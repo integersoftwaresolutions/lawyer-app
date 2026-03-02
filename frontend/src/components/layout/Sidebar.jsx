@@ -12,13 +12,15 @@ export default function Sidebar({
   const sidebarStyles = {
     width: "260px",
     minWidth: "260px",
-    border: `1px solid ${colors.border}`,
-    borderRadius: "8px",
+    borderRight: `1px solid ${colors.border}`,
     backgroundColor: colors.card,
     padding: "16px",
-    height: "fit-content",
-    position: "sticky",
-    top: "20px",
+    height: "calc(100vh - 80px)", // Full height minus header
+    position: "fixed",
+    top: "80px", // Below the fixed header
+    left: 0,
+    overflowY: "auto",
+    zIndex: 999,
     ...style,
   };
 

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import { lawyerApi } from "../../services/lawyer.api";
 import { bookingApi } from "../../services/booking.api";
-import { Card, Button, Badge, Modal } from "../../components/ui";
+import { Card, Button, Badge, Modal, Input, Select } from "../../components/ui";
 
 export default function LawyerBookingsPage() {
   const { colors } = useTheme();
@@ -315,72 +315,41 @@ export default function LawyerBookingsPage() {
         }
       >
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-          <div>
-            <label style={{ display: "block", marginBottom: "8px", color: colors.text.secondary, fontSize: "14px", fontWeight: 500 }}>
-              Date
-            </label>
-            <input
-              type="date"
-              value={editData.date}
-              onChange={(e) => setEditData((p) => ({ ...p, date: e.target.value }))}
-              style={{
-                width: "100%",
-                padding: "12px 16px",
-                borderRadius: "6px",
-                border: `1px solid ${colors.input.border}`,
-                backgroundColor: colors.input.background,
-                color: colors.input.text
-              }}
-            />
-          </div>
-          <div>
-            <label style={{ display: "block", marginBottom: "8px", color: colors.text.secondary, fontSize: "14px", fontWeight: 500 }}>
-              Time
-            </label>
-            <input
-              type="time"
-              step="900"
-              value={editData.time}
-              onChange={(e) => setEditData((p) => ({ ...p, time: e.target.value }))}
-              style={{
-                width: "100%",
-                padding: "12px 16px",
-                borderRadius: "6px",
-                border: `1px solid ${colors.input.border}`,
-                backgroundColor: colors.input.background,
-                color: colors.input.text
-              }}
-            />
-          </div>
+          <Input
+            label="Date"
+            type="date"
+            value={editData.date}
+            onChange={(e) => setEditData((p) => ({ ...p, date: e.target.value }))}
+            containerStyle={{ marginBottom: 0 }}
+          />
+          <Input
+            label="Time"
+            type="time"
+            step="900"
+            value={editData.time}
+            onChange={(e) => setEditData((p) => ({ ...p, time: e.target.value }))}
+            containerStyle={{ marginBottom: 0 }}
+          />
         </div>
 
-        <div style={{ marginTop: "16px" }}>
-          <label style={{ display: "block", marginBottom: "8px", color: colors.text.secondary, fontSize: "14px", fontWeight: 500 }}>
-            Duration
-          </label>
-          <select
-            value={editData.durationMinutes}
-            onChange={(e) => setEditData((p) => ({ ...p, durationMinutes: parseInt(e.target.value) }))}
-            style={{
-              width: "100%",
-              padding: "12px 16px",
-              borderRadius: "6px",
-              border: `1px solid ${colors.input.border}`,
-              backgroundColor: colors.input.background,
-              color: colors.input.text
-            }}
-          >
-            <option value={15}>15 minutes</option>
-            <option value={30}>30 minutes</option>
-            <option value={45}>45 minutes</option>
-            <option value={60}>60 minutes</option>
-            <option value={90}>90 minutes</option>
-            <option value={120}>120 minutes</option>
-          </select>
-          <p style={{ marginTop: "8px", marginBottom: 0, color: colors.text.muted, fontSize: "13px" }}>
-            Tip: Editing is allowed only for upcoming bookings. The new time must fit your availability.
-          </p>
-        </div>
+        <Select
+          label="Duration"
+          value={editData.durationMinutes}
+          onChange={(e) => setEditData((p) => ({ ...p, durationMinutes: parseInt(e.target.value) }))}
+          options={[
+            { value: 15, label: "15 minutes" },
+            { value: 30, label: "30 minutes" },
+            { value: 45, label: "45 minutes" },
+            { value: 60, label: "60 minutes" },
+            { value: 90, label: "90 minutes" },
+            { value: 120, label: "120 minutes" },
+          ]}
+          placeholder="Select duration"
+          containerStyle={{ marginTop: "16px" }}
+        />
+        <p style={{ marginTop: "8px", marginBottom: 0, color: colors.text.muted, fontSize: "13px" }}>
+          Tip: Editing is allowed only for upcoming bookings. The new time must fit your availability.
+        </p>
       </Modal>
 
       <Modal

@@ -19,6 +19,8 @@ export default function DashboardLayout({
     minHeight: "100vh",
     backgroundColor: colors.background,
     color: colors.text.primary,
+    display: "flex",
+    flexDirection: "column",
   };
 
   const headerStyles = {
@@ -30,6 +32,11 @@ export default function DashboardLayout({
     padding: "20px 24px",
     borderBottom: `1px solid ${colors.border}`,
     backgroundColor: colors.card,
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
   };
 
   const titleStyles = {
@@ -46,13 +53,17 @@ export default function DashboardLayout({
 
   const contentWrapperStyles = {
     display: "flex",
-    padding: "24px",
-    gap: "24px",
+    marginTop: "80px", // Approximate header height to account for fixed header
+    minHeight: "calc(100vh - 80px)",
   };
 
   const mainContentStyles = {
     flex: 1,
     minWidth: 0,
+    marginLeft: "260px", // Sidebar width
+    padding: "24px",
+    overflowY: "auto",
+    height: "calc(100vh - 80px)", // Full height minus header
   };
 
   const handleLogout = async () => {

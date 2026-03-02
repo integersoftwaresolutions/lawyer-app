@@ -3,6 +3,7 @@ import { lawyerApi } from "../../services/lawyer.api";
 import { useTheme } from "../../context/ThemeContext";
 import { Link } from "react-router-dom";
 import { Navbar } from "../../components/layout";
+import { Input, Button, Card } from "../../components/ui";
 
 export default function LawyerSearch() {
   const [q, setQ] = useState("");
@@ -28,7 +29,7 @@ export default function LawyerSearch() {
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       load({ q, city, sort: "rating", page: 1, limit: 10 });
-    }, 300); // Debounce search
+    }, 300);
 
     return () => clearTimeout(timeoutId);
   }, [q, city]);
@@ -53,25 +54,12 @@ export default function LawyerSearch() {
       color: colors.text.secondary
     },
     searchCard: {
-      border: `1px solid ${colors.border}`,
-      borderRadius: '8px',
-      backgroundColor: colors.card,
-      padding: '24px',
       marginBottom: '32px'
     },
     searchRow: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
       gap: '16px'
-    },
-    input: {
-      width: '100%',
-      padding: '12px',
-      borderRadius: '4px',
-      border: `1px solid ${colors.input.border}`,
-      backgroundColor: colors.input.background,
-      color: colors.input.text,
-      fontSize: '14px'
     },
     grid: {
       display: 'grid',
@@ -85,9 +73,6 @@ export default function LawyerSearch() {
       padding: '24px',
       cursor: 'pointer',
       transition: 'all 0.2s ease'
-    },
-    lawyerCardHover: {
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
     },
     lawyerName: {
       fontSize: '18px',
@@ -105,16 +90,6 @@ export default function LawyerSearch() {
       alignItems: 'center',
       gap: '4px',
       marginBottom: '16px'
-    },
-    button: {
-      width: '100%',
-      padding: '12px',
-      borderRadius: '4px',
-      border: 'none',
-      backgroundColor: colors.button.primary,
-      color: colors.button.primaryText,
-      cursor: 'pointer',
-      fontWeight: '500'
     },
     loadingContainer: {
       textAlign: 'center',
@@ -145,24 +120,22 @@ export default function LawyerSearch() {
         <p style={styles.subtitle}>Search and connect with qualified lawyers</p>
       </div>
 
-      <div style={styles.searchCard}>
+      <Card style={styles.searchCard}>
         <div style={styles.searchRow}>
-          <input
-            type="text"
+          <Input
             placeholder="Search by name, specialization..."
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            style={styles.input}
+            containerStyle={{ marginBottom: 0 }}
           />
-          <input
-            type="text"
+          <Input
             placeholder="City..."
             value={city}
             onChange={(e) => setCity(e.target.value)}
-            style={styles.input}
+            containerStyle={{ marginBottom: 0 }}
           />
         </div>
-      </div>
+      </Card>
 
       {loading ? (
         <div style={styles.loadingContainer}>
@@ -197,9 +170,9 @@ export default function LawyerSearch() {
                   </p>
                 </div>
                 <Link to={`/lawyers/${lawyer.userId}`}>
-                  <button style={styles.button}>
+                  <Button fullWidth style={{ marginTop: '16px' }}>
                     View Profile
-                  </button>
+                  </Button>
                 </Link>
               </div>
             ))}

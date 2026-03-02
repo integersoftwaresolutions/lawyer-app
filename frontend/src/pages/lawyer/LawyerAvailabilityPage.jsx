@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "../../context/ThemeContext";
 import { lawyerApi } from "../../services/lawyer.api";
-import { Card, Button } from "../../components/ui";
+import { Card, Button, Input, Checkbox } from "../../components/ui";
 
 const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 const DAY_LABELS = {
@@ -87,15 +87,6 @@ export default function LawyerAvailabilityPage() {
     return <div style={{ padding: "24px", color: colors.text.secondary }}>Loading...</div>;
   }
 
-  const inputStyles = {
-    padding: "8px 12px",
-    border: `1px solid ${colors.border}`,
-    borderRadius: "4px",
-    backgroundColor: colors.input.background,
-    color: colors.input.text,
-    fontSize: "14px",
-  };
-
   return (
     <div>
       <Card title="Weekly Availability" subtitle="Set your available hours for each day">
@@ -109,18 +100,14 @@ export default function LawyerAvailabilityPage() {
                 padding: "16px",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                <label style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }}>
-                  <input
-                    type="checkbox"
-                    checked={availability[day]?.enabled || false}
-                    onChange={() => toggleDay(day)}
-                    style={{ width: "18px", height: "18px" }}
-                  />
-                  <span style={{ fontWeight: "600", color: colors.text.primary }}>
-                    {DAY_LABELS[day]}
-                  </span>
-                </label>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: availability[day]?.enabled ? "12px" : "0" }}>
+                <Checkbox
+                  id={`day-${day}`}
+                  label={DAY_LABELS[day]}
+                  checked={availability[day]?.enabled || false}
+                  onChange={() => toggleDay(day)}
+                  containerStyle={{ marginBottom: 0 }}
+                />
                 {availability[day]?.enabled && (
                   <Button size="sm" variant="secondary" onClick={() => addSlot(day)}>
                     + Add Slot
@@ -132,32 +119,32 @@ export default function LawyerAvailabilityPage() {
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginLeft: "30px" }}>
                   {(availability[day]?.slots || []).map((slot, index) => (
                     <div key={index} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                      <input
+                      <Input
                         type="time"
                         value={slot.start || "09:00"}
                         onChange={(e) => updateSlot(day, index, "start", e.target.value)}
-                        style={inputStyles}
+                        containerStyle={{ marginBottom: 0, width: "auto" }}
+                        fullWidth={false}
+                        style={{ padding: "8px 12px" }}
                       />
                       <span style={{ color: colors.text.secondary }}>to</span>
-                      <input
+                      <Input
                         type="time"
                         value={slot.end || "17:00"}
                         onChange={(e) => updateSlot(day, index, "end", e.target.value)}
-                        style={inputStyles}
+                        containerStyle={{ marginBottom: 0, width: "auto" }}
+                        fullWidth={false}
+                        style={{ padding: "8px 12px" }}
                       />
                       {(availability[day]?.slots || []).length > 1 && (
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => removeSlot(day, index)}
-                          style={{
-                            background: "none",
-                            border: "none",
-                            color: "#dc3545",
-                            cursor: "pointer",
-                            fontSize: "18px",
-                          }}
+                          style={{ color: "#dc3545", padding: "4px 8px" }}
                         >
                           ×
-                        </button>
+                        </Button>
                       )}
                     </div>
                   ))}

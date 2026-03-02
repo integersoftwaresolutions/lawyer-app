@@ -4,7 +4,7 @@ import { createSocket } from "../../services/socket";
 import { useAuth } from "../../hooks/useAuth";
 import { useTheme } from "../../context/ThemeContext";
 import { bookingApi } from "../../services/booking.api";
-import { Button } from "../../components/ui";
+import { Button, Input } from "../../components/ui";
 
 export default function SessionChat() {
   const { bookingId } = useParams();
@@ -128,17 +128,7 @@ export default function SessionChat() {
     gap: "12px",
     padding: "16px",
     borderTop: `1px solid ${colors.border}`,
-  };
-
-  const inputStyles = {
-    flex: 1,
-    padding: "12px 16px",
-    borderRadius: "6px",
-    border: `1px solid ${colors.input.border}`,
-    backgroundColor: colors.input.background,
-    color: colors.input.text,
-    fontSize: "14px",
-    outline: "none",
+    alignItems: "center",
   };
 
   if (loading) {
@@ -207,13 +197,13 @@ export default function SessionChat() {
           </div>
 
           <div style={inputContainerStyles}>
-            <input
+            <Input
               type="text"
               value={text}
               onChange={(e) => setText(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Type your message..."
-              style={inputStyles}
+              containerStyle={{ flex: 1, marginBottom: 0 }}
             />
             <Button onClick={send} disabled={!text.trim()}>
               Send
