@@ -1,5 +1,4 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import Home from "../pages/public/Home.jsx";
 import MarketingPage from "../pages/public/MarketingPage.jsx";
 import LawyerSearch from "../pages/public/LawyerSearch.jsx";
 import LawyerProfile from "../pages/public/LawyerProfile.jsx";
@@ -38,7 +37,6 @@ export default function RoutesRoot() {
   return (
     <Routes>
       <Route path="/" element={<MarketingPage />} />
-      <Route path="/home" element={<Home />} />
       <Route path="/marketing" element={<MarketingPage />} />
       <Route path="/pricing" element={<MarketingPage />} />
       

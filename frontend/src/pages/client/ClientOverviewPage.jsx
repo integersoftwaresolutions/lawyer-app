@@ -1,13 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../hooks/useAuth";
 import { clientApi } from "../../services/client.api";
 import { walletApi } from "../../services/wallet.api";
 import { Card, Button, StatCard } from "../../components/ui";
 
 export default function ClientOverviewPage() {
-  const { colors } = useTheme();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
@@ -34,26 +32,21 @@ export default function ClientOverviewPage() {
   };
 
   if (loading) {
-    return <div style={{ padding: "24px", color: colors.text.secondary }}>Loading...</div>;
+    return <div className="p-6 text-text-secondary">Loading...</div>;
   }
 
   return (
     <div>
-      <Card style={{ marginBottom: "24px" }}>
-        <h2 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "8px", color: colors.text.primary }}>
+      <Card className="mb-6">
+        <h2 className="text-2xl font-bold mb-2 text-text-primary">
           Welcome back!
         </h2>
-        <p style={{ color: colors.text.secondary }}>
+        <p className="text-text-secondary">
           Manage your legal consultations and connect with expert lawyers
         </p>
       </Card>
 
-      <div style={{ 
-        display: "grid", 
-        gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", 
-        gap: "16px", 
-        marginBottom: "24px" 
-      }}>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-6">
         <StatCard
           icon="📅"
           value={stats?.upcomingBookings || 0}
@@ -76,9 +69,9 @@ export default function ClientOverviewPage() {
         />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+      <div className="grid grid-cols-2 gap-6">
         <Card title="Quick Actions">
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div className="flex flex-col gap-3">
             <Button fullWidth onClick={() => navigate("/client/search")}>
               Find Lawyers
             </Button>
@@ -92,14 +85,14 @@ export default function ClientOverviewPage() {
         </Card>
 
         <Card title="Account Info">
-          <div style={{ color: colors.text.secondary }}>
-            <p style={{ marginBottom: "8px" }}>
+          <div className="text-text-secondary">
+            <p className="mb-2">
               <strong>Email:</strong> {user?.email}
             </p>
-            <p style={{ marginBottom: "8px" }}>
+            <p className="mb-2">
               <strong>Role:</strong> {user?.role}
             </p>
-            <p style={{ marginBottom: "8px" }}>
+            <p className="mb-2">
               <strong>Monthly Credits:</strong> {wallet?.monthlyCredits || 0}
             </p>
           </div>

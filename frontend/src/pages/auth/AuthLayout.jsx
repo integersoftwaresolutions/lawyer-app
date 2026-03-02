@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "../../context/ThemeContext";
 import { Card } from "../../components/ui";
 
 export default function AuthLayout({ 
@@ -10,7 +9,6 @@ export default function AuthLayout({
   onBack,
   footer
 }) {
-  const { colors } = useTheme();
   const navigate = useNavigate();
 
   const handleBack = () => {
@@ -22,54 +20,27 @@ export default function AuthLayout({
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '24px',
-      backgroundColor: colors.background,
-    }}>
-      <div style={{ width: '100%', maxWidth: '540px' }}>
+    <div className="min-h-screen flex items-center justify-center p-6 bg-background">
+      <div className="w-full max-w-[540px]">
         {showBackButton && (
           <button
             onClick={handleBack}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              marginBottom: '16px',
-              padding: '8px 0',
-              background: 'none',
-              border: 'none',
-              color: colors.text.secondary,
-              fontSize: '14px',
-              cursor: 'pointer',
-            }}
+            className="flex items-center gap-1.5 mb-4 py-2 bg-transparent border-none text-text-secondary text-sm cursor-pointer hover:text-text-primary transition-colors"
           >
             ← Back
           </button>
         )}
 
-        <Card style={{ padding: '32px' }}>
+        <Card padding="p-8">
           {(title || subtitle) && (
-            <div style={{ marginBottom: '28px', textAlign: 'center' }}>
+            <div className="mb-7 text-center">
               {title && (
-                <h1 style={{
-                  fontSize: '26px',
-                  fontWeight: '600',
-                  margin: '0 0 8px 0',
-                  color: colors.text.primary,
-                }}>
+                <h1 className="text-[26px] font-semibold m-0 mb-2 text-text-primary">
                   {title}
                 </h1>
               )}
               {subtitle && (
-                <p style={{
-                  fontSize: '14px',
-                  margin: 0,
-                  color: colors.text.secondary,
-                }}>
+                <p className="text-sm m-0 text-text-secondary">
                   {subtitle}
                 </p>
               )}
@@ -79,14 +50,7 @@ export default function AuthLayout({
           {children}
 
           {footer && (
-            <div style={{
-              marginTop: '24px',
-              paddingTop: '20px',
-              borderTop: `1px solid ${colors.border}`,
-              textAlign: 'center',
-              fontSize: '14px',
-              color: colors.text.secondary,
-            }}>
+            <div className="mt-6 pt-5 border-t border-border text-center text-sm text-text-secondary">
               {footer}
             </div>
           )}
@@ -97,33 +61,20 @@ export default function AuthLayout({
 }
 
 export function AuthDivider({ text = "or" }) {
-  const { colors } = useTheme();
-
   return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: '16px',
-      margin: '24px 0',
-    }}>
-      <div style={{ flex: 1, height: '1px', backgroundColor: colors.border }} />
-      <span style={{ fontSize: '13px', color: colors.text.muted }}>{text}</span>
-      <div style={{ flex: 1, height: '1px', backgroundColor: colors.border }} />
+    <div className="flex items-center gap-4 my-6">
+      <div className="flex-1 h-px bg-border" />
+      <span className="text-xs text-text-muted">{text}</span>
+      <div className="flex-1 h-px bg-border" />
     </div>
   );
 }
 
 export function AuthLink({ children, onClick }) {
-  const { colors } = useTheme();
-
   return (
     <span
       onClick={onClick}
-      style={{
-        color: colors.button.primary,
-        cursor: 'pointer',
-        fontWeight: '500',
-      }}
+      className="text-primary cursor-pointer font-medium hover:text-primary-hover transition-colors"
     >
       {children}
     </span>
@@ -131,19 +82,10 @@ export function AuthLink({ children, onClick }) {
 }
 
 export function FormSection({ title, children }) {
-  const { colors } = useTheme();
-
   return (
-    <div style={{ marginBottom: '20px' }}>
+    <div className="mb-5">
       {title && (
-        <h3 style={{
-          fontSize: '13px',
-          fontWeight: '600',
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px',
-          color: colors.text.muted,
-          margin: '0 0 12px 0',
-        }}>
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-text-muted m-0 mb-3">
           {title}
         </h3>
       )}
@@ -154,11 +96,7 @@ export function FormSection({ title, children }) {
 
 export function FormRow({ children }) {
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(2, 1fr)',
-      gap: '12px',
-    }}>
+    <div className="grid grid-cols-2 gap-3">
       {children}
     </div>
   );
@@ -168,15 +106,7 @@ export function ErrorMessage({ message }) {
   if (!message) return null;
 
   return (
-    <div style={{
-      padding: '12px 16px',
-      marginBottom: '16px',
-      borderRadius: '6px',
-      backgroundColor: 'rgba(220, 53, 69, 0.1)',
-      border: '1px solid rgba(220, 53, 69, 0.3)',
-      color: '#dc3545',
-      fontSize: '13px',
-    }}>
+    <div className="py-3 px-4 mb-4 rounded-md bg-danger/10 border border-danger/30 text-danger text-xs">
       {message}
     </div>
   );

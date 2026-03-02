@@ -1,13 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import { useTheme } from "../../context/ThemeContext";
 
 export default function LawyerDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
-  const { colors } = useTheme();
 
   const menuItems = [
     { id: "overview", label: "Overview", icon: "🏠" },

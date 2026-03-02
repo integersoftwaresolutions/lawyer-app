@@ -1,73 +1,29 @@
-import { useTheme } from "../../context/ThemeContext";
 import { Link, useLocation } from "react-router-dom";
 
 export default function Sidebar({ 
   items = [], 
   basePath = "",
-  style = {},
+  className = "",
 }) {
-  const { colors } = useTheme();
   const location = useLocation();
 
-  const sidebarStyles = {
-    width: "260px",
-    minWidth: "260px",
-    borderRight: `1px solid ${colors.border}`,
-    backgroundColor: colors.card,
-    padding: "16px",
-    height: "calc(100vh - 80px)", // Full height minus header
-    position: "fixed",
-    top: "80px", // Below the fixed header
-    left: 0,
-    overflowY: "auto",
-    zIndex: 999,
-    ...style,
-  };
-
-  const navItemStyles = {
-    display: "flex",
-    alignItems: "center",
-    gap: "12px",
-    padding: "12px 16px",
-    borderRadius: "6px",
-    marginBottom: "4px",
-    textDecoration: "none",
-    transition: "all 0.2s ease",
-    cursor: "pointer",
-  };
-
-  const getItemStyles = (path) => {
-    const isActive = location.pathname === path;
-    return {
-      ...navItemStyles,
-      backgroundColor: isActive ? colors.button.primary : "transparent",
-      color: isActive ? colors.button.primaryText : colors.text.secondary,
-    };
-  };
-
-  const iconStyles = {
-    fontSize: "18px",
-    width: "24px",
-    textAlign: "center",
-  };
-
-  const labelStyles = {
-    fontSize: "14px",
-    fontWeight: "500",
-  };
-
   return (
-    <nav style={sidebarStyles}>
+    <nav className={`w-[260px] min-w-[260px] border-r border-border bg-card p-4 h-[calc(100vh-50px)] fixed top-16 left-0 overflow-y-auto z-[999] ${className}`}>
       {items.map((item) => {
         const path = `${basePath}/${item.id}`;
+        const isActive = location.pathname === path;
         return (
           <Link
             key={item.id}
             to={path}
-            style={getItemStyles(path)}
+            className={`flex items-center gap-3 py-3 px-4 rounded-md mb-1 no-underline transition-all duration-200 cursor-pointer ${
+              isActive 
+                ? "bg-primary text-primary-text" 
+                : "bg-transparent text-text-secondary hover:bg-surface"
+            }`}
           >
-            <span style={iconStyles}>{item.icon}</span>
-            <span style={labelStyles}>{item.label}</span>
+            <span className="text-lg w-6 text-center">{item.icon}</span>
+            <span className="text-sm font-medium">{item.label}</span>
           </Link>
         );
       })}

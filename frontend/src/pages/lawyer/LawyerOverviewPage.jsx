@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "../../context/ThemeContext";
 import { lawyerApi } from "../../services/lawyer.api";
 import { Card, Button, StatCard } from "../../components/ui";
 
 export default function LawyerOverviewPage() {
-  const { colors } = useTheme();
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -31,26 +29,21 @@ export default function LawyerOverviewPage() {
   };
 
   if (loading) {
-    return <div style={{ padding: "24px", color: colors.text.secondary }}>Loading...</div>;
+    return <div className="p-6 text-text-secondary">Loading...</div>;
   }
 
   return (
     <div>
-      <Card style={{ marginBottom: "24px" }}>
-        <h2 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "8px", color: colors.text.primary }}>
+      <Card className="mb-6">
+        <h2 className="text-2xl font-bold mb-2 text-text-primary">
           Welcome back, {profile?.fullName || "Lawyer"}!
         </h2>
-        <p style={{ color: colors.text.secondary }}>
+        <p className="text-text-secondary">
           Manage your profile, bookings, and earnings
         </p>
       </Card>
 
-      <div style={{ 
-        display: "grid", 
-        gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", 
-        gap: "16px", 
-        marginBottom: "24px" 
-      }}>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-6">
         <StatCard
           icon="📅"
           value={stats?.upcomingBookings || 0}
@@ -73,9 +66,9 @@ export default function LawyerOverviewPage() {
         />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+      <div className="grid grid-cols-2 gap-6">
         <Card title="Quick Actions">
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div className="flex flex-col gap-3">
             <Button fullWidth onClick={() => navigate("/lawyer/profile")}>
               Edit Profile
             </Button>
@@ -89,32 +82,31 @@ export default function LawyerOverviewPage() {
         </Card>
 
         <Card title="Profile Status">
-          <div style={{ color: colors.text.secondary }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px" }}>
+          <div className="text-text-secondary">
+            <div className="flex justify-between mb-3">
               <span>Verification Status:</span>
-              <span style={{ 
-                color: profile?.verificationStatus === "APPROVED" ? "#28a745" : 
-                       profile?.verificationStatus === "REJECTED" ? "#dc3545" : "#ffc107",
-                fontWeight: "600"
-              }}>
+              <span className={`font-semibold ${
+                profile?.verificationStatus === "APPROVED" ? "text-success" : 
+                profile?.verificationStatus === "REJECTED" ? "text-danger" : "text-warning"
+              }`}>
                 {profile?.verificationStatus || "PENDING"}
               </span>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px" }}>
+            <div className="flex justify-between mb-3">
               <span>Hourly Rate:</span>
-              <span style={{ fontWeight: "600", color: colors.text.primary }}>
+              <span className="font-semibold text-text-primary">
                 ${profile?.hourlyRate || 0}/hr
               </span>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px" }}>
+            <div className="flex justify-between mb-3">
               <span>Experience:</span>
-              <span style={{ fontWeight: "600", color: colors.text.primary }}>
+              <span className="font-semibold text-text-primary">
                 {profile?.experienceYears || 0} years
               </span>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <div className="flex justify-between">
               <span>Specializations:</span>
-              <span style={{ fontWeight: "600", color: colors.text.primary }}>
+              <span className="font-semibold text-text-primary">
                 {profile?.specialization?.length || 0}
               </span>
             </div>

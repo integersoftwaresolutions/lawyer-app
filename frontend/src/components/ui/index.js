@@ -7,3 +7,4 @@ export { default as Modal } from "./Modal";
 export { default as Textarea } from "./Textarea";
 export { default as StatCard } from "./StatCard";
 export { default as Checkbox } from "./Checkbox";
+export { default as Popover } from "./Popover";

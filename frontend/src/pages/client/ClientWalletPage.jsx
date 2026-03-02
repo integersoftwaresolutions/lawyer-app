@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "../../context/ThemeContext";
 import { walletApi } from "../../services/wallet.api";
 import { Card, Button, Input, Modal, StatCard } from "../../components/ui";
 
 export default function ClientWalletPage() {
-  const { colors } = useTheme();
   const [wallet, setWallet] = useState(null);
   const [loading, setLoading] = useState(true);
   const [ledger, setLedger] = useState([]);
@@ -90,7 +88,7 @@ export default function ClientWalletPage() {
   };
 
   if (loading) {
-    return <div style={{ padding: "24px", color: colors.text.secondary }}>Loading...</div>;
+    return <div className="p-6 text-text-secondary">Loading...</div>;
   }
 
   const creditPackages = [
@@ -102,12 +100,7 @@ export default function ClientWalletPage() {
 
   return (
     <div>
-      <div style={{ 
-        display: "grid", 
-        gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", 
-        gap: "16px", 
-        marginBottom: "24px" 
-      }}>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-6">
         <StatCard
           icon="💳"
           value={wallet?.balanceCredits || 0}
@@ -120,48 +113,27 @@ export default function ClientWalletPage() {
         />
       </div>
 
-      <Card title="Purchase Credits" style={{ marginBottom: "24px" }}>
-        <div style={{ 
-          display: "grid", 
-          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", 
-          gap: "16px" 
-        }}>
+      <Card title="Purchase Credits" className="mb-6">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4">
           {creditPackages.map((pkg) => (
             <div
               key={pkg.credits}
-              style={{
-                border: `2px solid ${pkg.popular ? colors.button.primary : colors.border}`,
-                borderRadius: "8px",
-                padding: "20px",
-                textAlign: "center",
-                position: "relative",
-              }}
+              className={`border-2 rounded-lg p-5 text-center relative ${
+                pkg.popular ? "border-primary" : "border-border"
+              }`}
             >
               {pkg.popular && (
-                <span
-                  style={{
-                    position: "absolute",
-                    top: "-10px",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    backgroundColor: colors.button.primary,
-                    color: colors.button.primaryText,
-                    padding: "4px 12px",
-                    borderRadius: "12px",
-                    fontSize: "11px",
-                    fontWeight: "600",
-                  }}
-                >
+                <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-primary text-primary-text py-1 px-3 rounded-xl text-[11px] font-semibold">
                   POPULAR
                 </span>
               )}
-              <div style={{ fontSize: "32px", fontWeight: "bold", color: colors.text.primary }}>
+              <div className="text-[32px] font-bold text-text-primary">
                 {pkg.credits}
               </div>
-              <div style={{ color: colors.text.secondary, marginBottom: "12px" }}>
+              <div className="text-text-secondary mb-3">
                 Credits
               </div>
-              <div style={{ fontSize: "20px", fontWeight: "600", color: colors.text.primary, marginBottom: "16px" }}>
+              <div className="text-xl font-semibold text-text-primary mb-4">
                 {pkg.price}
               </div>
               <Button
@@ -180,49 +152,51 @@ export default function ClientWalletPage() {
       </Card>
 
       <Card title="How Credits Work">
-        <div style={{ color: colors.text.secondary }}>
-          <ul style={{ paddingLeft: "20px", margin: 0 }}>
-            <li style={{ marginBottom: "8px" }}>Credits are used to book consultations with lawyers</li>
-            <li style={{ marginBottom: "8px" }}>Each consultation costs a certain number of credits based on the lawyer's rate</li>
-            <li style={{ marginBottom: "8px" }}>You receive free monthly credits based on your plan</li>
-            <li style={{ marginBottom: "8px" }}>Purchased credits never expire</li>
+        <div className="text-text-secondary">
+          <ul className="pl-5 m-0">
+            <li className="mb-2">Credits are used to book consultations with lawyers</li>
+            <li className="mb-2">Each consultation costs a certain number of credits based on the lawyer's rate</li>
+            <li className="mb-2">You receive free monthly credits based on your plan</li>
+            <li className="mb-2">Purchased credits never expire</li>
           </ul>
         </div>
       </Card>
 
-      <Card title="Purchase History" style={{ marginTop: "24px" }}>
+      <Card title="Purchase History" className="mt-6">
         {ledgerLoading ? (
-          <p style={{ color: colors.text.secondary, margin: 0 }}>Loading history...</p>
+          <p className="text-text-secondary m-0">Loading history...</p>
         ) : ledger.length === 0 ? (
-          <p style={{ color: colors.text.secondary, margin: 0 }}>No transactions yet.</p>
+          <p className="text-text-secondary m-0">No transactions yet.</p>
         ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  <th style={{ textAlign: "left", padding: "10px", borderBottom: `1px solid ${colors.border}`, color: colors.text.secondary, fontSize: "13px" }}>Date</th>
-                  <th style={{ textAlign: "left", padding: "10px", borderBottom: `1px solid ${colors.border}`, color: colors.text.secondary, fontSize: "13px" }}>Type</th>
-                  <th style={{ textAlign: "left", padding: "10px", borderBottom: `1px solid ${colors.border}`, color: colors.text.secondary, fontSize: "13px" }}>Amount</th>
-                  <th style={{ textAlign: "left", padding: "10px", borderBottom: `1px solid ${colors.border}`, color: colors.text.secondary, fontSize: "13px" }}>Note</th>
-                  <th style={{ textAlign: "left", padding: "10px", borderBottom: `1px solid ${colors.border}`, color: colors.text.secondary, fontSize: "13px" }}>Actions</th>
+                  <th className="text-left p-2.5 border-b border-border text-text-secondary text-xs">Date</th>
+                  <th className="text-left p-2.5 border-b border-border text-text-secondary text-xs">Type</th>
+                  <th className="text-left p-2.5 border-b border-border text-text-secondary text-xs">Amount</th>
+                  <th className="text-left p-2.5 border-b border-border text-text-secondary text-xs">Note</th>
+                  <th className="text-left p-2.5 border-b border-border text-text-secondary text-xs">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {ledger.map((tx) => (
                   <tr key={tx._id}>
-                    <td style={{ padding: "10px", borderBottom: `1px solid ${colors.border}`, color: colors.text.primary, fontSize: "14px" }}>
+                    <td className="p-2.5 border-b border-border text-text-primary text-sm">
                       {formatLedgerDate(tx.createdAt)}
                     </td>
-                    <td style={{ padding: "10px", borderBottom: `1px solid ${colors.border}`, color: colors.text.primary, fontSize: "14px" }}>
+                    <td className="p-2.5 border-b border-border text-text-primary text-sm">
                       {tx.type}
                     </td>
-                    <td style={{ padding: "10px", borderBottom: `1px solid ${colors.border}`, color: tx.amount >= 0 ? colors.text.primary : colors.text.secondary, fontSize: "14px", fontWeight: 600 }}>
+                    <td className={`p-2.5 border-b border-border text-sm font-semibold ${
+                      tx.amount >= 0 ? "text-text-primary" : "text-text-secondary"
+                    }`}>
                       {tx.amount >= 0 ? `+${tx.amount}` : tx.amount}
                     </td>
-                    <td style={{ padding: "10px", borderBottom: `1px solid ${colors.border}`, color: colors.text.secondary, fontSize: "14px" }}>
+                    <td className="p-2.5 border-b border-border text-text-secondary text-sm">
                       {tx.note || "-"}
                     </td>
-                    <td style={{ padding: "10px", borderBottom: `1px solid ${colors.border}` }}>
+                    <td className="p-2.5 border-b border-border">
                       <Button
                         size="sm"
                         variant="danger"
@@ -254,7 +228,7 @@ export default function ClientWalletPage() {
           </>
         }
       >
-        <p style={{ color: colors.text.secondary, marginTop: 0 }}>
+        <p className="text-text-secondary mt-0">
           This will remove the item from your history. It will not change your wallet balance.
         </p>
       </Modal>
@@ -281,7 +255,7 @@ export default function ClientWalletPage() {
           onChange={(e) => setTopupAmount(e.target.value)}
           placeholder="Enter amount"
         />
-        <p style={{ color: colors.text.secondary, fontSize: "14px" }}>
+        <p className="text-text-secondary text-sm">
           Note: In production, this would integrate with a payment gateway.
         </p>
       </Modal>

@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "../../context/ThemeContext";
 import { adminApi } from "../../services/admin.api";
 import { Card, Button, Badge } from "../../components/ui";
 
 export default function AdminBookingsPage() {
-  const { colors } = useTheme();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
@@ -55,35 +53,14 @@ export default function AdminBookingsPage() {
     { value: "CANCELLED", label: "Cancelled" },
   ];
 
-  const tableStyles = {
-    width: "100%",
-    borderCollapse: "collapse",
-  };
-
-  const thStyles = {
-    textAlign: "left",
-    padding: "12px",
-    borderBottom: `1px solid ${colors.border}`,
-    color: colors.text.secondary,
-    fontSize: "13px",
-    fontWeight: "600",
-  };
-
-  const tdStyles = {
-    padding: "12px",
-    borderBottom: `1px solid ${colors.border}`,
-    color: colors.text.primary,
-    fontSize: "14px",
-  };
-
   return (
     <div>
       <Card>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-          <h2 style={{ fontSize: "20px", fontWeight: "bold", color: colors.text.primary, margin: 0 }}>
+        <div className="flex justify-between items-center mb-5">
+          <h2 className="text-xl font-bold text-text-primary m-0">
             All Bookings
           </h2>
-          <div style={{ display: "flex", gap: "8px" }}>
+          <div className="flex gap-2">
             {filterOptions.map((opt) => (
               <Button
                 key={opt.value}
@@ -98,34 +75,34 @@ export default function AdminBookingsPage() {
         </div>
 
         {loading ? (
-          <p style={{ color: colors.text.secondary }}>Loading...</p>
+          <p className="text-text-secondary">Loading...</p>
         ) : bookings.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "40px", color: colors.text.secondary }}>
+          <div className="text-center py-10 text-text-secondary">
             <p>No bookings found</p>
           </div>
         ) : (
-          <table style={tableStyles}>
+          <table className="w-full border-collapse">
             <thead>
               <tr>
-                <th style={thStyles}>Client</th>
-                <th style={thStyles}>Lawyer</th>
-                <th style={thStyles}>Date & Time</th>
-                <th style={thStyles}>Duration</th>
-                <th style={thStyles}>Amount</th>
-                <th style={thStyles}>Platform Fee</th>
-                <th style={thStyles}>Status</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Client</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Lawyer</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Date & Time</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Duration</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Amount</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Platform Fee</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Status</th>
               </tr>
             </thead>
             <tbody>
               {bookings.map((booking) => (
                 <tr key={booking._id}>
-                  <td style={tdStyles}>{booking.clientId?.email || "N/A"}</td>
-                  <td style={tdStyles}>{booking.lawyerUserId?.email || "N/A"}</td>
-                  <td style={tdStyles}>{formatDate(booking.startAt)}</td>
-                  <td style={tdStyles}>{booking.durationMinutes} min</td>
-                  <td style={tdStyles}>${booking.amount || 0}</td>
-                  <td style={tdStyles}>${booking.platformFee || 0}</td>
-                  <td style={tdStyles}>{getStatusBadge(booking.status)}</td>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">{booking.clientId?.email || "N/A"}</td>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">{booking.lawyerUserId?.email || "N/A"}</td>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">{formatDate(booking.startAt)}</td>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">{booking.durationMinutes} min</td>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">${booking.amount || 0}</td>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">${booking.platformFee || 0}</td>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">{getStatusBadge(booking.status)}</td>
                 </tr>
               ))}
             </tbody>

@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "../../context/ThemeContext";
 import { adminApi } from "../../services/admin.api";
 import { Card, Button, StatCard } from "../../components/ui";
 
 export default function AdminOverviewPage() {
-  const { colors } = useTheme();
   const navigate = useNavigate();
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -26,29 +24,24 @@ export default function AdminOverviewPage() {
   };
 
   if (loading) {
-    return <div style={{ padding: "24px", color: colors.text.secondary }}>Loading...</div>;
+    return <div className="p-6 text-text-secondary">Loading...</div>;
   }
 
   return (
     <div>
-      <Card style={{ marginBottom: "24px" }}>
-        <h2 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "8px", color: colors.text.primary }}>
+      <Card className="mb-6">
+        <h2 className="text-2xl font-bold mb-2 text-text-primary">
           Platform Overview
         </h2>
-        <p style={{ color: colors.text.secondary }}>
+        <p className="text-text-secondary">
           Monitor and manage the lawyer marketplace platform
         </p>
       </Card>
 
-      <h3 style={{ fontSize: "16px", fontWeight: "600", color: colors.text.primary, marginBottom: "16px" }}>
+      <h3 className="text-base font-semibold text-text-primary mb-4">
         Users
       </h3>
-      <div style={{ 
-        display: "grid", 
-        gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", 
-        gap: "16px", 
-        marginBottom: "24px" 
-      }}>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4 mb-6">
         <StatCard
           icon="👥"
           value={analytics?.users?.total || 0}
@@ -66,15 +59,10 @@ export default function AdminOverviewPage() {
         />
       </div>
 
-      <h3 style={{ fontSize: "16px", fontWeight: "600", color: colors.text.primary, marginBottom: "16px" }}>
+      <h3 className="text-base font-semibold text-text-primary mb-4">
         Lawyers
       </h3>
-      <div style={{ 
-        display: "grid", 
-        gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", 
-        gap: "16px", 
-        marginBottom: "24px" 
-      }}>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4 mb-6">
         <StatCard
           icon="✅"
           value={analytics?.lawyers?.verified || 0}
@@ -87,15 +75,10 @@ export default function AdminOverviewPage() {
         />
       </div>
 
-      <h3 style={{ fontSize: "16px", fontWeight: "600", color: colors.text.primary, marginBottom: "16px" }}>
+      <h3 className="text-base font-semibold text-text-primary mb-4">
         Bookings & Revenue
       </h3>
-      <div style={{ 
-        display: "grid", 
-        gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", 
-        gap: "16px", 
-        marginBottom: "24px" 
-      }}>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4 mb-6">
         <StatCard
           icon="📅"
           value={analytics?.bookings?.total || 0}
@@ -128,9 +111,9 @@ export default function AdminOverviewPage() {
         />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+      <div className="grid grid-cols-2 gap-6">
         <Card title="Quick Actions">
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div className="flex flex-col gap-3">
             <Button fullWidth onClick={() => navigate("/admin/verification")}>
               Review Pending Lawyers ({analytics?.lawyers?.pending || 0})
             </Button>
@@ -144,10 +127,10 @@ export default function AdminOverviewPage() {
         </Card>
 
         <Card title="Recent Activity">
-          <div style={{ color: colors.text.secondary }}>
-            <p style={{ marginBottom: "8px" }}>• {analytics?.bookings?.thisMonth || 0} bookings this month</p>
-            <p style={{ marginBottom: "8px" }}>• {analytics?.lawyers?.pending || 0} lawyers awaiting verification</p>
-            <p style={{ marginBottom: "8px" }}>• ${analytics?.revenue?.thisMonth || 0} revenue this month</p>
+          <div className="text-text-secondary">
+            <p className="mb-2">• {analytics?.bookings?.thisMonth || 0} bookings this month</p>
+            <p className="mb-2">• {analytics?.lawyers?.pending || 0} lawyers awaiting verification</p>
+            <p className="mb-2">• ${analytics?.revenue?.thisMonth || 0} revenue this month</p>
           </div>
         </Card>
       </div>

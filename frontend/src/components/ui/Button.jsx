@@ -1,5 +1,3 @@
-import { useTheme } from "../../context/ThemeContext";
-
 export default function Button({ 
   children, 
   variant = "primary", 
@@ -7,69 +5,35 @@ export default function Button({
   fullWidth = false,
   loading = false,
   disabled = false,
-  style = {},
+  className = "",
   ...props 
 }) {
-  const { colors } = useTheme();
-
-  const baseStyles = {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "8px",
-    borderRadius: "6px",
-    fontWeight: "500",
-    cursor: disabled || loading ? "not-allowed" : "pointer",
-    opacity: disabled || loading ? 0.6 : 1,
-    transition: "all 0.2s ease",
-    border: "none",
-    width: fullWidth ? "100%" : "auto",
+  const baseClasses = "inline-flex items-center justify-center gap-2 rounded-md font-medium transition-all duration-200 border-none";
+  
+  const sizeClasses = {
+    sm: "py-2 px-4 text-sm",
+    md: "py-3 px-6 text-sm",
+    lg: "py-4 px-8 text-base",
   };
 
-  const sizeStyles = {
-    sm: { padding: "8px 16px", fontSize: "13px" },
-    md: { padding: "12px 24px", fontSize: "14px" },
-    lg: { padding: "16px 32px", fontSize: "16px" },
+  const variantClasses = {
+    primary: "bg-primary text-primary-text hover:bg-primary-hover",
+    secondary: "bg-secondary text-secondary-text border border-secondary-border hover:bg-secondary-hover",
+    danger: "bg-danger text-danger-text hover:bg-danger-hover",
+    success: "bg-success text-success-text hover:bg-success-hover",
+    ghost: "bg-transparent text-text-primary hover:bg-surface",
   };
 
-  const variantStyles = {
-    primary: {
-      backgroundColor: colors.button.primary,
-      color: colors.button.primaryText,
-    },
-    secondary: {
-      backgroundColor: "transparent",
-      color: colors.text.primary,
-      border: `1px solid ${colors.border}`,
-    },
-    danger: {
-      backgroundColor: "#dc3545",
-      color: "#ffffff",
-    },
-    success: {
-      backgroundColor: "#28a745",
-      color: "#ffffff",
-    },
-    ghost: {
-      backgroundColor: "transparent",
-      color: colors.text.primary,
-    },
-  };
-
-  const combinedStyles = {
-    ...baseStyles,
-    ...sizeStyles[size],
-    ...variantStyles[variant],
-    ...style,
-  };
+  const disabledClasses = (disabled || loading) ? "opacity-60 cursor-not-allowed" : "cursor-pointer";
+  const widthClass = fullWidth ? "w-full" : "";
 
   return (
     <button
-      style={combinedStyles}
+      className={`${baseClasses} ${sizeClasses[size]} ${variantClasses[variant]} ${disabledClasses} ${widthClass} ${className}`}
       disabled={disabled || loading}
       {...props}
     >
-      {loading && <span style={{ marginRight: "8px" }}>...</span>}
+      {loading && <span className="mr-2">...</span>}
       {children}
     </button>
   );

@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "../../context/ThemeContext";
 import { lawyerApi } from "../../services/lawyer.api";
 import { constantsApi } from "../../services/constants.api";
 import { Card, Button, Input, Select, Badge } from "../../components/ui";
 
 export default function ClientSearchPage() {
-  const { colors } = useTheme();
   const navigate = useNavigate();
   const [lawyers, setLawyers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -76,8 +74,8 @@ export default function ClientSearchPage() {
 
   return (
     <div>
-      <Card style={{ marginBottom: "24px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr auto", gap: "12px", alignItems: "flex-end" }}>
+      <Card className="mb-6">
+        <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] gap-3 items-end">
           <Input
             label="Search"
             placeholder="Search by name or keyword..."
@@ -116,56 +114,44 @@ export default function ClientSearchPage() {
             onChange={(e) => handleFilterChange("maxRate", e.target.value)}
             containerStyle={{ marginBottom: 0 }}
           />
-          <Button onClick={handleSearch} style={{ marginBottom: "16px" }}>
+          <Button onClick={handleSearch} className="mb-4">
             Search
           </Button>
         </div>
       </Card>
 
       {loading ? (
-        <div style={{ textAlign: "center", padding: "40px", color: colors.text.secondary }}>
+        <div className="text-center py-10 text-text-secondary">
           Loading lawyers...
         </div>
       ) : lawyers.length === 0 ? (
         <Card>
-          <div style={{ textAlign: "center", padding: "40px", color: colors.text.secondary }}>
+          <div className="text-center py-10 text-text-secondary">
             <p>No lawyers found matching your criteria.</p>
-            <p style={{ fontSize: "14px", marginTop: "8px" }}>
+            <p className="text-sm mt-2">
               Try adjusting your filters or search terms.
             </p>
           </div>
         </Card>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "16px" }}>
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
           {lawyers.map((lawyer) => (
-            <Card key={lawyer._id} style={{ cursor: "pointer" }} onClick={() => navigate(`/lawyers/${lawyer.userId}`)}>
-              <div style={{ display: "flex", gap: "16px" }}>
-                <div
-                  style={{
-                    width: "80px",
-                    height: "80px",
-                    borderRadius: "50%",
-                    backgroundColor: colors.surface,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "32px",
-                    flexShrink: 0,
-                  }}
-                >
+            <Card key={lawyer._id} className="cursor-pointer" onClick={() => navigate(`/lawyers/${lawyer.userId}`)}>
+              <div className="flex gap-4">
+                <div className="w-20 h-20 rounded-full bg-surface flex items-center justify-center text-[32px] flex-shrink-0">
                   {lawyer.profileImage ? (
                     <img
                       src={lawyer.profileImage}
                       alt={lawyer.fullName}
-                      style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }}
+                      className="w-full h-full rounded-full object-cover"
                     />
                   ) : (
                     "👤"
                   )}
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                    <h3 style={{ fontSize: "16px", fontWeight: "600", color: colors.text.primary, margin: 0 }}>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-base font-semibold text-text-primary m-0">
                       {lawyer.fullName}
                     </h3>
                     {lawyer.verificationStatus === "APPROVED" && (
@@ -175,19 +161,19 @@ export default function ClientSearchPage() {
                       <Badge variant="warning" size="sm">Featured</Badge>
                     )}
                   </div>
-                  <div style={{ color: "#ffc107", fontSize: "14px", marginBottom: "4px" }}>
+                  <div className="text-warning text-sm mb-1">
                     {renderStars(lawyer.ratingAvg || 0)} ({lawyer.ratingCount || 0})
                   </div>
-                  <div style={{ color: colors.text.secondary, fontSize: "13px", marginBottom: "8px" }}>
+                  <div className="text-text-secondary text-xs mb-2">
                     {lawyer.city || "Location not specified"} • {lawyer.experienceYears || 0} years exp.
                   </div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "8px" }}>
+                  <div className="flex flex-wrap gap-1 mb-2">
                     {(lawyer.specialization || []).slice(0, 3).map((spec) => (
                       <Badge key={spec} size="sm">{spec}</Badge>
                     ))}
                   </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontWeight: "600", color: colors.text.primary }}>
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold text-text-primary">
                       ${lawyer.hourlyRate || 0}/hr
                     </span>
                     <Button size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/lawyers/${lawyer.userId}`); }}>

@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { createSocket } from "../../services/socket";
 import { useAuth } from "../../hooks/useAuth";
-import { useTheme } from "../../context/ThemeContext";
 import { bookingApi } from "../../services/booking.api";
 import { Button, Input } from "../../components/ui";
 
@@ -10,7 +9,6 @@ export default function SessionChat() {
   const { bookingId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { colors } = useTheme();
   const messagesEndRef = useRef(null);
   const bootedRef = useRef(false);
 
@@ -95,59 +93,23 @@ export default function SessionChat() {
     }
   }
 
-  const containerStyles = {
-    minHeight: "100vh",
-    backgroundColor: colors.background,
-    padding: "24px",
-  };
-
-  const headerStyles = {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "24px",
-  };
-
-  const chatContainerStyles = {
-    border: `1px solid ${colors.border}`,
-    borderRadius: "8px",
-    backgroundColor: colors.card,
-    height: "500px",
-    display: "flex",
-    flexDirection: "column",
-  };
-
-  const messagesStyles = {
-    flex: 1,
-    overflowY: "auto",
-    padding: "16px",
-  };
-
-  const inputContainerStyles = {
-    display: "flex",
-    gap: "12px",
-    padding: "16px",
-    borderTop: `1px solid ${colors.border}`,
-    alignItems: "center",
-  };
-
   if (loading) {
     return (
-      <div style={{ ...containerStyles, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <p style={{ color: colors.text.secondary }}>Loading chat...</p>
+      <div className="min-h-screen bg-background p-6 flex items-center justify-center">
+        <p className="text-text-secondary">Loading chat...</p>
       </div>
     );
   }
 
   return (
-    <div style={containerStyles}>
-      <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-        <div style={headerStyles}>
+    <div className="min-h-screen bg-background p-6">
+      <div className="max-w-[800px] mx-auto">
+        <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 style={{ fontSize: "24px", fontWeight: "bold", color: colors.text.primary, marginBottom: "4px" }}>
+            <h1 className="text-2xl font-bold text-text-primary mb-1">
               Session Chat
             </h1>
-            <p style={{ color: colors.text.secondary, fontSize: "14px" }}>
+            <p className="text-text-secondary text-sm">
               {booking?.consultationType || "CHAT"} session • {booking?.durationMinutes || 30} minutes
             </p>
           </div>
@@ -156,37 +118,27 @@ export default function SessionChat() {
           </Button>
         </div>
 
-        <div style={chatContainerStyles}>
-          <div style={messagesStyles}>
+        <div className="border border-border rounded-lg bg-card h-[500px] flex flex-col">
+          <div className="flex-1 overflow-y-auto p-4">
             {items.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "40px", color: colors.text.secondary }}>
+              <div className="text-center py-10 text-text-secondary">
                 <p>No messages yet. Start the conversation!</p>
               </div>
             ) : (
               items.map((m) => (
                 <div
                   key={m._id}
-                  style={{
-                    marginBottom: "12px",
-                    display: "flex",
-                    justifyContent: m.senderId === user?.id ? "flex-end" : "flex-start",
-                  }}
+                  className={`mb-3 flex ${m.senderId === user?.id ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    style={{
-                      maxWidth: "70%",
-                      padding: "12px 16px",
-                      borderRadius: "12px",
-                      backgroundColor: m.senderId === user?.id ? colors.button.primary : colors.surface,
-                      color: m.senderId === user?.id ? colors.button.primaryText : colors.text.primary,
-                    }}
+                    className={`max-w-[70%] py-3 px-4 rounded-xl ${
+                      m.senderId === user?.id 
+                        ? "bg-primary text-primary-text" 
+                        : "bg-surface text-text-primary"
+                    }`}
                   >
-                    <p style={{ margin: 0, fontSize: "14px" }}>{m.text}</p>
-                    <p style={{ 
-                      margin: "4px 0 0 0", 
-                      fontSize: "11px", 
-                      opacity: 0.7 
-                    }}>
+                    <p className="m-0 text-sm">{m.text}</p>
+                    <p className="mt-1 mb-0 text-[11px] opacity-70">
                       {new Date(m.createdAt).toLocaleTimeString()}
                     </p>
                   </div>
@@ -196,14 +148,14 @@ export default function SessionChat() {
             <div ref={messagesEndRef} />
           </div>
 
-          <div style={inputContainerStyles}>
+          <div className="flex gap-3 p-4 border-t border-border items-center">
             <Input
               type="text"
               value={text}
               onChange={(e) => setText(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Type your message..."
-              containerStyle={{ flex: 1, marginBottom: 0 }}
+              containerClassName="flex-1 mb-0"
             />
             <Button onClick={send} disabled={!text.trim()}>
               Send

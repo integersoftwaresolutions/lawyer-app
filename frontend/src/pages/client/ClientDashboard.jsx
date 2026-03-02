@@ -1,14 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import { useTheme } from "../../context/ThemeContext";
 import LawyerSearch from "../public/LawyerSearch.jsx";
 
 export default function ClientDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
-  const { colors } = useTheme();
 
   const menuItems = [
     { id: "overview", label: "Overview", icon: "🏠" },
@@ -24,152 +22,64 @@ export default function ClientDashboard() {
     navigate("/login");
   };
 
-  const styles = {
-    container: {
-      minHeight: '100vh',
-      backgroundColor: colors.background,
-      color: colors.text.primary,
-      padding: '20px'
-    },
-    header: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: '32px'
-    },
-    title: {
-      fontSize: '32px',
-      fontWeight: 'bold',
-      color: colors.text.primary
-    },
-    sidebar: {
-      width: '250px',
-      border: `1px solid ${colors.border}`,
-      borderRadius: '8px',
-      backgroundColor: colors.card,
-      padding: '16px',
-      height: 'fit-content'
-    },
-    sidebarButton: {
-      width: '100%',
-      padding: '12px',
-      borderRadius: '4px',
-      border: 'none',
-      backgroundColor: 'transparent',
-      color: colors.text.secondary,
-      cursor: 'pointer',
-      textAlign: 'left',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '12px',
-      marginBottom: '8px'
-    },
-    sidebarButtonActive: {
-      backgroundColor: colors.button.primary,
-      color: colors.button.primaryText
-    },
-    mainContent: {
-      flex: 1,
-      marginLeft: '32px'
-    },
-    card: {
-      border: `1px solid ${colors.border}`,
-      borderRadius: '8px',
-      backgroundColor: colors.card,
-      padding: '24px',
-      marginBottom: '24px'
-    },
-    cardTitle: {
-      fontSize: '20px',
-      fontWeight: 'bold',
-      marginBottom: '16px',
-      color: colors.text.primary
-    },
-    statCard: {
-      border: `1px solid ${colors.border}`,
-      borderRadius: '8px',
-      backgroundColor: colors.surface,
-      padding: '20px',
-      textAlign: 'center'
-    },
-    statNumber: {
-      fontSize: '32px',
-      fontWeight: 'bold',
-      marginBottom: '8px',
-      color: colors.text.primary
-    },
-    statLabel: {
-      fontSize: '14px',
-      color: colors.text.secondary
-    },
-    button: {
-      padding: '12px 24px',
-      borderRadius: '4px',
-      border: 'none',
-      backgroundColor: colors.button.primary,
-      color: colors.button.primaryText,
-      cursor: 'pointer',
-      fontWeight: '500'
-    }
-  };
 
   const renderContent = () => {
     switch (activeTab) {
       case "overview":
         return (
           <div>
-            <div style={styles.card}>
-              <h2 style={styles.cardTitle}>
+            <div className="border border-border rounded-lg bg-card p-6 mb-6">
+              <h2 className="text-xl font-bold mb-4 text-text-primary">
                 Welcome back, {user?.fullName || "Client"}!
               </h2>
-              <p style={{ color: colors.text.secondary, marginBottom: '24px' }}>
+              <p className="text-text-secondary mb-6">
                 Manage your legal consultations and connect with expert lawyers
               </p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '32px' }}>
-              <div style={styles.statCard}>
-                <div style={{ fontSize: '32px', marginBottom: '8px' }}>🔍</div>
-                <h3 style={styles.statNumber}>12</h3>
-                <p style={styles.statLabel}>Lawyers Found</p>
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-8">
+              <div className="border border-border rounded-lg bg-surface p-5 text-center">
+                <div className="text-[32px] mb-2">🔍</div>
+                <h3 className="text-[32px] font-bold mb-2 text-text-primary">12</h3>
+                <p className="text-sm text-text-secondary">Lawyers Found</p>
               </div>
 
-              <div style={styles.statCard}>
-                <div style={{ fontSize: '32px', marginBottom: '8px' }}>📅</div>
-                <h3 style={styles.statNumber}>3</h3>
-                <p style={styles.statLabel}>Upcoming Sessions</p>
+              <div className="border border-border rounded-lg bg-surface p-5 text-center">
+                <div className="text-[32px] mb-2">📅</div>
+                <h3 className="text-[32px] font-bold mb-2 text-text-primary">3</h3>
+                <p className="text-sm text-text-secondary">Upcoming Sessions</p>
               </div>
 
-              <div style={styles.statCard}>
-                <div style={{ fontSize: '32px', marginBottom: '8px' }}>💳</div>
-                <h3 style={styles.statNumber}>$250</h3>
-                <p style={styles.statLabel}>Wallet Balance</p>
+              <div className="border border-border rounded-lg bg-surface p-5 text-center">
+                <div className="text-[32px] mb-2">💳</div>
+                <h3 className="text-[32px] font-bold mb-2 text-text-primary">$250</h3>
+                <p className="text-sm text-text-secondary">Wallet Balance</p>
               </div>
 
-              <div style={styles.statCard}>
-                <div style={{ fontSize: '32px', marginBottom: '8px' }}>⭐</div>
-                <h3 style={styles.statNumber}>4.8</h3>
-                <p style={styles.statLabel}>Average Rating</p>
+              <div className="border border-border rounded-lg bg-surface p-5 text-center">
+                <div className="text-[32px] mb-2">⭐</div>
+                <h3 className="text-[32px] font-bold mb-2 text-text-primary">4.8</h3>
+                <p className="text-sm text-text-secondary">Average Rating</p>
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-              <div style={styles.card}>
-                <h3 style={styles.cardTitle}>Recent Activity</h3>
-                <div style={{ color: colors.text.secondary }}>
+            <div className="grid grid-cols-2 gap-6">
+              <div className="border border-border rounded-lg bg-card p-6 mb-6">
+                <h3 className="text-xl font-bold mb-4 text-text-primary">Recent Activity</h3>
+                <div className="text-text-secondary">
                   <p>• Consultation with John Doe completed</p>
                   <p>• New message from Sarah Smith</p>
                   <p>• Payment processed for 2 sessions</p>
                 </div>
               </div>
 
-              <div style={styles.card}>
-                <h3 style={styles.cardTitle}>Quick Actions</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <button style={styles.button} onClick={() => setActiveTab("search")}>
+              <div className="border border-border rounded-lg bg-card p-6 mb-6">
+                <h3 className="text-xl font-bold mb-4 text-text-primary">Quick Actions</h3>
+                <div className="flex flex-col gap-3">
+                  <button className="py-3 px-6 rounded border-none bg-primary text-primary-text cursor-pointer font-medium" onClick={() => setActiveTab("search")}>
                     Find Lawyers
                   </button>
-                  <button style={{ ...styles.button, backgroundColor: colors.button.secondary, color: colors.button.secondaryText, border: `1px solid ${colors.border}` }}>
+                  <button className="py-3 px-6 rounded border border-border bg-secondary text-secondary-text cursor-pointer font-medium">
                     Book Session
                   </button>
                 </div>
@@ -183,9 +93,9 @@ export default function ClientDashboard() {
 
       case "bookings":
         return (
-          <div style={styles.card}>
-            <h2 style={styles.cardTitle}>My Bookings</h2>
-            <div style={{ color: colors.text.secondary }}>
+          <div className="border border-border rounded-lg bg-card p-6 mb-6">
+            <h2 className="text-xl font-bold mb-4 text-text-primary">My Bookings</h2>
+            <div className="text-text-secondary">
               <p>No upcoming bookings</p>
             </div>
           </div>
@@ -193,21 +103,21 @@ export default function ClientDashboard() {
 
       case "wallet":
         return (
-          <div style={styles.card}>
-            <h2 style={styles.cardTitle}>Wallet & Credits</h2>
-            <div style={{ marginBottom: '24px' }}>
-              <h3 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '8px' }}>$250.00</h3>
-              <p style={{ color: colors.text.secondary }}>Current Balance</p>
+          <div className="border border-border rounded-lg bg-card p-6 mb-6">
+            <h2 className="text-xl font-bold mb-4 text-text-primary">Wallet & Credits</h2>
+            <div className="mb-6">
+              <h3 className="text-2xl font-bold mb-2">$250.00</h3>
+              <p className="text-text-secondary">Current Balance</p>
             </div>
-            <button style={styles.button}>Add Funds</button>
+            <button className="py-3 px-6 rounded border-none bg-primary text-primary-text cursor-pointer font-medium">Add Funds</button>
           </div>
         );
 
       case "reviews":
         return (
-          <div style={styles.card}>
-            <h2 style={styles.cardTitle}>My Reviews</h2>
-            <div style={{ color: colors.text.secondary }}>
+          <div className="border border-border rounded-lg bg-card p-6 mb-6">
+            <h2 className="text-xl font-bold mb-4 text-text-primary">My Reviews</h2>
+            <div className="text-text-secondary">
               <p>No reviews yet</p>
             </div>
           </div>
@@ -215,9 +125,9 @@ export default function ClientDashboard() {
 
       case "profile":
         return (
-          <div style={styles.card}>
-            <h2 style={styles.cardTitle}>My Profile</h2>
-            <div style={{ color: colors.text.secondary }}>
+          <div className="border border-border rounded-lg bg-card p-6 mb-6">
+            <h2 className="text-xl font-bold mb-4 text-text-primary">My Profile</h2>
+            <div className="text-text-secondary">
               <p>Email: {user?.email}</p>
               <p>Role: {user?.role}</p>
             </div>
@@ -230,31 +140,32 @@ export default function ClientDashboard() {
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <h1 style={styles.title}>Client Dashboard</h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <span style={{ color: colors.text.secondary }}>Welcome, {user?.fullName || "Client"}</span>
+    <div className="min-h-screen bg-background text-text-primary p-5">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-[32px] font-bold text-text-primary">Client Dashboard</h1>
+        <div className="flex items-center gap-4">
+          <span className="text-text-secondary">Welcome, {user?.fullName || "Client"}</span>
           <button
             onClick={handleLogout}
-            style={{ ...styles.button, backgroundColor: '#dc3545', color: 'white' }}
+            className="py-3 px-6 rounded bg-danger text-danger-text cursor-pointer font-medium"
           >
             Logout
           </button>
         </div>
       </div>
 
-      <div style={{ display: 'flex' }}>
-        <div style={styles.sidebar}>
+      <div className="flex">
+        <div className="w-[250px] border border-border rounded-lg bg-card p-4 h-fit">
           <nav>
             {menuItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                style={{
-                  ...styles.sidebarButton,
-                  ...(activeTab === item.id ? styles.sidebarButtonActive : {})
-                }}
+                className={`w-full py-3 px-3 rounded border-none bg-transparent cursor-pointer text-left flex items-center gap-3 mb-2 ${
+                  activeTab === item.id 
+                    ? "bg-primary text-primary-text" 
+                    : "text-text-secondary"
+                }`}
               >
                 <span>{item.icon}</span>
                 <span>{item.label}</span>
@@ -263,7 +174,7 @@ export default function ClientDashboard() {
           </nav>
         </div>
 
-        <div style={styles.mainContent}>
+        <div className="flex-1 ml-8">
           {renderContent()}
         </div>
       </div>

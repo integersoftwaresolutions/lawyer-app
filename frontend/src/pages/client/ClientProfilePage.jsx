@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "../../context/ThemeContext";
 import { clientApi } from "../../services/client.api";
 import { Card, Button, Input } from "../../components/ui";
 
 export default function ClientProfilePage() {
-  const { colors } = useTheme();
   const [profile, setProfile] = useState({
     fullName: "",
     phone: "",
@@ -47,13 +45,13 @@ export default function ClientProfilePage() {
   };
 
   if (loading) {
-    return <div style={{ padding: "24px", color: colors.text.secondary }}>Loading...</div>;
+    return <div className="p-6 text-text-secondary">Loading...</div>;
   }
 
   return (
     <div>
       <Card title="My Profile" subtitle="Update your personal information">
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+        <div className="grid grid-cols-2 gap-4">
           <Input
             label="Full Name"
             value={profile.fullName || ""}
@@ -79,7 +77,7 @@ export default function ClientProfilePage() {
             placeholder="Enter your address"
           />
         </div>
-        <div style={{ marginTop: "24px" }}>
+        <div className="mt-6">
           <Button onClick={handleSave} loading={saving}>
             Save Changes
           </Button>

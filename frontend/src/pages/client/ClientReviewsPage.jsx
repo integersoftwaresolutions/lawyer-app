@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "../../context/ThemeContext";
 import { clientApi } from "../../services/client.api";
 import { Card, Badge } from "../../components/ui";
 
 export default function ClientReviewsPage() {
-  const { colors } = useTheme();
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -36,48 +34,44 @@ export default function ClientReviewsPage() {
   };
 
   if (loading) {
-    return <div style={{ padding: "24px", color: colors.text.secondary }}>Loading...</div>;
+    return <div className="p-6 text-text-secondary">Loading...</div>;
   }
 
   return (
     <div>
       <Card title="My Reviews" subtitle="Reviews you've given to lawyers">
         {reviews.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "40px", color: colors.text.secondary }}>
+          <div className="text-center py-10 text-text-secondary">
             <p>You haven't written any reviews yet.</p>
-            <p style={{ fontSize: "14px", marginTop: "8px" }}>
+            <p className="text-sm mt-2">
               Complete a consultation to leave a review.
             </p>
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <div className="flex flex-col gap-4">
             {reviews.map((review) => (
               <div
                 key={review._id}
-                style={{
-                  border: `1px solid ${colors.border}`,
-                  borderRadius: "8px",
-                  padding: "16px",
-                }}
+                className="border border-border rounded-lg p-4"
               >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+                <div className="flex justify-between items-start mb-3">
                   <div>
-                    <div style={{ color: "#ffc107", fontSize: "18px", marginBottom: "4px" }}>
+                    <div className="text-warning text-lg mb-1">
                       {renderStars(review.rating)}
                     </div>
-                    <div style={{ color: colors.text.secondary, fontSize: "13px" }}>
+                    <div className="text-text-secondary text-xs">
                       Lawyer: {review.lawyerUserId?.email || "N/A"}
                     </div>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{ color: colors.text.muted, fontSize: "13px" }}>
+                  <div className="flex items-center gap-2">
+                    <span className="text-text-muted text-xs">
                       {formatDate(review.createdAt)}
                     </span>
                     {review.isDisputed && <Badge variant="warning">Disputed</Badge>}
                   </div>
                 </div>
                 {review.comment && (
-                  <p style={{ color: colors.text.primary, margin: 0, fontSize: "14px" }}>
+                  <p className="text-text-primary m-0 text-sm">
                     {review.comment}
                   </p>
                 )}

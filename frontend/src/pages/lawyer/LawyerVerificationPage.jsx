@@ -1,10 +1,8 @@
 import { useRef, useState, useEffect } from "react";
-import { useTheme } from "../../context/ThemeContext";
 import { lawyerApi } from "../../services/lawyer.api";
 import { Card, Badge, Button } from "../../components/ui";
 
 export default function LawyerVerificationPage() {
-  const { colors } = useTheme();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploadingType, setUploadingType] = useState(null);
@@ -54,7 +52,7 @@ export default function LawyerVerificationPage() {
   };
 
   if (loading) {
-    return <div style={{ padding: "24px", color: colors.text.secondary }}>Loading...</div>;
+    return <div className="p-6 text-text-secondary">Loading...</div>;
   }
 
   const getStatusBadge = (status) => {
@@ -77,18 +75,18 @@ export default function LawyerVerificationPage() {
       <input
         ref={fileInputRef}
         type="file"
-        style={{ display: "none" }}
+        className="hidden"
         onChange={onFileSelected}
         accept="image/*,application/pdf"
       />
 
-      <Card style={{ marginBottom: "24px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <Card className="mb-6">
+        <div className="flex justify-between items-center">
           <div>
-            <h2 style={{ fontSize: "20px", fontWeight: "bold", color: colors.text.primary, marginBottom: "8px" }}>
+            <h2 className="text-xl font-bold text-text-primary mb-2">
               Verification Status
             </h2>
-            <p style={{ color: colors.text.secondary, margin: 0 }}>
+            <p className="text-text-secondary m-0">
               {profile?.verificationStatus === "APPROVED" 
                 ? "Your profile has been verified. You can now receive bookings from clients."
                 : profile?.verificationStatus === "REJECTED"
@@ -100,15 +98,11 @@ export default function LawyerVerificationPage() {
         </div>
 
         {profile?.verificationNotes && (
-          <div style={{ 
-            marginTop: "16px", 
-            padding: "12px", 
-            backgroundColor: colors.surface, 
-            borderRadius: "6px",
-            borderLeft: `4px solid ${profile?.verificationStatus === "REJECTED" ? "#dc3545" : "#ffc107"}`
-          }}>
-            <strong style={{ color: colors.text.primary }}>Admin Notes:</strong>
-            <p style={{ color: colors.text.secondary, margin: "8px 0 0 0" }}>
+          <div className={`mt-4 p-3 bg-surface rounded-md border-l-4 ${
+            profile?.verificationStatus === "REJECTED" ? "border-danger" : "border-warning"
+          }`}>
+            <strong className="text-text-primary">Admin Notes:</strong>
+            <p className="text-text-secondary mt-2 m-0">
               {profile.verificationNotes}
             </p>
           </div>
@@ -116,29 +110,22 @@ export default function LawyerVerificationPage() {
       </Card>
 
       <Card title="Required Documents" subtitle="Upload the following documents for verification">
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <div className="flex flex-col gap-4">
           {documents.map((doc) => (
             <div
               key={doc.type}
-              style={{
-                border: `1px solid ${colors.border}`,
-                borderRadius: "8px",
-                padding: "16px",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
+              className="border border-border rounded-lg p-4 flex justify-between items-center"
             >
               <div>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                  <span style={{ fontWeight: "600", color: colors.text.primary }}>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-semibold text-text-primary">
                     {doc.label}
                   </span>
                   {doc.required && (
                     <Badge variant="danger" size="sm">Required</Badge>
                   )}
                 </div>
-                <p style={{ color: colors.text.secondary, margin: 0, fontSize: "13px" }}>
+                <p className="text-text-secondary m-0 text-xs">
                   Upload a clear copy of your {doc.label.toLowerCase()}
                 </p>
               </div>
@@ -154,19 +141,14 @@ export default function LawyerVerificationPage() {
           ))}
         </div>
 
-        <div style={{ 
-          marginTop: "24px", 
-          padding: "16px", 
-          backgroundColor: colors.surface, 
-          borderRadius: "8px" 
-        }}>
-          <h4 style={{ color: colors.text.primary, marginBottom: "8px" }}>
+        <div className="mt-6 p-4 bg-surface rounded-lg">
+          <h4 className="text-text-primary mb-2">
             Verification Process
           </h4>
-          <ol style={{ color: colors.text.secondary, paddingLeft: "20px", margin: 0 }}>
-            <li style={{ marginBottom: "8px" }}>Upload all required documents</li>
-            <li style={{ marginBottom: "8px" }}>Our admin team will review your documents within 1-3 business days</li>
-            <li style={{ marginBottom: "8px" }}>Once approved, you'll receive a verification badge on your profile</li>
+          <ol className="text-text-secondary pl-5 m-0">
+            <li className="mb-2">Upload all required documents</li>
+            <li className="mb-2">Our admin team will review your documents within 1-3 business days</li>
+            <li className="mb-2">Once approved, you'll receive a verification badge on your profile</li>
             <li>Verified lawyers appear higher in search results and can receive more bookings</li>
           </ol>
         </div>

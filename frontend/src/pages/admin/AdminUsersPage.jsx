@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "../../context/ThemeContext";
 import { adminApi } from "../../services/admin.api";
 import { Card, Button, Badge } from "../../components/ui";
 
 export default function AdminUsersPage() {
-  const { colors } = useTheme();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
@@ -50,35 +48,14 @@ export default function AdminUsersPage() {
     { value: "ADMIN", label: "Admins" },
   ];
 
-  const tableStyles = {
-    width: "100%",
-    borderCollapse: "collapse",
-  };
-
-  const thStyles = {
-    textAlign: "left",
-    padding: "12px",
-    borderBottom: `1px solid ${colors.border}`,
-    color: colors.text.secondary,
-    fontSize: "13px",
-    fontWeight: "600",
-  };
-
-  const tdStyles = {
-    padding: "12px",
-    borderBottom: `1px solid ${colors.border}`,
-    color: colors.text.primary,
-    fontSize: "14px",
-  };
-
   return (
     <div>
       <Card>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-          <h2 style={{ fontSize: "20px", fontWeight: "bold", color: colors.text.primary, margin: 0 }}>
+        <div className="flex justify-between items-center mb-5">
+          <h2 className="text-xl font-bold text-text-primary m-0">
             All Users
           </h2>
-          <div style={{ display: "flex", gap: "8px" }}>
+          <div className="flex gap-2">
             {filterOptions.map((opt) => (
               <Button
                 key={opt.value}
@@ -93,32 +70,32 @@ export default function AdminUsersPage() {
         </div>
 
         {loading ? (
-          <p style={{ color: colors.text.secondary }}>Loading...</p>
+          <p className="text-text-secondary">Loading...</p>
         ) : users.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "40px", color: colors.text.secondary }}>
+          <div className="text-center py-10 text-text-secondary">
             <p>No users found</p>
           </div>
         ) : (
-          <table style={tableStyles}>
+          <table className="w-full border-collapse">
             <thead>
               <tr>
-                <th style={thStyles}>Email</th>
-                <th style={thStyles}>Role</th>
-                <th style={thStyles}>Email Verified</th>
-                <th style={thStyles}>Joined</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Email</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Role</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Email Verified</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Joined</th>
               </tr>
             </thead>
             <tbody>
               {users.map((user) => (
                 <tr key={user._id}>
-                  <td style={tdStyles}>{user.email}</td>
-                  <td style={tdStyles}>{getRoleBadge(user.role)}</td>
-                  <td style={tdStyles}>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">{user.email}</td>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">{getRoleBadge(user.role)}</td>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">
                     <Badge variant={user.isEmailVerified ? "success" : "warning"}>
                       {user.isEmailVerified ? "Verified" : "Pending"}
                     </Badge>
                   </td>
-                  <td style={tdStyles}>{formatDate(user.createdAt)}</td>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">{formatDate(user.createdAt)}</td>
                 </tr>
               ))}
             </tbody>

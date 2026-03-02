@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "../../context/ThemeContext";
 import { adminApi } from "../../services/admin.api";
 import { Card, Button, Badge, Modal, Textarea, Select } from "../../components/ui";
 
 export default function AdminLawyersPage() {
-  const { colors } = useTheme();
   const [lawyers, setLawyers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
@@ -71,35 +69,14 @@ export default function AdminLawyersPage() {
     { value: "REJECTED", label: "Rejected" },
   ];
 
-  const tableStyles = {
-    width: "100%",
-    borderCollapse: "collapse",
-  };
-
-  const thStyles = {
-    textAlign: "left",
-    padding: "12px",
-    borderBottom: `1px solid ${colors.border}`,
-    color: colors.text.secondary,
-    fontSize: "13px",
-    fontWeight: "600",
-  };
-
-  const tdStyles = {
-    padding: "12px",
-    borderBottom: `1px solid ${colors.border}`,
-    color: colors.text.primary,
-    fontSize: "14px",
-  };
-
   return (
     <div>
       <Card>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-          <h2 style={{ fontSize: "20px", fontWeight: "bold", color: colors.text.primary, margin: 0 }}>
+        <div className="flex justify-between items-center mb-5">
+          <h2 className="text-xl font-bold text-text-primary m-0">
             All Lawyers
           </h2>
-          <div style={{ display: "flex", gap: "8px" }}>
+          <div className="flex gap-2">
             {filterOptions.map((opt) => (
               <Button
                 key={opt.value}
@@ -114,38 +91,38 @@ export default function AdminLawyersPage() {
         </div>
 
         {loading ? (
-          <p style={{ color: colors.text.secondary }}>Loading...</p>
+          <p className="text-text-secondary">Loading...</p>
         ) : lawyers.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "40px", color: colors.text.secondary }}>
+          <div className="text-center py-10 text-text-secondary">
             <p>No lawyers found</p>
           </div>
         ) : (
-          <table style={tableStyles}>
+          <table className="w-full border-collapse">
             <thead>
               <tr>
-                <th style={thStyles}>Name</th>
-                <th style={thStyles}>Email</th>
-                <th style={thStyles}>City</th>
-                <th style={thStyles}>Experience</th>
-                <th style={thStyles}>Rate</th>
-                <th style={thStyles}>Rating</th>
-                <th style={thStyles}>Status</th>
-                <th style={thStyles}>Joined</th>
-                <th style={thStyles}>Actions</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Name</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Email</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">City</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Experience</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Rate</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Rating</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Status</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Joined</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody>
               {lawyers.map((lawyer) => (
                 <tr key={lawyer._id}>
-                  <td style={tdStyles}>{lawyer.fullName}</td>
-                  <td style={tdStyles}>{lawyer.userId?.email || "N/A"}</td>
-                  <td style={tdStyles}>{lawyer.city || "-"}</td>
-                  <td style={tdStyles}>{lawyer.experienceYears || 0} yrs</td>
-                  <td style={tdStyles}>${lawyer.hourlyRate || 0}/hr</td>
-                  <td style={tdStyles}>{lawyer.ratingAvg?.toFixed(1) || "0.0"} ({lawyer.ratingCount || 0})</td>
-                  <td style={tdStyles}>{getStatusBadge(lawyer.verificationStatus)}</td>
-                  <td style={tdStyles}>{formatDate(lawyer.createdAt)}</td>
-                  <td style={tdStyles}>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">{lawyer.fullName}</td>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">{lawyer.userId?.email || "N/A"}</td>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">{lawyer.city || "-"}</td>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">{lawyer.experienceYears || 0} yrs</td>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">${lawyer.hourlyRate || 0}/hr</td>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">{lawyer.ratingAvg?.toFixed(1) || "0.0"} ({lawyer.ratingCount || 0})</td>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">{getStatusBadge(lawyer.verificationStatus)}</td>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">{formatDate(lawyer.createdAt)}</td>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">
                     <Button
                       size="sm"
                       variant="secondary"

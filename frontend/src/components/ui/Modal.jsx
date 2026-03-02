@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { useTheme } from "../../context/ThemeContext";
 import Button from "./Button";
 
 export default function Modal({ 
@@ -11,8 +10,6 @@ export default function Modal({
   size = "md",
   closeOnOverlay = true,
 }) {
-  const { colors } = useTheme();
-
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -26,75 +23,11 @@ export default function Modal({
 
   if (!isOpen) return null;
 
-  const sizeStyles = {
-    sm: { maxWidth: "400px" },
-    md: { maxWidth: "500px" },
-    lg: { maxWidth: "700px" },
-    xl: { maxWidth: "900px" },
-  };
-
-  const overlayStyles = {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 1000,
-    padding: "20px",
-  };
-
-  const modalStyles = {
-    backgroundColor: colors.card,
-    borderRadius: "12px",
-    width: "100%",
-    ...sizeStyles[size],
-    maxHeight: "90vh",
-    overflow: "hidden",
-    display: "flex",
-    flexDirection: "column",
-  };
-
-  const headerStyles = {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "20px 24px",
-    borderBottom: `1px solid ${colors.border}`,
-  };
-
-  const titleStyles = {
-    fontSize: "18px",
-    fontWeight: "600",
-    color: colors.text.primary,
-    margin: 0,
-  };
-
-  const closeButtonStyles = {
-    background: "none",
-    border: "none",
-    fontSize: "24px",
-    cursor: "pointer",
-    color: colors.text.secondary,
-    padding: "0",
-    lineHeight: "1",
-  };
-
-  const bodyStyles = {
-    padding: "24px",
-    overflowY: "auto",
-    flex: 1,
-  };
-
-  const footerStyles = {
-    padding: "16px 24px",
-    borderTop: `1px solid ${colors.border}`,
-    display: "flex",
-    justifyContent: "flex-end",
-    gap: "12px",
+  const sizeClasses = {
+    sm: "max-w-[400px]",
+    md: "max-w-[500px]",
+    lg: "max-w-[700px]",
+    xl: "max-w-[900px]",
   };
 
   const handleOverlayClick = (e) => {
@@ -104,16 +37,26 @@ export default function Modal({
   };
 
   return (
-    <div style={overlayStyles} onClick={handleOverlayClick}>
-      <div style={modalStyles}>
-        <div style={headerStyles}>
-          <h2 style={titleStyles}>{title}</h2>
-          <button style={closeButtonStyles} onClick={onClose}>
+    <div 
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-5" 
+      onClick={handleOverlayClick}
+    >
+      <div className={`bg-card rounded-xl w-full ${sizeClasses[size]} max-h-[90vh] overflow-hidden flex flex-col`}>
+        <div className="flex justify-between items-center py-5 px-6 border-b border-border">
+          <h2 className="text-lg font-semibold text-text-primary m-0">{title}</h2>
+          <button 
+            className="bg-transparent border-none text-2xl cursor-pointer text-text-secondary p-0 leading-none hover:text-text-primary transition-colors" 
+            onClick={onClose}
+          >
             ×
           </button>
         </div>
-        <div style={bodyStyles}>{children}</div>
-        {footer && <div style={footerStyles}>{footer}</div>}
+        <div className="p-6 overflow-y-auto flex-1">{children}</div>
+        {footer && (
+          <div className="py-4 px-6 border-t border-border flex justify-end gap-3">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,75 +1,29 @@
-import { useTheme } from "../../context/ThemeContext";
-
 export default function Checkbox({ 
   label,
   error,
   checked = false,
   onChange,
   id,
-  containerStyle = {},
+  containerClassName = "",
   ...props 
 }) {
-  const { colors } = useTheme();
-
-  const containerStyles = {
-    display: "flex",
-    alignItems: "flex-start",
-    gap: "10px",
-    marginBottom: "16px",
-    ...containerStyle,
-  };
-
-  const checkboxStyles = {
-    width: "18px",
-    height: "18px",
-    minWidth: "18px",
-    borderRadius: "4px",
-    border: `1px solid ${error ? "#dc3545" : colors.input.border}`,
-    backgroundColor: checked ? colors.button.primary : colors.input.background,
-    cursor: "pointer",
-    appearance: "none",
-    position: "relative",
-    marginTop: "2px",
-  };
-
-  const labelStyles = {
-    fontSize: "14px",
-    color: colors.text.secondary,
-    cursor: "pointer",
-    lineHeight: "1.5",
-  };
-
-  const errorStyles = {
-    marginTop: "4px",
-    fontSize: "12px",
-    color: "#dc3545",
-  };
-
-  const checkmarkStyles = {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    width: "10px",
-    height: "10px",
-    pointerEvents: "none",
-  };
-
   return (
     <div>
-      <div style={containerStyles}>
-        <div style={{ position: "relative", display: "inline-flex" }}>
+      <div className={`flex items-start gap-2.5 mb-4 ${containerClassName}`}>
+        <div className="relative inline-flex">
           <input 
             type="checkbox" 
             id={id}
             checked={checked}
             onChange={onChange}
-            style={checkboxStyles}
+            className={`w-[18px] h-[18px] min-w-[18px] rounded border ${
+              error ? "border-danger" : "border-input-border"
+            } ${checked ? "bg-primary" : "bg-input-background"} cursor-pointer appearance-none relative mt-0.5`}
             {...props} 
           />
           {checked && (
             <svg 
-              style={checkmarkStyles}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 pointer-events-none"
               viewBox="0 0 12 10" 
               fill="none"
             >
@@ -84,12 +38,12 @@ export default function Checkbox({
           )}
         </div>
         {label && (
-          <label htmlFor={id} style={labelStyles}>
+          <label htmlFor={id} className="text-sm text-text-secondary cursor-pointer leading-normal">
             {label}
           </label>
         )}
       </div>
-      {error && <p style={errorStyles}>{error}</p>}
+      {error && <p className="mt-1 text-xs text-danger">{error}</p>}
     </div>
   );
 }

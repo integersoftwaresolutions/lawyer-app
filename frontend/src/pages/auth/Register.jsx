@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { useAuth } from "../../hooks/useAuth";
-import { useTheme } from "../../context/ThemeContext";
 import { Input, Button, Select, Textarea, Checkbox } from "../../components/ui";
 import AuthLayout, { AuthDivider, AuthLink, ErrorMessage, FormSection, FormRow } from "./AuthLayout";
 
@@ -40,7 +39,6 @@ const INITIAL_FORM_DATA = {
 export default function Register() {
   const navigate = useNavigate();
   const { register } = useAuth();
-  const { colors } = useTheme();
   
   const [step, setStep] = useState(1);
   const [role, setRole] = useState("");
@@ -201,14 +199,13 @@ export default function Register() {
         onBack={() => setStep(1)}
         footer={authFooter}
       >
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+        <div className="flex gap-3 mb-6">
           <RoleCard
             icon="👤"
             title="Client"
             description="Find legal help"
             selected={role === "CLIENT"}
             onClick={() => setRole("CLIENT")}
-            colors={colors}
           />
           <RoleCard
             icon="⚖️"
@@ -216,7 +213,6 @@ export default function Register() {
             description="Offer services"
             selected={role === "LAWYER"}
             onClick={() => setRole("LAWYER")}
-            colors={colors}
           />
         </div>
 
@@ -397,26 +393,20 @@ export default function Register() {
   );
 }
 
-function RoleCard({ icon, title, description, selected, onClick, colors }) {
+function RoleCard({ icon, title, description, selected, onClick }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      style={{
-        flex: 1,
-        padding: '20px 16px',
-        borderRadius: '8px',
-        border: `2px solid ${selected ? colors.button.primary : colors.border}`,
-        backgroundColor: selected ? `${colors.button.primary}15` : 'transparent',
-        color: colors.text.primary,
-        cursor: 'pointer',
-        textAlign: 'center',
-        transition: 'all 0.2s ease',
-      }}
+      className={`flex-1 py-5 px-4 rounded-lg border-2 cursor-pointer text-center transition-all duration-200 ${
+        selected 
+          ? "border-primary bg-primary/10 text-text-primary" 
+          : "border-border bg-transparent text-text-primary"
+      }`}
     >
-      <div style={{ fontSize: '28px', marginBottom: '8px' }}>{icon}</div>
-      <div style={{ fontWeight: '600', marginBottom: '4px' }}>{title}</div>
-      <div style={{ fontSize: '12px', color: colors.text.secondary }}>
+      <div className="text-[28px] mb-2">{icon}</div>
+      <div className="font-semibold mb-1">{title}</div>
+      <div className="text-xs text-text-secondary">
         {description}
       </div>
     </button>

@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "../../context/ThemeContext";
 import { lawyerApi } from "../../services/lawyer.api";
 import { Card, Badge, StatCard, Button, Modal } from "../../components/ui";
 
 export default function LawyerEarningsPage() {
-  const { colors } = useTheme();
   const [earnings, setEarnings] = useState({ items: [], summary: {} });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -60,38 +58,12 @@ export default function LawyerEarningsPage() {
   };
 
   if (loading) {
-    return <div style={{ padding: "24px", color: colors.text.secondary }}>Loading...</div>;
+    return <div className="p-6 text-text-secondary">Loading...</div>;
   }
-
-  const tableStyles = {
-    width: "100%",
-    borderCollapse: "collapse",
-  };
-
-  const thStyles = {
-    textAlign: "left",
-    padding: "12px",
-    borderBottom: `1px solid ${colors.border}`,
-    color: colors.text.secondary,
-    fontSize: "13px",
-    fontWeight: "600",
-  };
-
-  const tdStyles = {
-    padding: "12px",
-    borderBottom: `1px solid ${colors.border}`,
-    color: colors.text.primary,
-    fontSize: "14px",
-  };
 
   return (
     <div>
-      <div style={{ 
-        display: "grid", 
-        gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", 
-        gap: "16px", 
-        marginBottom: "24px" 
-      }}>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-6">
         <StatCard
           icon="💰"
           value={`$${earnings.summary.totalEarnings || 0}`}
@@ -111,34 +83,32 @@ export default function LawyerEarningsPage() {
 
       <Card title="Transaction History">
         {earnings.items.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "40px", color: colors.text.secondary }}>
+          <div className="text-center py-10 text-text-secondary">
             <p>No transactions yet</p>
           </div>
         ) : (
-          <table style={tableStyles}>
+          <table className="w-full border-collapse">
             <thead>
               <tr>
-                <th style={thStyles}>Date</th>
-                <th style={thStyles}>Type</th>
-                <th style={thStyles}>Amount</th>
-                <th style={thStyles}>Note</th>
-                <th style={thStyles}>Actions</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Date</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Type</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Amount</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Note</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody>
               {earnings.items.map((item) => (
                 <tr key={item._id}>
-                  <td style={tdStyles}>{formatDate(item.createdAt)}</td>
-                  <td style={tdStyles}>{getTypeBadge(item.type)}</td>
-                  <td style={{
-                    ...tdStyles,
-                    color: item.amount >= 0 ? "#28a745" : "#dc3545",
-                    fontWeight: "600",
-                  }}>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">{formatDate(item.createdAt)}</td>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">{getTypeBadge(item.type)}</td>
+                  <td className={`p-3 border-b border-border text-sm font-semibold ${
+                    item.amount >= 0 ? "text-success" : "text-danger"
+                  }`}>
                     {item.amount >= 0 ? "+" : ""}${Math.abs(item.amount)}
                   </td>
-                  <td style={tdStyles}>{item.note || "-"}</td>
-                  <td style={tdStyles}>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">{item.note || "-"}</td>
+                  <td className="p-3 border-b border-border">
                     <Button
                       size="sm"
                       variant="danger"
@@ -169,7 +139,7 @@ export default function LawyerEarningsPage() {
           </>
         }
       >
-        <p style={{ color: colors.text.secondary, marginTop: 0 }}>
+        <p className="text-text-secondary mt-0">
           This will remove the item from your history. It will not change your wallet balance.
         </p>
       </Modal>

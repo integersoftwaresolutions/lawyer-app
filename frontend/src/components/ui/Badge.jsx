@@ -1,65 +1,29 @@
-import { useTheme } from "../../context/ThemeContext";
-
 export default function Badge({ 
   children, 
   variant = "default",
   size = "md",
-  style = {},
+  className = "",
   ...props 
 }) {
-  const { colors } = useTheme();
-
-  const baseStyles = {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: "20px",
-    fontWeight: "500",
-    whiteSpace: "nowrap",
+  const baseClasses = "inline-flex items-center justify-center rounded-full font-medium whitespace-nowrap";
+  
+  const sizeClasses = {
+    sm: "py-1 px-2 text-xs",
+    md: "py-1.5 px-3 text-xs",
+    lg: "py-2 px-4 text-sm",
   };
 
-  const sizeStyles = {
-    sm: { padding: "4px 8px", fontSize: "11px" },
-    md: { padding: "6px 12px", fontSize: "12px" },
-    lg: { padding: "8px 16px", fontSize: "14px" },
-  };
-
-  const variantStyles = {
-    default: {
-      backgroundColor: colors.surface,
-      color: colors.text.secondary,
-    },
-    primary: {
-      backgroundColor: colors.button.primary,
-      color: colors.button.primaryText,
-    },
-    success: {
-      backgroundColor: "#d4edda",
-      color: "#155724",
-    },
-    warning: {
-      backgroundColor: "#fff3cd",
-      color: "#856404",
-    },
-    danger: {
-      backgroundColor: "#f8d7da",
-      color: "#721c24",
-    },
-    info: {
-      backgroundColor: "#d1ecf1",
-      color: "#0c5460",
-    },
-  };
-
-  const combinedStyles = {
-    ...baseStyles,
-    ...sizeStyles[size],
-    ...variantStyles[variant],
-    ...style,
+  const variantClasses = {
+    default: "bg-surface text-text-secondary",
+    primary: "bg-primary text-primary-text",
+    success: "bg-success text-success-text",
+    warning: "bg-warning text-warning-text",
+    danger: "bg-danger text-danger-text",
+    info: "bg-info text-info-text",
   };
 
   return (
-    <span style={combinedStyles} {...props}>
+    <span className={`${baseClasses} ${sizeClasses[size]} ${variantClasses[variant]} ${className}`} {...props}>
       {children}
     </span>
   );

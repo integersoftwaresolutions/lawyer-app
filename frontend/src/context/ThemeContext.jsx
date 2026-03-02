@@ -18,47 +18,37 @@ export const ThemeProvider = ({ children }) => {
 
   useEffect(() => {
     localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+    // Apply theme class to document root
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+    }
   }, [isDarkMode]);
+
+  // Apply theme on mount
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
 
   const toggleTheme = () => setIsDarkMode(!isDarkMode);
 
   const theme = {
     isDarkMode,
     toggleTheme,
-    colors: {
-      background: isDarkMode ? '#000000' : '#FFFFFF',
-      surface: isDarkMode ? '#1A1A1A' : '#F8F9FA',
-      card: isDarkMode ? '#2A2A2A' : '#FFFFFF',
-      border: isDarkMode ? '#333333' : '#E5E7EB',
-      text: {
-        primary: isDarkMode ? '#FFFFFF' : '#000000',
-        secondary: isDarkMode ? '#9CA3AF' : '#6B7280',
-        muted: isDarkMode ? '#6B7280' : '#9CA3AF'
-      },
-      accent: isDarkMode ? '#FFFFFF' : '#000000',
-      input: {
-        background: isDarkMode ? '#1A1A1A' : '#FFFFFF',
-        border: isDarkMode ? '#333333' : '#D1D5DB',
-        text: isDarkMode ? '#FFFFFF' : '#000000',
-        placeholder: isDarkMode ? '#6B7280' : '#9CA3AF'
-      },
-      button: {
-        primary: isDarkMode ? '#FFFFFF' : '#000000',
-        primaryText: isDarkMode ? '#000000' : '#FFFFFF',
-        secondary: isDarkMode ? 'transparent' : 'transparent',
-        secondaryText: isDarkMode ? '#FFFFFF' : '#000000'
-      }
-    }
   };
 
   return (
     <ThemeContext.Provider value={theme}>
-      <div style={{ 
-        backgroundColor: theme.colors.background,
-        color: theme.colors.text.primary,
-        minHeight: '100vh',
-        transition: 'all 0.3s ease'
-      }}>
+      <div className="min-h-screen bg-background text-text-primary transition-colors duration-300">
         {children}
       </div>
     </ThemeContext.Provider>

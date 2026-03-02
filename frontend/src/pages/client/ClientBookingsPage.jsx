@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "../../context/ThemeContext";
 import { clientApi } from "../../services/client.api";
 import { Card, Button, Badge, Modal, Textarea, Input, Select } from "../../components/ui";
 
 export default function ClientBookingsPage() {
-  const { colors } = useTheme();
   const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -153,35 +151,15 @@ export default function ClientBookingsPage() {
     { value: "CANCELLED", label: "Cancelled" },
   ];
 
-  const tableStyles = {
-    width: "100%",
-    borderCollapse: "collapse",
-  };
-
-  const thStyles = {
-    textAlign: "left",
-    padding: "12px",
-    borderBottom: `1px solid ${colors.border}`,
-    color: colors.text.secondary,
-    fontSize: "13px",
-    fontWeight: "600",
-  };
-
-  const tdStyles = {
-    padding: "12px",
-    borderBottom: `1px solid ${colors.border}`,
-    color: colors.text.primary,
-    fontSize: "14px",
-  };
 
   return (
     <div>
       <Card>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-          <h2 style={{ fontSize: "20px", fontWeight: "bold", color: colors.text.primary, margin: 0 }}>
+        <div className="flex justify-between items-center mb-5">
+          <h2 className="text-xl font-bold text-text-primary m-0">
             My Bookings
           </h2>
-          <div style={{ display: "flex", gap: "8px" }}>
+          <div className="flex gap-2">
             {filterOptions.map((opt) => (
               <Button
                 key={opt.value}
@@ -196,36 +174,36 @@ export default function ClientBookingsPage() {
         </div>
 
         {loading ? (
-          <p style={{ color: colors.text.secondary }}>Loading...</p>
+          <p className="text-text-secondary">Loading...</p>
         ) : bookings.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "40px", color: colors.text.secondary }}>
+          <div className="text-center py-10 text-text-secondary">
             <p>No bookings found</p>
-            <Button style={{ marginTop: "16px" }} onClick={() => navigate("/client/search")}>
+            <Button className="mt-4" onClick={() => navigate("/client/search")}>
               Find Lawyers
             </Button>
           </div>
         ) : (
-          <table style={tableStyles}>
+          <table className="w-full border-collapse">
             <thead>
               <tr>
-                <th style={thStyles}>Lawyer</th>
-                <th style={thStyles}>Date & Time</th>
-                <th style={thStyles}>Duration</th>
-                <th style={thStyles}>Type</th>
-                <th style={thStyles}>Status</th>
-                <th style={thStyles}>Actions</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Lawyer</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Date & Time</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Duration</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Type</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Status</th>
+                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody>
               {bookings.map((booking) => (
                 <tr key={booking._id}>
-                  <td style={tdStyles}>{booking.lawyerUserId?.email || "N/A"}</td>
-                  <td style={tdStyles}>{formatDate(booking.startAt)}</td>
-                  <td style={tdStyles}>{booking.durationMinutes} min</td>
-                  <td style={tdStyles}>{booking.consultationType || "CHAT"}</td>
-                  <td style={tdStyles}>{getStatusBadge(booking.status)}</td>
-                  <td style={tdStyles}>
-                    <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">{booking.lawyerUserId?.email || "N/A"}</td>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">{formatDate(booking.startAt)}</td>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">{booking.durationMinutes} min</td>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">{booking.consultationType || "CHAT"}</td>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">{getStatusBadge(booking.status)}</td>
+                  <td className="p-3 border-b border-border text-text-primary text-sm">
+                    <div className="flex gap-2 flex-wrap">
                       {isEditableOrViewable(booking) && (
                         <>
                           <Button
@@ -286,20 +264,20 @@ export default function ClientBookingsPage() {
         }
       >
         {viewModal.booking && (
-          <div style={{ color: colors.text.primary }}>
-            <div style={{ marginBottom: "10px" }}>
+          <div className="text-text-primary">
+            <div className="mb-2.5">
               <strong>Lawyer:</strong> {viewModal.booking.lawyerUserId?.email || "N/A"}
             </div>
-            <div style={{ marginBottom: "10px" }}>
+            <div className="mb-2.5">
               <strong>Date & Time:</strong> {formatDate(viewModal.booking.startAt)}
             </div>
-            <div style={{ marginBottom: "10px" }}>
+            <div className="mb-2.5">
               <strong>Duration:</strong> {viewModal.booking.durationMinutes} minutes
             </div>
-            <div style={{ marginBottom: "10px" }}>
+            <div className="mb-2.5">
               <strong>Type:</strong> {viewModal.booking.consultationType || "CHAT"}
             </div>
-            <div style={{ marginBottom: "10px" }}>
+            <div className="mb-2.5">
               <strong>Status:</strong> {viewModal.booking.status}
             </div>
           </div>
@@ -321,7 +299,7 @@ export default function ClientBookingsPage() {
           </>
         }
       >
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+        <div className="grid grid-cols-2 gap-3">
           <Input
             label="Date"
             type="date"
@@ -354,7 +332,7 @@ export default function ClientBookingsPage() {
           placeholder="Select duration"
           containerStyle={{ marginTop: "16px" }}
         />
-        <p style={{ marginTop: "8px", marginBottom: 0, color: colors.text.muted, fontSize: "13px" }}>
+        <p className="mt-2 mb-0 text-text-muted text-xs">
           Tip: Editing is allowed only for upcoming bookings. The new time must fit the lawyer availability.
         </p>
       </Modal>
@@ -374,7 +352,7 @@ export default function ClientBookingsPage() {
           </>
         }
       >
-        <p style={{ color: colors.text.secondary, marginTop: 0 }}>
+        <p className="text-text-secondary mt-0">
           This will remove the booking from your history. You can delete completed bookings too.
         </p>
       </Modal>
@@ -394,22 +372,18 @@ export default function ClientBookingsPage() {
           </>
         }
       >
-        <div style={{ marginBottom: "16px" }}>
-          <label style={{ display: "block", marginBottom: "8px", color: colors.text.secondary }}>
+        <div className="mb-4">
+          <label className="block mb-2 text-text-secondary">
             Rating
           </label>
-          <div style={{ display: "flex", gap: "8px" }}>
+          <div className="flex gap-2">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
                 key={star}
                 onClick={() => setReviewData({ ...reviewData, rating: star })}
-                style={{
-                  background: "none",
-                  border: "none",
-                  fontSize: "24px",
-                  cursor: "pointer",
-                  color: star <= reviewData.rating ? "#ffc107" : colors.text.muted,
-                }}
+                className={`bg-transparent border-none text-2xl cursor-pointer ${
+                  star <= reviewData.rating ? "text-warning" : "text-text-muted"
+                }`}
               >
                 ★
               </button>

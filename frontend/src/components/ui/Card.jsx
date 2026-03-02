@@ -1,51 +1,19 @@
-import { useTheme } from "../../context/ThemeContext";
-
 export default function Card({ 
   children, 
   title,
   subtitle,
   headerAction,
-  padding = "24px",
-  style = {},
+  padding = "p-6",
+  className = "",
   ...props 
 }) {
-  const { colors } = useTheme();
-
-  const cardStyles = {
-    border: `1px solid ${colors.border}`,
-    borderRadius: "8px",
-    backgroundColor: colors.card,
-    padding,
-    ...style,
-  };
-
-  const headerStyles = {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: title || subtitle ? "16px" : 0,
-  };
-
-  const titleStyles = {
-    fontSize: "18px",
-    fontWeight: "600",
-    color: colors.text.primary,
-    margin: 0,
-  };
-
-  const subtitleStyles = {
-    fontSize: "14px",
-    color: colors.text.secondary,
-    marginTop: "4px",
-  };
-
   return (
-    <div style={cardStyles} {...props}>
+    <div className={`border border-card-border rounded-lg bg-card ${padding} ${className}`} {...props}>
       {(title || headerAction) && (
-        <div style={headerStyles}>
+        <div className={`flex justify-between items-center ${title || subtitle ? "mb-4" : ""}`}>
           <div>
-            {title && <h3 style={titleStyles}>{title}</h3>}
-            {subtitle && <p style={subtitleStyles}>{subtitle}</p>}
+            {title && <h3 className="text-lg font-semibold text-card-text m-0">{title}</h3>}
+            {subtitle && <p className="text-sm text-text-secondary mt-1">{subtitle}</p>}
           </div>
           {headerAction}
         </div>

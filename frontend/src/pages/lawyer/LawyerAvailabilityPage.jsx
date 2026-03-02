@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "../../context/ThemeContext";
 import { lawyerApi } from "../../services/lawyer.api";
 import { Card, Button, Input, Checkbox } from "../../components/ui";
 
@@ -15,7 +14,6 @@ const DAY_LABELS = {
 };
 
 export default function LawyerAvailabilityPage() {
-  const { colors } = useTheme();
   const [availability, setAvailability] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -84,29 +82,25 @@ export default function LawyerAvailabilityPage() {
   };
 
   if (loading) {
-    return <div style={{ padding: "24px", color: colors.text.secondary }}>Loading...</div>;
+    return <div className="p-6 text-text-secondary">Loading...</div>;
   }
 
   return (
     <div>
       <Card title="Weekly Availability" subtitle="Set your available hours for each day">
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <div className="flex flex-col gap-4">
           {DAYS.map((day) => (
             <div
               key={day}
-              style={{
-                border: `1px solid ${colors.border}`,
-                borderRadius: "8px",
-                padding: "16px",
-              }}
+              className="border border-border rounded-lg p-4"
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: availability[day]?.enabled ? "12px" : "0" }}>
+              <div className={`flex justify-between items-center ${availability[day]?.enabled ? "mb-3" : ""}`}>
                 <Checkbox
                   id={`day-${day}`}
                   label={DAY_LABELS[day]}
                   checked={availability[day]?.enabled || false}
                   onChange={() => toggleDay(day)}
-                  containerStyle={{ marginBottom: 0 }}
+                  containerClassName="mb-0"
                 />
                 {availability[day]?.enabled && (
                   <Button size="sm" variant="secondary" onClick={() => addSlot(day)}>
@@ -116,32 +110,32 @@ export default function LawyerAvailabilityPage() {
               </div>
 
               {availability[day]?.enabled && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginLeft: "30px" }}>
+                <div className="flex flex-col gap-2 ml-8">
                   {(availability[day]?.slots || []).map((slot, index) => (
-                    <div key={index} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <div key={index} className="flex items-center gap-3">
                       <Input
                         type="time"
                         value={slot.start || "09:00"}
                         onChange={(e) => updateSlot(day, index, "start", e.target.value)}
-                        containerStyle={{ marginBottom: 0, width: "auto" }}
+                        containerClassName="mb-0 w-auto"
                         fullWidth={false}
-                        style={{ padding: "8px 12px" }}
+                        className="py-2 px-3"
                       />
-                      <span style={{ color: colors.text.secondary }}>to</span>
+                      <span className="text-text-secondary">to</span>
                       <Input
                         type="time"
                         value={slot.end || "17:00"}
                         onChange={(e) => updateSlot(day, index, "end", e.target.value)}
-                        containerStyle={{ marginBottom: 0, width: "auto" }}
+                        containerClassName="mb-0 w-auto"
                         fullWidth={false}
-                        style={{ padding: "8px 12px" }}
+                        className="py-2 px-3"
                       />
                       {(availability[day]?.slots || []).length > 1 && (
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => removeSlot(day, index)}
-                          style={{ color: "#dc3545", padding: "4px 8px" }}
+                          className="text-danger py-1 px-2"
                         >
                           ×
                         </Button>
@@ -154,7 +148,7 @@ export default function LawyerAvailabilityPage() {
           ))}
         </div>
 
-        <div style={{ marginTop: "24px", display: "flex", justifyContent: "flex-end" }}>
+        <div className="mt-6 flex justify-end">
           <Button onClick={handleSave} loading={saving}>
             Save Availability
           </Button>

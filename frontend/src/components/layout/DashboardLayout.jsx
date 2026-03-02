@@ -1,9 +1,5 @@
-import { useTheme } from "../../context/ThemeContext";
-import { useAuth } from "../../hooks/useAuth";
-import { useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
-import Button from "../ui/Button";
-import ThemeToggle from "../ThemeToggle";
+import Navbar from "./Navbar";
 
 export default function DashboardLayout({ 
   children, 
@@ -11,84 +7,13 @@ export default function DashboardLayout({
   menuItems = [],
   basePath = "",
 }) {
-  const { colors } = useTheme();
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-
-  const containerStyles = {
-    minHeight: "100vh",
-    backgroundColor: colors.background,
-    color: colors.text.primary,
-    display: "flex",
-    flexDirection: "column",
-  };
-
-  const headerStyles = {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    flexWrap: "wrap",
-    rowGap: "12px",
-    padding: "20px 24px",
-    borderBottom: `1px solid ${colors.border}`,
-    backgroundColor: colors.card,
-    position: "fixed",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1000,
-  };
-
-  const titleStyles = {
-    fontSize: "24px",
-    fontWeight: "bold",
-    color: colors.text.primary,
-  };
-
-  const userInfoStyles = {
-    display: "flex",
-    alignItems: "center",
-    gap: "16px",
-  };
-
-  const contentWrapperStyles = {
-    display: "flex",
-    marginTop: "80px", // Approximate header height to account for fixed header
-    minHeight: "calc(100vh - 80px)",
-  };
-
-  const mainContentStyles = {
-    flex: 1,
-    minWidth: 0,
-    marginLeft: "260px", // Sidebar width
-    padding: "24px",
-    overflowY: "auto",
-    height: "calc(100vh - 80px)", // Full height minus header
-  };
-
-  const handleLogout = async () => {
-    await logout();
-    navigate("/login");
-  };
-
   return (
-    <div style={containerStyles}>
-      <header style={headerStyles}>
-        <h1 style={titleStyles}>{title}</h1>
-        <div style={userInfoStyles}>
-          <span style={{ color: colors.text.secondary, fontSize: "14px" }}>
-            Welcome, {user?.email || "User"}
-          </span>
-          <ThemeToggle />
-          <Button variant="danger" size="sm" onClick={handleLogout}>
-            Logout
-          </Button>
-        </div>
-      </header>
-
-      <div style={contentWrapperStyles}>
+    <div className="min-h-screen bg-background text-text-primary flex flex-col">
+      <Navbar />
+      
+      <div className="flex">
         <Sidebar items={menuItems} basePath={basePath} />
-        <main style={mainContentStyles}>
+        <main className="flex-1 min-w-0 ml-[260px] p-6 overflow-y-auto min-h-screen">
           {children}
         </main>
       </div>
