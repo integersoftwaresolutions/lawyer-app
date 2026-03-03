@@ -52,6 +52,20 @@ export function AuthProvider({ children }) {
           storage.clear();
           setUser(null);
         }
+      },
+      async refreshUser() {
+        try {
+          const res = await authApi.me();
+          setUser(res.data);
+          return res.data;
+        } catch (err) {
+          const status = err?.response?.status;
+          if (status === 401) {
+            storage.clear();
+            setUser(null);
+          }
+          throw err;
+        }
       }
     }),
     [user, loading]

@@ -40,3 +40,21 @@ export const logout = asyncHandler(async (req, res) => {
 export const me = asyncHandler(async (req, res) => {
   return sendSuccess(res, { message: "Me", data: req.user });
 });
+
+export const sendOtp = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  await authService.sendOtp(email);
+  return sendSuccess(res, { message: "Verification code sent to your email" });
+});
+
+export const verifyOtp = asyncHandler(async (req, res) => {
+  const { email, code } = req.body;
+  await authService.verifyOtp(email, code);
+  return sendSuccess(res, { message: "Email verified successfully" });
+});
+
+export const resendOtp = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  await authService.resendOtp(email);
+  return sendSuccess(res, { message: "Verification code resent to your email" });
+});

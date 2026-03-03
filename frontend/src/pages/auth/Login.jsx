@@ -52,12 +52,19 @@ export default function Login() {
     
     try {
       const res = await login(formData);
+      
+      // Check if email is verified
+      if (!res.data.user?.isEmailVerified) {
+        navigate(`/verify-email?email=${encodeURIComponent(formData.email)}`);
+        return;
+      }
+      
       const redirectMap = {
         CLIENT: "/client/dashboard",
         LAWYER: "/lawyer/dashboard",
         ADMIN: "/admin/dashboard",
       };
-      navigate(redirectMap[res.data.role] || "/");
+      navigate(redirectMap[res.data.user?.role || res.data.role] || "/");
     } catch (error) {
       handleLoginError(error);
     } finally {

@@ -4,6 +4,7 @@ import LawyerProfile from "../models/LawyerProfile.js";
 import Wallet from "../models/Wallet.js";
 import AdminSetting from "../models/AdminSetting.js";
 import { signAccessToken, signRefreshToken, verifyRefreshToken, hashToken, compareToken } from "./token.service.js";
+import * as otpService from "./otp.service.js";
 
 async function ensureAdminSetting() {
   const existing = await AdminSetting.findOne();
@@ -41,7 +42,15 @@ export async function register({ role, email, password, fullName }) {
     });
   }
 
-  return { userId: user._id.toString() };
+  // Send OTP for email verification
+  try {
+    await otpService.sendOtp(email, "EMAIL_VERIFICATION");
+  } catch (error) {
+    // Log error but don't fail registration
+    console.error("Failed to send OTP:", error);
+  }
+
+  return { userId: user._id.toString(), email };
 }
 
 export async function login({ email, password }) {
@@ -92,4 +101,45 @@ export async function logout(userId) {
   if (!user) return;
   user.refreshTokenHash = null;
   await user.save();
+}
+
+export async function sendOtp(email) {
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+  if (user.isEmailVerified) {
+    throw new ApiError(400, "Email already verified");
+  }
+  return otpService.sendOtp(email, "EMAIL_VERIFICATION");
+}
+
+export async function verifyOtp(email, code) {
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+  if (user.isEmailVerified) {
+    throw new ApiError(400, "Email already verified");
+  }
+
+  // Verify the OTP
+  await otpService.verifyOtp(email, code, "EMAIL_VERIFICATION");
+
+  // Mark email as verified
+  user.isEmailVerified = true;
+  await user.save();
+
+  return { success: true };
+}
+
+export async function resendOtp(email) {
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+  if (user.isEmailVerified) {
+    throw new ApiError(400, "Email already verified");
+  }
+  return otpService.resendOtp(email, "EMAIL_VERIFICATION");
 }

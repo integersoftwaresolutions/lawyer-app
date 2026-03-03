@@ -4,6 +4,7 @@ import LawyerSearch from "../pages/public/LawyerSearch.jsx";
 import LawyerProfile from "../pages/public/LawyerProfile.jsx";
 import Login from "../pages/auth/Login.jsx";
 import Register from "../pages/auth/Register.jsx";
+import VerifyEmail from "../pages/auth/VerifyEmail.jsx";
 
 import ClientDashboardLayout from "../pages/client/ClientDashboardLayout.jsx";
 import ClientOverviewPage from "../pages/client/ClientOverviewPage.jsx";
@@ -119,6 +120,7 @@ export default function RoutesRoot() {
       {/* Auth Routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
 
       {/* Chat Route */}
       <Route

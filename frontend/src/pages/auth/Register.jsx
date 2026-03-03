@@ -134,8 +134,9 @@ export default function Register() {
         });
       }
       
-      await register(payload);
-      navigate("/login");
+      const res = await register(payload);
+      // Redirect to email verification page
+      navigate(`/verify-email?email=${encodeURIComponent(formData.email)}`);
     } catch (error) {
       handleRegistrationError(error);
     } finally {

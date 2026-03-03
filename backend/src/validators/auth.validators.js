@@ -21,3 +21,22 @@ export const loginSchema = Joi.object({
 export const refreshSchema = Joi.object({
   body: Joi.object({}).optional()
 });
+
+export const sendOtpSchema = Joi.object({
+  body: Joi.object({
+    email: Joi.string().email().required()
+  }).required()
+});
+
+export const verifyOtpSchema = Joi.object({
+  body: Joi.object({
+    email: Joi.string().email().required(),
+    code: Joi.string().length(6).pattern(/^\d+$/).required()
+  }).required()
+});
+
+export const resendOtpSchema = Joi.object({
+  body: Joi.object({
+    email: Joi.string().email().required()
+  }).required()
+});
