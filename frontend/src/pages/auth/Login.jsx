@@ -1,24 +1,23 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import { useToast } from "../../hooks/useToast";
+import { useAuthForm } from "../../hooks/useAuthForm";
 import { Input, Button } from "../../components/ui";
 import AuthLayout, { AuthDivider, AuthLink, ErrorMessage, FormSection } from "./AuthLayout";
+import { GoogleAuthButton } from "./components/GoogleAuthButton";
 
 export default function Login() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login } = useAuth();
+  const toast = useToast();
+  const fromVerify = searchParams.get("from") === "verify";
   
-  const [formData, setFormData] = useState({ email: "", password: "" });
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-
-  const handleChange = (field) => (e) => {
-    setFormData({ ...formData, [field]: e.target.value });
-    if (errors[field]) {
-      setErrors({ ...errors, [field]: null });
-    }
-  };
+  const { formData, errors, loading, setLoading, handleChange, setError, setErrors, clearErrors } = useAuthForm({
+    email: "",
+    password: ""
+  });
 
   const validate = () => {
     const newErrors = {};
@@ -48,17 +47,18 @@ export default function Login() {
     }
     
     setLoading(true);
-    setErrors({});
+    clearErrors();
     
     try {
       const res = await login(formData);
       
       // Check if email is verified
       if (!res.data.user?.isEmailVerified) {
-        navigate(`/verify-email?email=${encodeURIComponent(formData.email)}`);
+        navigate(`/verify-email?email=${encodeURIComponent(formData.email)}&from=login`);
         return;
       }
       
+      toast.success("Login successful!");
       const redirectMap = {
         CLIENT: "/client/dashboard",
         LAWYER: "/lawyer/dashboard",
@@ -79,16 +79,21 @@ export default function Login() {
 
     if (statusCode === 401 || statusCode === 400) {
       if (lowerMessage.includes('email') && (lowerMessage.includes('not found') || lowerMessage.includes('user'))) {
-        setErrors({ email: "No account found with this email" });
-      } else if (lowerMessage.includes('password')) {
-        setErrors({ password: "Incorrect password" });
+        setError("email", "No account found with this email");
+        toast.error("No account found with this email");
+      } else if (lowerMessage.includes('password') || lowerMessage.includes('invalid credentials')) {
+        setError("password", "Incorrect password");
+        toast.error("Incorrect password");
       } else {
-        setErrors({ submit: message });
+        setError("submit", message);
+        toast.error(message);
       }
     } else if (statusCode === 404) {
-      setErrors({ email: "No account found with this email" });
+      setError("email", "No account found with this email");
+      toast.error("No account found with this email");
     } else {
-      setErrors({ submit: message });
+      setError("submit", message);
+      toast.error(message);
     }
   };
 
@@ -96,10 +101,20 @@ export default function Login() {
     setLoading(true);
     try {
       console.log("Google login success:", response);
+      // TODO: Implement Google OAuth login
     } catch (error) {
       console.error("Google login failed:", error);
+      toast.error("Google sign-in failed");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleBack = () => {
+    if (fromVerify) {
+      navigate("/verify-email?email=" + encodeURIComponent(formData.email || ""));
+    } else {
+      navigate(-1);
     }
   };
 
@@ -107,6 +122,8 @@ export default function Login() {
     <AuthLayout
       title="Welcome Back"
       subtitle="Sign in to continue to your account"
+      showBackButton={fromVerify}
+      onBack={handleBack}
       footer={
         <>
           Don't have an account?{" "}
@@ -114,16 +131,11 @@ export default function Login() {
         </>
       }
     >
-      <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-        <GoogleLogin
+      <GoogleAuthButton 
           onSuccess={handleGoogleSuccess}
-          onError={console.error}
           text="signin_with"
-          theme="filled_black"
-          size="large"
-          width="100%"
+        disabled={loading}
         />
-      </GoogleOAuthProvider>
 
       <AuthDivider text="or continue with email" />
 

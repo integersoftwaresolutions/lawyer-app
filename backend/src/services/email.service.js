@@ -1,93 +1,156 @@
 import nodemailer from "nodemailer";
 import { env } from "../config/env.js";
+import { renderEmailTemplate, htmlToText } from "./template.service.js";
 
 let transporter = null;
 
+/**
+ * Initialize and get email transporter
+ */
 function getTransporter() {
   if (transporter) return transporter;
 
-  // In development, use console logging if email is not configured
-  if (env.nodeEnv === "development" && !env.emailUser) {
-    console.warn("Email not configured. OTPs will be logged to console.");
+  // Check if email is configured
+  const isConfigured = env.emailUser && env.emailPassword && env.emailHost;
+  
+  if (!isConfigured) {
+    if (env.nodeEnv === "development") {
+      console.warn("\n⚠️  EMAIL NOT CONFIGURED");
+      console.warn("   OTPs will be logged to console instead of being sent.");
+      console.warn("   To enable email sending, add to .env:");
+      console.warn("   EMAIL_USER=your-email@gmail.com");
+      console.warn("   EMAIL_PASSWORD=your-app-password");
+      console.warn("   EMAIL_HOST=smtp.gmail.com\n");
+    }
     return null;
   }
 
-  transporter = nodemailer.createTransport({
-    host: env.emailHost,
-    port: env.emailPort,
-    secure: env.emailSecure,
-    auth: env.emailUser && env.emailPassword ? {
-      user: env.emailUser,
-      pass: env.emailPassword
-    } : undefined
-  });
+  try {
+    // For Gmail, use service instead of host/port
+    const isGmail = env.emailHost.includes("gmail");
+    
+    transporter = nodemailer.createTransport(
+      isGmail
+        ? {
+            service: "gmail",
+            auth: {
+              user: env.emailUser,
+              pass: env.emailPassword
+            }
+          }
+        : {
+            host: env.emailHost,
+            port: env.emailPort,
+            secure: env.emailSecure, // true for 465, false for other ports
+            auth: {
+              user: env.emailUser,
+              pass: env.emailPassword
+            }
+          }
+    );
 
-  return transporter;
+    // Verify connection
+    transporter.verify((error) => {
+      if (error) {
+        console.error("❌ Email transporter verification failed:", error.message);
+      } else {
+        console.log("✅ Email transporter configured successfully");
+      }
+    });
+
+    return transporter;
+  } catch (error) {
+    console.error("❌ Failed to create email transporter:", error);
+    return null;
+  }
 }
 
-export async function sendEmail({ to, subject, html, text }) {
+/**
+ * Send email using template
+ * @param {object} options - Email options
+ * @param {string} options.to - Recipient email
+ * @param {string} options.subject - Email subject
+ * @param {string} options.template - Template name (without .html)
+ * @param {object} options.variables - Template variables
+ * @param {string} options.html - Optional custom HTML (overrides template)
+ * @param {string} options.text - Optional plain text version
+ */
+export async function sendEmail({ to, subject, template, variables = {}, html, text }) {
   const mailTransporter = getTransporter();
+
+  // Generate HTML from template if not provided
+  if (!html && template) {
+    html = renderEmailTemplate(template, variables);
+  }
+
+  // Generate text version if not provided
+  if (!text && html) {
+    text = htmlToText(html);
+  }
 
   // In development without email config, log to console
   if (!mailTransporter) {
-    console.log("=".repeat(50));
-    console.log("EMAIL (Development Mode - Not Sent):");
+    console.log("\n" + "=".repeat(70));
+    console.log("📧 EMAIL (Development Mode - Not Actually Sent)");
+    console.log("=".repeat(70));
     console.log("To:", to);
     console.log("Subject:", subject);
-    console.log("Text:", text);
-    console.log("HTML:", html);
-    console.log("=".repeat(50));
-    return { success: true, messageId: "dev-mode" };
+    console.log("\n--- Plain Text Version ---");
+    console.log(text?.substring(0, 500) || "N/A");
+    if (text && text.length > 500) console.log("... (truncated)");
+    console.log("\n--- 🔑 OTP CODE (Look for this!) ---");
+    const otpMatch = text?.match(/\d{6}/) || html?.match(/\d{6}/);
+    if (otpMatch) {
+      console.log(`   VERIFICATION CODE: ${otpMatch[0]}`);
+    } else {
+      console.log("   (OTP code not found in email content)");
+    }
+    console.log("\n--- Full HTML (first 300 chars) ---");
+    console.log(html?.substring(0, 300) || "N/A");
+    if (html && html.length > 300) console.log("... (truncated)");
+    console.log("=".repeat(70));
+    console.log("💡 To actually send emails, configure EMAIL_USER, EMAIL_PASSWORD, EMAIL_HOST in .env");
+    console.log("=".repeat(70) + "\n");
+    return { success: true, messageId: "dev-mode", sent: false };
   }
 
   try {
-    const info = await mailTransporter.sendMail({
+    const mailOptions = {
       from: `"${env.emailFromName}" <${env.emailFrom}>`,
       to,
       subject,
       text,
       html
-    });
+    };
 
-    return { success: true, messageId: info.messageId };
+    const info = await mailTransporter.sendMail(mailOptions);
+    
+    console.log(`✅ Email sent successfully to ${to} (Message ID: ${info.messageId})`);
+    
+    return { 
+      success: true, 
+      messageId: info.messageId,
+      sent: true 
+    };
   } catch (error) {
-    console.error("Email send error:", error);
+    console.error("❌ Email send error:", error);
     throw new Error(`Failed to send email: ${error.message}`);
   }
 }
 
+/**
+ * Send verification email with OTP
+ * @param {string} email - Recipient email
+ * @param {string} otpCode - OTP code to send
+ */
 export async function sendVerificationEmail(email, otpCode) {
-  const subject = "Verify Your Email Address";
-  const text = `Your verification code is: ${otpCode}\n\nThis code will expire in ${env.otpExpiryMinutes} minutes.`;
-  const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Verify Your Email</title>
-    </head>
-    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-        <h1 style="color: white; margin: 0;">Verify Your Email</h1>
-      </div>
-      <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
-        <p style="font-size: 16px;">Hello,</p>
-        <p style="font-size: 16px;">Thank you for registering with Lawyer App. Please use the verification code below to verify your email address:</p>
-        <div style="background: white; border: 2px dashed #667eea; border-radius: 8px; padding: 20px; text-align: center; margin: 30px 0;">
-          <div style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #667eea; font-family: 'Courier New', monospace;">
-            ${otpCode}
-          </div>
-        </div>
-        <p style="font-size: 14px; color: #666;">This code will expire in <strong>${env.otpExpiryMinutes} minutes</strong>.</p>
-        <p style="font-size: 14px; color: #666;">If you didn't request this code, please ignore this email.</p>
-        <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
-        <p style="font-size: 12px; color: #999; text-align: center;">© ${new Date().getFullYear()} Lawyer App. All rights reserved.</p>
-      </div>
-    </body>
-    </html>
-  `;
-
-  return sendEmail({ to: email, subject, text, html });
+  return sendEmail({
+    to: email,
+    subject: "Verify Your Email Address",
+    template: "verification-email",
+    variables: {
+      otpCode,
+      expiryMinutes: env.otpExpiryMinutes.toString()
+    }
+  });
 }
-

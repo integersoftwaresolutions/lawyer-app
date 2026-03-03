@@ -13,11 +13,31 @@ async function ensureAdminSetting() {
 }
 
 export async function register({ role, email, password, fullName }) {
-  const exists = await User.findOne({ email });
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    throw new ApiError(400, "Invalid email format");
+  }
+
+  // Check if email already exists
+  const exists = await User.findOne({ email: email.toLowerCase() });
   if (exists) throw new ApiError(409, "Email already registered");
 
+  // Validate password strength
+  if (password.length < 6) {
+    throw new ApiError(400, "Password must be at least 6 characters");
+  }
+
+  // Hash password
   const passwordHash = await User.hashPassword(password);
-  const user = await User.create({ role, email, passwordHash, isEmailVerified: false });
+  
+  // Create user
+  const user = await User.create({ 
+    role, 
+    email: email.toLowerCase(), 
+    passwordHash, 
+    isEmailVerified: false 
+  });
 
   // Create wallet
   const settings = await ensureAdminSetting();
@@ -28,26 +48,27 @@ export async function register({ role, email, password, fullName }) {
     monthlyResetAt: new Date()
   });
 
-  // If lawyer, create profile
+  // Create basic profile (empty, to be completed later)
   if (role === "LAWYER") {
     await LawyerProfile.create({
       userId: user._id,
-      fullName: fullName || "Lawyer",
-      city: "",
-      specialization: [],
-      experienceYears: 0,
-      hourlyRate: 0,
-      ratingAvg: 0,
+      fullName: fullName || "",
       verificationStatus: "PENDING"
+    });
+  } else if (role === "CLIENT") {
+    await ClientProfile.create({
+      userId: user._id,
+      fullName: fullName || ""
     });
   }
 
   // Send OTP for email verification
   try {
     await otpService.sendOtp(email, "EMAIL_VERIFICATION");
+    console.log(`✅ Registration OTP sent to ${email}`);
   } catch (error) {
-    // Log error but don't fail registration
-    console.error("Failed to send OTP:", error);
+    // Log error but don't fail registration - OTP is stored, user can request resend
+    console.error(`❌ Failed to send registration OTP to ${email}:`, error.message);
   }
 
   return { userId: user._id.toString(), email };
@@ -59,6 +80,17 @@ export async function login({ email, password }) {
 
   const ok = await user.comparePassword(password);
   if (!ok) throw new ApiError(401, "Invalid credentials");
+
+  // If email is not verified, automatically send OTP
+  if (!user.isEmailVerified) {
+    try {
+      await otpService.sendOtp(email, "EMAIL_VERIFICATION");
+      console.log(`✅ Login: OTP sent to unverified email ${email}`);
+    } catch (error) {
+      console.error(`❌ Login: Failed to send OTP to ${email}:`, error.message);
+      // Don't fail login - user can request resend on verify page
+    }
+  }
 
   const accessToken = signAccessToken(user._id.toString(), user.role);
   const refreshToken = signRefreshToken(user._id.toString());

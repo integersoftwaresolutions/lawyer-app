@@ -1,68 +1,48 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { useAuth } from "../../hooks/useAuth";
-import { Input, Button, Select, Textarea, Checkbox } from "../../components/ui";
-import AuthLayout, { AuthDivider, AuthLink, ErrorMessage, FormSection, FormRow } from "./AuthLayout";
-
-const SPECIALIZATIONS = [
-  { value: "family", label: "Family Law" },
-  { value: "corporate", label: "Corporate Law" },
-  { value: "criminal", label: "Criminal Law" },
-  { value: "immigration", label: "Immigration Law" },
-  { value: "estate", label: "Estate Planning" },
-  { value: "tax", label: "Tax Law" },
-  { value: "intellectual-property", label: "Intellectual Property" },
-  { value: "personal-injury", label: "Personal Injury" },
-  { value: "employment", label: "Employment Law" },
-  { value: "real-estate", label: "Real Estate Law" },
-];
+import { useToast } from "../../hooks/useToast";
+import { useStepNavigation } from "../../hooks/useStepNavigation";
+import { useAuthForm } from "../../hooks/useAuthForm";
+import AuthLayout, { AuthLink } from "./AuthLayout";
+import { RegisterMethodStep } from "./steps/RegisterMethodStep";
+import { RoleSelectionStep } from "./steps/RoleSelectionStep";
+import { RegistrationFormStep } from "./steps/RegistrationFormStep";
 
 const INITIAL_FORM_DATA = {
-  firstName: "",
-  lastName: "",
+  fullName: "",
   email: "",
-  phone: "",
   password: "",
   confirmPassword: "",
-  barNumber: "",
-  city: "",
-  specialization: "",
-  experienceYears: "",
-  hourlyRate: "",
-  bio: "",
-  company: "",
-  legalNeeds: "",
   agreeTerms: false,
+};
+
+const REGISTER_STEPS = {
+  METHOD: 1,
+  ROLE: 2,
+  FORM: 3
 };
 
 export default function Register() {
   const navigate = useNavigate();
   const { register } = useAuth();
+  const toast = useToast();
   
-  const [step, setStep] = useState(1);
+  const { step, goNext, goBack, canGoBack } = useStepNavigation(REGISTER_STEPS.METHOD, {
+    defaultBackPath: "/login"
+  });
+  
+  const { formData, errors, loading, setLoading, handleChange, setError, setErrors, clearErrors } = useAuthForm(INITIAL_FORM_DATA);
   const [role, setRole] = useState("");
-  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-
-  const handleChange = (field) => (e) => {
-    const value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
-    setFormData({ ...formData, [field]: value });
-    if (errors[field]) {
-      setErrors({ ...errors, [field]: null });
-    }
-  };
-
-  const handleGoogleSuccess = async () => {
-    setStep(2);
-  };
 
   const validate = () => {
     const newErrors = {};
     
-    if (!formData.firstName.trim()) newErrors.firstName = "Required";
-    if (!formData.lastName.trim()) newErrors.lastName = "Required";
+    if (!formData.fullName.trim()) {
+      newErrors.fullName = "Full name is required";
+    } else if (formData.fullName.trim().length < 2) {
+      newErrors.fullName = "Name must be at least 2 characters";
+    }
     
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
@@ -73,7 +53,7 @@ export default function Register() {
     if (!formData.password) {
       newErrors.password = "Password is required";
     } else if (formData.password.length < 6) {
-      newErrors.password = "At least 6 characters";
+      newErrors.password = "Password must be at least 6 characters";
     }
     
     if (!formData.confirmPassword) {
@@ -84,15 +64,6 @@ export default function Register() {
     
     if (!formData.agreeTerms) {
       newErrors.agreeTerms = "You must agree to continue";
-    }
-    
-    if (role === "LAWYER") {
-      if (!formData.barNumber.trim()) newErrors.barNumber = "Required";
-      if (!formData.city.trim()) newErrors.city = "Required";
-      if (!formData.specialization) newErrors.specialization = "Required";
-      if (!formData.experienceYears) newErrors.experienceYears = "Required";
-      if (!formData.hourlyRate) newErrors.hourlyRate = "Required";
-      if (!formData.bio.trim()) newErrors.bio = "Required";
     }
     
     return newErrors;
@@ -108,51 +79,34 @@ export default function Register() {
     }
     
     setLoading(true);
-    setErrors({});
+    clearErrors();
     
     try {
       const payload = {
         role,
         email: formData.email,
         password: formData.password,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        phone: formData.phone,
-        company: formData.company,
-        legalNeeds: formData.legalNeeds,
+        fullName: formData.fullName.trim(),
       };
       
-      if (role === "LAWYER") {
-        Object.assign(payload, {
-          fullName: `${formData.firstName} ${formData.lastName}`,
-          barNumber: formData.barNumber,
-          city: formData.city,
-          specialization: formData.specialization,
-          experienceYears: formData.experienceYears,
-          hourlyRate: formData.hourlyRate,
-          bio: formData.bio,
-        });
-      }
-      
-      const res = await register(payload);
-      // Redirect to email verification page
-      navigate(`/verify-email?email=${encodeURIComponent(formData.email)}`);
+      await register(payload);
+      toast.success("Registration successful! Please verify your email.");
+      navigate(`/verify-email?email=${encodeURIComponent(formData.email)}&from=register`);
     } catch (error) {
-      handleRegistrationError(error);
+      const message = error.response?.data?.message || "Registration failed. Please try again.";
+      if (error.response?.status === 409) {
+        setError("email", "This email is already registered");
+      } else {
+        setError("submit", message);
+        toast.error(message);
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRegistrationError = (error) => {
-    const message = error.response?.data?.message || "";
-    const status = error.response?.status;
-    
-    if (status === 409 || message.toLowerCase().includes('email') || message.toLowerCase().includes('exists')) {
-      setErrors({ email: "This email is already registered" });
-    } else {
-      setErrors({ submit: message || "Registration failed. Please try again." });
-    }
+  const handleRoleSelect = (selectedRole) => {
+    setRole(selectedRole);
   };
 
   const authFooter = (
@@ -162,254 +116,53 @@ export default function Register() {
     </>
   );
 
-  // Step 1: Choose sign up method
-  if (step === 1) {
-    return (
-      <AuthLayout
-        title="Create Account"
-        subtitle="Get started with your free account"
-        footer={authFooter}
-      >
-        <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={console.error}
-            text="signup_with"
-            theme="filled_black"
-            size="large"
-            width="100%"
-          />
-        </GoogleOAuthProvider>
+  const getStepTitle = () => {
+    switch (step) {
+      case REGISTER_STEPS.METHOD:
+        return { title: "Create Account", subtitle: "Get started with your free account" };
+      case REGISTER_STEPS.ROLE:
+        return { title: "Choose Your Role", subtitle: "How will you be using the platform?" };
+      case REGISTER_STEPS.FORM:
+        return { title: "Create Your Account", subtitle: "Enter your basic information to get started" };
+      default:
+        return { title: "", subtitle: "" };
+    }
+  };
 
-        <AuthDivider text="or continue with email" />
+  const { title, subtitle } = getStepTitle();
 
-        <Button variant="secondary" fullWidth onClick={() => setStep(2)}>
-          Sign up with Email
-        </Button>
-      </AuthLayout>
-    );
-  }
-
-  // Step 2: Choose role
-  if (step === 2) {
-    return (
-      <AuthLayout
-        title="Choose Your Role"
-        subtitle="How will you be using the platform?"
-        showBackButton
-        onBack={() => setStep(1)}
-        footer={authFooter}
-      >
-        <div className="flex gap-3 mb-6">
-          <RoleCard
-            icon="👤"
-            title="Client"
-            description="Find legal help"
-            selected={role === "CLIENT"}
-            onClick={() => setRole("CLIENT")}
-          />
-          <RoleCard
-            icon="⚖️"
-            title="Lawyer"
-            description="Offer services"
-            selected={role === "LAWYER"}
-            onClick={() => setRole("LAWYER")}
-          />
-        </div>
-
-        <Button fullWidth onClick={() => setStep(3)} disabled={!role}>
-          Continue
-        </Button>
-      </AuthLayout>
-    );
-  }
-
-  // Step 3: Registration form
   return (
     <AuthLayout
-      title={role === "CLIENT" ? "Client Registration" : "Lawyer Registration"}
-      subtitle="Complete your profile to get started"
-      maxWidth={role === "LAWYER" ? "480px" : "420px"}
-      showBackButton
-      onBack={() => setStep(2)}
+      title={title}
+      subtitle={subtitle}
+      showBackButton={canGoBack}
+      onBack={goBack}
       footer={authFooter}
     >
-      <form onSubmit={handleSubmit}>
-        <ErrorMessage message={errors.submit} />
-
-        <FormSection title="Personal Information">
-          <FormRow>
-            <Input
-              label="First Name"
-              placeholder="John"
-              value={formData.firstName}
-              onChange={handleChange("firstName")}
-              error={errors.firstName}
-            />
-            <Input
-              label="Last Name"
-              placeholder="Doe"
-              value={formData.lastName}
-              onChange={handleChange("lastName")}
-              error={errors.lastName}
-            />
-          </FormRow>
-          
-          <Input
-            label="Email Address"
-            type="email"
-            placeholder="you@example.com"
-            value={formData.email}
-            onChange={handleChange("email")}
-            error={errors.email}
-          />
-          
-          <Input
-            label="Phone Number"
-            type="tel"
-            placeholder="+1 (555) 000-0000"
-            value={formData.phone}
-            onChange={handleChange("phone")}
-            helperText="Optional"
-          />
-        </FormSection>
-
-        <FormSection title="Security">
-          <Input
-            label="Password"
-            type="password"
-            placeholder="Create a password"
-            value={formData.password}
-            onChange={handleChange("password")}
-            error={errors.password}
-            helperText={!errors.password ? "At least 6 characters" : undefined}
-          />
-          
-          <Input
-            label="Confirm Password"
-            type="password"
-            placeholder="Repeat your password"
-            value={formData.confirmPassword}
-            onChange={handleChange("confirmPassword")}
-            error={errors.confirmPassword}
-          />
-        </FormSection>
-
-        {role === "LAWYER" && (
-          <>
-            <FormSection title="Professional Details">
-              <FormRow>
-                <Input
-                  label="Bar Number"
-                  placeholder="123456"
-                  value={formData.barNumber}
-                  onChange={handleChange("barNumber")}
-                  error={errors.barNumber}
-                />
-                <Input
-                  label="City"
-                  placeholder="New York"
-                  value={formData.city}
-                  onChange={handleChange("city")}
-                  error={errors.city}
-                />
-              </FormRow>
-              
-              <Select
-                label="Specialization"
-                value={formData.specialization}
-                onChange={handleChange("specialization")}
-                options={SPECIALIZATIONS}
-                placeholder="Select your specialty"
-                error={errors.specialization}
-              />
-              
-              <FormRow>
-                <Input
-                  label="Experience"
-                  type="number"
-                  placeholder="Years"
-                  value={formData.experienceYears}
-                  onChange={handleChange("experienceYears")}
-                  error={errors.experienceYears}
-                />
-                <Input
-                  label="Hourly Rate"
-                  type="number"
-                  placeholder="$ per hour"
-                  value={formData.hourlyRate}
-                  onChange={handleChange("hourlyRate")}
-                  error={errors.hourlyRate}
-                />
-              </FormRow>
-            </FormSection>
-
-            <FormSection title="About You">
-              <Textarea
-                label="Professional Bio"
-                placeholder="Tell potential clients about your experience, expertise, and approach..."
-                value={formData.bio}
-                onChange={handleChange("bio")}
-                error={errors.bio}
-                rows={4}
-              />
-            </FormSection>
-          </>
-        )}
-
-        {role === "CLIENT" && (
-          <FormSection title="Additional Information">
-            <Input
-              label="Company"
-              placeholder="Company name"
-              value={formData.company}
-              onChange={handleChange("company")}
-              helperText="Optional"
-            />
-            
-            <Textarea
-              label="Legal Needs"
-              placeholder="Briefly describe what kind of legal help you're looking for..."
-              value={formData.legalNeeds}
-              onChange={handleChange("legalNeeds")}
-              rows={3}
-              helperText="Optional - helps us recommend lawyers"
-            />
-          </FormSection>
-        )}
-
-        <Checkbox
-          id="terms"
-          label="I agree to the Terms of Service and Privacy Policy"
-          checked={formData.agreeTerms}
-          onChange={handleChange("agreeTerms")}
-          error={errors.agreeTerms}
+      {step === REGISTER_STEPS.METHOD && (
+        <RegisterMethodStep
+          onEmailClick={goNext}
+          onGoogleSuccess={() => goNext()}
         />
+      )}
 
-        <Button type="submit" fullWidth loading={loading} disabled={loading}>
-          Create Account
-        </Button>
-      </form>
+      {step === REGISTER_STEPS.ROLE && (
+        <RoleSelectionStep
+          selectedRole={role}
+          onRoleSelect={handleRoleSelect}
+          onContinue={goNext}
+              />
+        )}
+
+      {step === REGISTER_STEPS.FORM && (
+        <RegistrationFormStep
+          formData={formData}
+          errors={errors}
+          loading={loading}
+          onChange={handleChange}
+          onSubmit={handleSubmit}
+        />
+      )}
     </AuthLayout>
-  );
-}
-
-function RoleCard({ icon, title, description, selected, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex-1 py-5 px-4 rounded-lg border-2 cursor-pointer text-center transition-all duration-200 ${
-        selected 
-          ? "border-primary bg-primary/10 text-text-primary" 
-          : "border-border bg-transparent text-text-primary"
-      }`}
-    >
-      <div className="text-[28px] mb-2">{icon}</div>
-      <div className="font-semibold mb-1">{title}</div>
-      <div className="text-xs text-text-secondary">
-        {description}
-      </div>
-    </button>
   );
 }

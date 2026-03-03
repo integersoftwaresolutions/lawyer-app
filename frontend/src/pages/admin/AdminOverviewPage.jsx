@@ -2,6 +2,18 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { adminApi } from "../../services/admin.api";
 import { Card, Button, StatCard } from "../../components/ui";
+import { 
+  FiUsers, 
+  FiBriefcase, 
+  FiUser, 
+  FiCheckCircle, 
+  FiClock, 
+  FiCalendar, 
+  FiDollarSign, 
+  FiBarChart2, 
+  FiTrendingUp, 
+  FiStar 
+} from "react-icons/fi";
 
 export default function AdminOverviewPage() {
   const navigate = useNavigate();
@@ -43,17 +55,17 @@ export default function AdminOverviewPage() {
       </h3>
       <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4 mb-6">
         <StatCard
-          icon="👥"
+          icon={FiUsers}
           value={analytics?.users?.total || 0}
           label="Total Users"
         />
         <StatCard
-          icon="👨‍⚖️"
+          icon={FiBriefcase}
           value={analytics?.users?.lawyers || 0}
           label="Lawyers"
         />
         <StatCard
-          icon="👤"
+          icon={FiUser}
           value={analytics?.users?.clients || 0}
           label="Clients"
         />
@@ -64,12 +76,12 @@ export default function AdminOverviewPage() {
       </h3>
       <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4 mb-6">
         <StatCard
-          icon="✅"
+          icon={FiCheckCircle}
           value={analytics?.lawyers?.verified || 0}
           label="Verified Lawyers"
         />
         <StatCard
-          icon="⏳"
+          icon={FiClock}
           value={analytics?.lawyers?.pending || 0}
           label="Pending Verification"
         />
@@ -80,32 +92,32 @@ export default function AdminOverviewPage() {
       </h3>
       <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4 mb-6">
         <StatCard
-          icon="📅"
+          icon={FiCalendar}
           value={analytics?.bookings?.total || 0}
           label="Total Bookings"
         />
         <StatCard
-          icon="✅"
+          icon={FiCheckCircle}
           value={analytics?.bookings?.completed || 0}
           label="Completed"
         />
         <StatCard
-          icon="📊"
+          icon={FiBarChart2}
           value={analytics?.bookings?.thisMonth || 0}
           label="This Month"
         />
         <StatCard
-          icon="💰"
+          icon={FiDollarSign}
           value={`$${analytics?.revenue?.total || 0}`}
           label="Total Revenue"
         />
         <StatCard
-          icon="📈"
+          icon={FiTrendingUp}
           value={`$${analytics?.revenue?.thisMonth || 0}`}
           label="Revenue This Month"
         />
         <StatCard
-          icon="⭐"
+          icon={FiStar}
           value={analytics?.reviews || 0}
           label="Total Reviews"
         />

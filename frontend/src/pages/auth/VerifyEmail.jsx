@@ -1,43 +1,51 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { FiCheckCircle, FiMail } from "react-icons/fi";
 import { useAuth } from "../../hooks/useAuth";
+import { useToast } from "../../hooks/useToast";
 import { authApi } from "../../services/auth.api";
-import { Input, Button } from "../../components/ui";
+import { Button } from "../../components/ui";
 import AuthLayout, { AuthDivider, AuthLink, ErrorMessage, FormSection } from "./AuthLayout";
+import { OtpInput } from "./components/OtpInput";
+import { ResendOtpButton } from "./components/ResendOtpButton";
 
 export default function VerifyEmail() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user, refreshUser } = useAuth();
+  const toast = useToast();
   
   const email = searchParams.get("email") || user?.email || "";
+  const from = searchParams.get("from") || ""; // "register" or "login"
   const [code, setCode] = useState("");
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [resendLoading, setResendLoading] = useState(false);
-  const [resendCooldown, setResendCooldown] = useState(0);
   const [success, setSuccess] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
 
   useEffect(() => {
     if (!email) {
       navigate("/register");
+      return;
     }
-  }, [email, navigate]);
 
-  useEffect(() => {
-    if (resendCooldown > 0) {
-      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [resendCooldown]);
+    // Automatically send OTP when page loads (if coming from login or if not sent yet)
+    const sendOtpOnLoad = async () => {
+      if (!otpSent && email) {
+        try {
+          await authApi.sendOtp(email);
+          setOtpSent(true);
+          toast.success("Verification code sent to your email!");
+        } catch (error) {
+          const message = error.response?.data?.message || "Failed to send verification code";
+          console.error("Failed to send OTP on load:", error);
+          // Don't show error toast here - user can manually resend
+        }
+      }
+    };
 
-  const handleChange = (e) => {
-    const value = e.target.value.replace(/\D/g, "").slice(0, 6);
-    setCode(value);
-    if (errors.code) {
-      setErrors({ ...errors, code: null });
-    }
-  };
+    sendOtpOnLoad();
+  }, [email, navigate, otpSent, toast]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -53,6 +61,7 @@ export default function VerifyEmail() {
     try {
       await authApi.verifyOtp(email, code);
       setSuccess(true);
+      toast.success("Email verified successfully!");
       
       // Refresh user data to get updated verification status
       if (refreshUser) {
@@ -66,35 +75,43 @@ export default function VerifyEmail() {
       // Redirect after 2 seconds
       setTimeout(() => {
         const redirectMap = {
-          CLIENT: "/client/dashboard",
-          LAWYER: "/lawyer/dashboard",
+          CLIENT: "/client/profile",
+          LAWYER: "/lawyer/profile",
           ADMIN: "/admin/dashboard",
         };
         navigate(redirectMap[user?.role] || "/login");
       }, 2000);
     } catch (error) {
       const message = error.response?.data?.message || "Verification failed. Please try again.";
-      setErrors({ submit: message, code: message.includes("code") || message.includes("Invalid") || message.includes("expired") ? message : null });
+      setErrors({ 
+        submit: message, 
+        code: message.includes("code") || message.includes("Invalid") || message.includes("expired") ? message : null 
+      });
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   };
 
   const handleResend = async () => {
-    if (resendCooldown > 0) return;
-    
-    setResendLoading(true);
-    setErrors({});
-    
     try {
       await authApi.resendOtp(email);
-      setResendCooldown(60); // 60 second cooldown
-      setErrors({ submit: "Verification code resent! Please check your email." });
+      setOtpSent(true);
+      toast.success("Verification code resent! Please check your email.");
     } catch (error) {
       const message = error.response?.data?.message || "Failed to resend code. Please try again.";
-      setErrors({ submit: message });
-    } finally {
-      setResendLoading(false);
+      toast.error(message);
+      throw error;
+    }
+  };
+
+  const handleBack = () => {
+    if (from === "login") {
+      navigate(`/login?from=verify&email=${encodeURIComponent(email)}`);
+    } else if (from === "register") {
+      navigate("/register");
+    } else {
+      navigate("/login");
     }
   };
 
@@ -105,8 +122,10 @@ export default function VerifyEmail() {
         subtitle="Your email has been successfully verified"
       >
         <div className="text-center py-8">
-          <div className="text-6xl mb-4">✓</div>
-          <p className="text-text-secondary mb-6">Redirecting you to your dashboard...</p>
+          <div className="flex justify-center mb-4">
+            <FiCheckCircle className="text-6xl text-success" />
+          </div>
+          <p className="text-text-secondary mb-6">Redirecting you to complete your profile...</p>
         </div>
       </AuthLayout>
     );
@@ -115,39 +134,31 @@ export default function VerifyEmail() {
   return (
     <AuthLayout
       title="Verify Your Email"
-      subtitle={`We've sent a verification code to ${email}`}
+      subtitle={
+        <div className="flex items-center gap-2 justify-center">
+          <FiMail className="text-text-secondary" />
+          <span>We've sent a verification code to {email}</span>
+        </div>
+      }
+      showBackButton={!!from}
+      onBack={handleBack}
       footer={
-        <>
-          Didn't receive the code?{" "}
-          <AuthLink onClick={handleResend} disabled={resendCooldown > 0 || resendLoading}>
-            {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend Code"}
-          </AuthLink>
-        </>
+        <ResendOtpButton 
+          onResend={handleResend}
+          email={email}
+          cooldownSeconds={60}
+        />
       }
     >
       <form onSubmit={handleSubmit}>
         <ErrorMessage message={errors.submit} />
 
         <FormSection>
-          <div>
-            <label className="block text-sm font-medium text-text-primary mb-2">
-              Verification Code
-            </label>
-            <Input
-              type="text"
-              inputMode="numeric"
-              placeholder="000000"
-              value={code}
-              onChange={handleChange}
-              error={errors.code}
-              className="text-center text-2xl tracking-widest font-mono"
-              maxLength={6}
-              autoFocus
-            />
-            <p className="text-xs text-text-secondary mt-2 text-center">
-              Enter the 6-digit code sent to your email
-            </p>
-          </div>
+          <OtpInput
+            value={code}
+            onChange={setCode}
+            error={errors.code}
+          />
         </FormSection>
 
         <Button
@@ -158,17 +169,6 @@ export default function VerifyEmail() {
         >
           Verify Email
         </Button>
-
-        <div className="mt-4 text-center">
-          <button
-            type="button"
-            onClick={handleResend}
-            disabled={resendCooldown > 0 || resendLoading}
-            className="text-sm text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {resendLoading ? "Sending..." : resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : "Resend verification code"}
-          </button>
-        </div>
 
         <AuthDivider />
 
@@ -181,4 +181,3 @@ export default function VerifyEmail() {
     </AuthLayout>
   );
 }
-

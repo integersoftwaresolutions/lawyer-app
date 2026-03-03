@@ -20,7 +20,7 @@ export async function updateClientProfile(userId, data) {
     profile = new ClientProfile({ userId });
   }
   
-  const allowedFields = ["fullName", "phone", "city", "address", "profileImage"];
+  const allowedFields = ["fullName", "phone", "whatsapp", "city", "address", "cnic", "dateOfBirth", "gender", "profileImage"];
   for (const field of allowedFields) {
     if (data[field] !== undefined) {
       profile[field] = data[field];

@@ -13,7 +13,7 @@ export default function DashboardLayout({
       
       <div className="flex">
         <Sidebar items={menuItems} basePath={basePath} />
-        <main className="flex-1 min-w-0 ml-[260px] p-6 overflow-y-auto min-h-screen">
+        <main className="flex-1 min-w-0 ml-[280px] p-6 overflow-y-auto min-h-screen">
           {children}
         </main>
       </div>

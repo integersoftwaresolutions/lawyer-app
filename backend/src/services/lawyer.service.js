@@ -65,6 +65,7 @@ export async function updateLawyerProfile(userId, data) {
 
   const allowedFields = [
     "fullName", "phone", "email", "whatsapp", "city", "officeAddress",
+    "cnic", "barCouncilNumber", "barCouncil",
     "specialization", "languages", "experienceYears", "hourlyRate",
     "consultationFee", "bio", "profileImage"
   ];

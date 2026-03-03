@@ -40,9 +40,15 @@ export default function AuthLayout({
                 </h1>
               )}
               {subtitle && (
-                <p className="text-sm m-0 text-text-secondary">
-                  {subtitle}
-                </p>
+                typeof subtitle === 'string' ? (
+                  <p className="text-sm m-0 text-text-secondary">
+                    {subtitle}
+                  </p>
+                ) : (
+                  <div className="text-sm m-0 text-text-secondary">
+                    {subtitle}
+                  </div>
+                )
               )}
             </div>
           )}

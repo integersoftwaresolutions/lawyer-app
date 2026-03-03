@@ -2,6 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { lawyerApi } from "../../services/lawyer.api";
 import { Card, Button, StatCard } from "../../components/ui";
+import { 
+  FiCalendar, 
+  FiDollarSign, 
+  FiStar, 
+  FiUsers 
+} from "react-icons/fi";
 
 export default function LawyerOverviewPage() {
   const navigate = useNavigate();
@@ -45,22 +51,22 @@ export default function LawyerOverviewPage() {
 
       <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-6">
         <StatCard
-          icon="📅"
+          icon={FiCalendar}
           value={stats?.upcomingBookings || 0}
           label="Upcoming Sessions"
         />
         <StatCard
-          icon="💰"
+          icon={FiDollarSign}
           value={`$${stats?.totalEarnings || 0}`}
           label="Total Earnings"
         />
         <StatCard
-          icon="⭐"
+          icon={FiStar}
           value={stats?.ratingAvg?.toFixed(1) || "0.0"}
           label={`Rating (${stats?.ratingCount || 0} reviews)`}
         />
         <StatCard
-          icon="👥"
+          icon={FiUsers}
           value={stats?.totalConsultations || 0}
           label="Total Consultations"
         />

@@ -4,6 +4,12 @@ import { useAuth } from "../../hooks/useAuth";
 import { clientApi } from "../../services/client.api";
 import { walletApi } from "../../services/wallet.api";
 import { Card, Button, StatCard } from "../../components/ui";
+import { 
+  FiCalendar, 
+  FiCheckCircle, 
+  FiCreditCard, 
+  FiBarChart2 
+} from "react-icons/fi";
 
 export default function ClientOverviewPage() {
   const { user } = useAuth();
@@ -48,22 +54,22 @@ export default function ClientOverviewPage() {
 
       <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-6">
         <StatCard
-          icon="📅"
+          icon={FiCalendar}
           value={stats?.upcomingBookings || 0}
           label="Upcoming Sessions"
         />
         <StatCard
-          icon="✅"
+          icon={FiCheckCircle}
           value={stats?.completedBookings || 0}
           label="Completed Sessions"
         />
         <StatCard
-          icon="💳"
+          icon={FiCreditCard}
           value={wallet?.balanceCredits || 0}
           label="Credits Balance"
         />
         <StatCard
-          icon="📊"
+          icon={FiBarChart2}
           value={stats?.totalBookings || 0}
           label="Total Bookings"
         />
