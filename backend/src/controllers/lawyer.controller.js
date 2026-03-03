@@ -4,7 +4,7 @@ import * as lawyerService from "../services/lawyer.service.js";
 import * as availabilityService from "../services/availability.service.js";
 import * as reviewService from "../services/review.service.js";
 import * as bookingService from "../services/booking.service.js";
-import VerificationDocument from "../models/VerificationDocument.js";
+import * as verificationService from "../services/verification.service.js";
 
 export const search = asyncHandler(async (req, res) => {
   const out = await lawyerService.searchLawyers(req.query);
@@ -96,13 +96,17 @@ export const uploadVerificationDocument = asyncHandler(async (req, res) => {
 
   const documentUrl = `/uploads/${req.file.filename}`;
 
-  const doc = await VerificationDocument.create({
+  const doc = await verificationService.uploadVerificationDocument({
     lawyerUserId: req.user.id,
     documentType,
     documentUrl,
-    fileName: req.file.originalname || req.file.filename,
-    status: "PENDING"
+    fileName: req.file.originalname || req.file.filename
   });
 
-  return sendSuccess(res, { statusCode: 201, message: "Document uploaded", data: doc.toObject() });
+  return sendSuccess(res, { statusCode: 201, message: "Document uploaded successfully", data: doc });
+});
+
+export const getVerificationStatus = asyncHandler(async (req, res) => {
+  const out = await verificationService.getVerificationStatus(req.user.id);
+  return sendSuccess(res, { message: "Verification status", data: out });
 });

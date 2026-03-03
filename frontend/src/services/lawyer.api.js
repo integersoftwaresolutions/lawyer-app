@@ -33,6 +33,8 @@ export const lawyerApi = {
   
   getMyReviews: (params) => api.get("/lawyers/me/reviews", { params }).then((r) => r.data),
 
+  getVerificationStatus: () => api.get("/lawyers/me/verification/status").then((r) => r.data),
+
   uploadVerificationDocument: (documentType, file) => {
     const form = new FormData();
     form.append("documentType", documentType);

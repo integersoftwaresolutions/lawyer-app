@@ -1,18 +1,16 @@
-import { useEffect } from "react";
-import { useDispatch } from "react-redux";
-import { bootstrapAuth } from "../store/slices/authSlice";
-
 /**
- * AuthProvider - Bootstraps authentication on app load
- * Uses Redux for state management (single source of truth)
+ * AuthProvider - Legacy component
+ * 
+ * @deprecated Authentication bootstrapping is now handled by Gateway component
+ * This component is kept for backward compatibility but does nothing
+ * 
+ * The Gateway component now handles:
+ * - Bootstrap authentication
+ * - Loading states
+ * - App initialization
  */
 export function AuthProvider({ children }) {
-  const dispatch = useDispatch();
-
-  // Bootstrap auth on mount - check if user is logged in
-  useEffect(() => {
-    dispatch(bootstrapAuth());
-  }, [dispatch]);
-
+  // Gateway component now handles bootstrap
+  // This is kept for backward compatibility
   return children;
 }

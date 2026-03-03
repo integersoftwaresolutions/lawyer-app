@@ -14,6 +14,9 @@ export const adminApi = {
   verifyLawyer: (lawyerUserId, payload) => 
     api.post(`/admin/lawyers/${lawyerUserId}/verify`, payload).then((r) => r.data),
   
+  getLawyerVerificationStatus: (lawyerUserId) => 
+    api.get(`/admin/lawyers/${lawyerUserId}/verification`).then((r) => r.data),
+
   getVerificationDocs: (lawyerUserId) => 
     api.get(`/admin/lawyers/${lawyerUserId}/documents`).then((r) => r.data),
   

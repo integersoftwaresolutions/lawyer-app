@@ -13,6 +13,7 @@ r.get("/bookings", adminCtrl.getAllBookings);
 
 r.get("/lawyers", adminCtrl.allLawyers);
 r.get("/lawyers/pending", adminCtrl.pendingLawyers);
+r.get("/lawyers/:lawyerUserId/verification", adminCtrl.getLawyerVerificationStatus);
 r.post("/lawyers/:lawyerUserId/verify", adminCtrl.verifyLawyer);
 r.get("/lawyers/:lawyerUserId/documents", adminCtrl.getVerificationDocs);
 r.post("/documents/:documentId/review", adminCtrl.reviewDocument);

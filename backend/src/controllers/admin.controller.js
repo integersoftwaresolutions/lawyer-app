@@ -1,10 +1,11 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendSuccess } from "../helpers/response.helper.js";
 import * as adminService from "../services/admin.service.js";
+import * as verificationService from "../services/verification.service.js";
 
-export const pendingLawyers = asyncHandler(async (_req, res) => {
-  const out = await adminService.listPendingLawyers();
-  return sendSuccess(res, { message: "Pending lawyers", data: out });
+export const pendingLawyers = asyncHandler(async (req, res) => {
+  const out = await verificationService.getPendingVerifications(req.query);
+  return sendSuccess(res, { message: "Pending verifications", data: out.items, meta: out.meta });
 });
 
 export const allLawyers = asyncHandler(async (req, res) => {
@@ -13,13 +14,13 @@ export const allLawyers = asyncHandler(async (req, res) => {
 });
 
 export const verifyLawyer = asyncHandler(async (req, res) => {
-  const out = await adminService.setLawyerVerification({
+  const out = await verificationService.verifyLawyer({
     lawyerUserId: req.params.lawyerUserId,
     status: req.body.status,
     notes: req.body.notes,
     adminId: req.user.id
   });
-  return sendSuccess(res, { message: "Updated verification", data: out });
+  return sendSuccess(res, { message: "Verification updated successfully", data: out });
 });
 
 export const getSettings = asyncHandler(async (_req, res) => {
@@ -48,16 +49,21 @@ export const getAllBookings = asyncHandler(async (req, res) => {
 });
 
 export const getVerificationDocs = asyncHandler(async (req, res) => {
-  const out = await adminService.getVerificationDocuments(req.params.lawyerUserId);
+  const out = await verificationService.getLawyerDocuments(req.params.lawyerUserId);
   return sendSuccess(res, { message: "Verification documents", data: out });
 });
 
 export const reviewDocument = asyncHandler(async (req, res) => {
-  const out = await adminService.reviewVerificationDocument({
+  const out = await verificationService.reviewDocument({
     documentId: req.params.documentId,
     status: req.body.status,
     notes: req.body.notes,
     adminId: req.user.id
   });
-  return sendSuccess(res, { message: "Document reviewed", data: out });
+  return sendSuccess(res, { message: "Document reviewed successfully", data: out });
+});
+
+export const getLawyerVerificationStatus = asyncHandler(async (req, res) => {
+  const out = await verificationService.getVerificationStatus(req.params.lawyerUserId);
+  return sendSuccess(res, { message: "Verification status", data: out });
 });

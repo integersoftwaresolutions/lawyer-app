@@ -38,11 +38,6 @@ export default function Sidebar({
               }`}>
                 {item.label}
               </span>
-              
-              {/* Active indicator */}
-              {isActive && (
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-primary-text opacity-80" />
-              )}
             </Link>
           );
         })}

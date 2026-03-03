@@ -1,24 +1,39 @@
 import { useRef, useState, useEffect } from "react";
 import { lawyerApi } from "../../services/lawyer.api";
 import { Card, Badge, Button } from "../../components/ui";
+import { useToast } from "../../hooks/useToast";
+import { 
+  FiCheckCircle, 
+  FiXCircle, 
+  FiClock, 
+  FiUpload, 
+  FiFile, 
+  FiAlertCircle,
+  FiShield,
+  FiEye,
+  FiDownload
+} from "react-icons/fi";
 
 export default function LawyerVerificationPage() {
-  const [profile, setProfile] = useState(null);
+  const [verificationData, setVerificationData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploadingType, setUploadingType] = useState(null);
   const fileInputRef = useRef(null);
   const pendingDocTypeRef = useRef(null);
+  const toast = useToast();
 
   useEffect(() => {
-    loadProfile();
+    loadVerificationStatus();
   }, []);
 
-  const loadProfile = async () => {
+  const loadVerificationStatus = async () => {
     try {
-      const res = await lawyerApi.getMyProfile();
-      setProfile(res.data);
+      setLoading(true);
+      const res = await lawyerApi.getVerificationStatus();
+      setVerificationData(res.data);
     } catch (error) {
-      console.error("Failed to load profile:", error);
+      console.error("Failed to load verification status:", error);
+      toast.error(error.response?.data?.message || "Failed to load verification status");
     } finally {
       setLoading(false);
     }
@@ -37,14 +52,27 @@ export default function LawyerVerificationPage() {
     const docType = pendingDocTypeRef.current;
     if (!file || !docType) return;
 
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Please upload a PDF or image file (JPG, PNG)");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size must be less than 5MB");
+      return;
+    }
+
     try {
       setUploadingType(docType);
       await lawyerApi.uploadVerificationDocument(docType, file);
-      alert("Document uploaded. It will be reviewed by admin.");
-      loadProfile();
+      toast.success("Document uploaded successfully! It will be reviewed by our admin team.");
+      loadVerificationStatus();
     } catch (error) {
       console.error("Upload failed:", error);
-      alert(error.response?.data?.message || "Failed to upload document");
+      toast.error(error.response?.data?.message || "Failed to upload document");
     } finally {
       setUploadingType(null);
       pendingDocTypeRef.current = null;
@@ -52,23 +80,155 @@ export default function LawyerVerificationPage() {
   };
 
   if (loading) {
-    return <div className="p-6 text-text-secondary">Loading...</div>;
+    return (
+      <div className="p-6 text-text-secondary flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Loading verification status...</p>
+        </div>
+      </div>
+    );
   }
 
-  const getStatusBadge = (status) => {
-    const variants = {
-      PENDING: "warning",
-      APPROVED: "success",
-      REJECTED: "danger",
+  const status = verificationData?.profile?.verificationStatus || "PENDING";
+
+  const getStatusConfig = (status) => {
+    const configs = {
+      APPROVED: {
+        icon: FiCheckCircle,
+        color: "text-success",
+        bgColor: "bg-success/10",
+        borderColor: "border-success",
+        badge: "success",
+        title: "Verified Lawyer",
+        description: "Your profile has been verified. You can now receive bookings from clients."
+      },
+      REJECTED: {
+        icon: FiXCircle,
+        color: "text-danger",
+        bgColor: "bg-danger/10",
+        borderColor: "border-danger",
+        badge: "danger",
+        title: "Verification Rejected",
+        description: "Your verification was rejected. Please review the notes and resubmit your documents."
+      },
+      PENDING: {
+        icon: FiClock,
+        color: "text-warning",
+        bgColor: "bg-warning/10",
+        borderColor: "border-warning",
+        badge: "warning",
+        title: "Verification Pending",
+        description: "Your verification is under review by our admin team. This usually takes 1-3 business days."
+      }
     };
-    return <Badge variant={variants[status] || "default"} size="lg">{status}</Badge>;
+    return configs[status] || configs.PENDING;
   };
 
-  const documents = [
-    { type: "BAR_LICENSE", label: "Bar License", required: true },
-    { type: "GOVERNMENT_ID", label: "Government ID", required: true },
-    { type: "PROFESSIONAL_CERTIFICATE", label: "Professional Certificate", required: false },
-  ];
+  const statusConfig = getStatusConfig(status);
+  const StatusIcon = statusConfig.icon;
+
+  const getDocumentStatus = (docType) => {
+    const docs = verificationData?.documents?.[docType] || [];
+    if (docs.length === 0) return { status: "NOT_UPLOADED", doc: null };
+    
+    const latestDoc = docs[0]; // Most recent document
+    return { status: latestDoc.status, doc: latestDoc };
+  };
+
+  const renderDocumentCard = (docConfig) => {
+    const docStatus = getDocumentStatus(docConfig.type);
+    const hasDocument = docStatus.doc !== null;
+    const isApproved = docStatus.status === "APPROVED";
+    const isRejected = docStatus.status === "REJECTED";
+    const isPending = docStatus.status === "PENDING";
+
+    return (
+      <Card key={docConfig.type} className="overflow-hidden">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                isApproved ? "bg-success/10 text-success" :
+                isRejected ? "bg-danger/10 text-danger" :
+                isPending ? "bg-warning/10 text-warning" :
+                "bg-surface text-text-secondary"
+              }`}>
+                <FiFile className="w-5 h-5" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-semibold text-text-primary m-0">
+                    {docConfig.label}
+                  </h3>
+                  {docConfig.required && (
+                    <Badge variant="danger" size="sm">Required</Badge>
+                  )}
+                </div>
+                <p className="text-sm text-text-secondary m-0 mt-1">
+                  {hasDocument 
+                    ? `Uploaded: ${new Date(docStatus.doc.createdAt).toLocaleDateString()}`
+                    : "Not uploaded yet"}
+                </p>
+              </div>
+            </div>
+
+            {hasDocument && (
+              <div className="mt-3 flex items-center gap-2">
+                {isApproved && (
+                  <Badge variant="success" size="sm" className="flex items-center gap-1">
+                    <FiCheckCircle className="w-3 h-3" />
+                    Approved
+                  </Badge>
+                )}
+                {isRejected && (
+                  <Badge variant="danger" size="sm" className="flex items-center gap-1">
+                    <FiXCircle className="w-3 h-3" />
+                    Rejected
+                  </Badge>
+                )}
+                {isPending && (
+                  <Badge variant="warning" size="sm" className="flex items-center gap-1">
+                    <FiClock className="w-3 h-3" />
+                    Under Review
+                  </Badge>
+                )}
+                {docStatus.doc.adminNotes && (
+                  <p className="text-xs text-text-secondary mt-1">
+                    Note: {docStatus.doc.adminNotes}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {hasDocument && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => window.open(docStatus.doc.documentUrl, '_blank')}
+                className="flex items-center gap-1"
+              >
+                <FiEye className="w-4 h-4" />
+                View
+              </Button>
+            )}
+            <Button
+              variant={hasDocument ? "secondary" : "primary"}
+              size="sm"
+              loading={uploadingType === docConfig.type}
+              onClick={() => openFilePicker(docConfig.type)}
+              className="flex items-center gap-1"
+            >
+              <FiUpload className="w-4 h-4" />
+              {hasDocument ? "Replace" : "Upload"}
+            </Button>
+          </div>
+        </div>
+      </Card>
+    );
+  };
 
   return (
     <div>
@@ -80,79 +240,97 @@ export default function LawyerVerificationPage() {
         accept="image/*,application/pdf"
       />
 
-      <Card className="mb-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h2 className="text-xl font-bold text-text-primary mb-2">
-              Verification Status
-            </h2>
-            <p className="text-text-secondary m-0">
-              {profile?.verificationStatus === "APPROVED" 
-                ? "Your profile has been verified. You can now receive bookings from clients."
-                : profile?.verificationStatus === "REJECTED"
-                ? "Your verification was rejected. Please review the notes and resubmit."
-                : "Your verification is pending review by our admin team."}
-            </p>
+      {/* Status Card */}
+      <Card className={`mb-6 border-l-4 ${statusConfig.borderColor} ${statusConfig.bgColor}`}>
+        <div className="flex items-start gap-4">
+          <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${statusConfig.bgColor} ${statusConfig.color} flex-shrink-0`}>
+            <StatusIcon className="w-6 h-6" />
           </div>
-          {getStatusBadge(profile?.verificationStatus || "PENDING")}
-        </div>
+          <div className="flex-1">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-xl font-bold text-text-primary m-0">
+                {statusConfig.title}
+              </h2>
+              <Badge variant={statusConfig.badge} size="lg" className="flex items-center gap-1">
+                {status === "APPROVED" && <FiShield className="w-4 h-4" />}
+                {status}
+              </Badge>
+            </div>
+            <p className="text-text-secondary m-0 mb-3">
+              {statusConfig.description}
+            </p>
 
-        {profile?.verificationNotes && (
-          <div className={`mt-4 p-3 bg-surface rounded-md border-l-4 ${
-            profile?.verificationStatus === "REJECTED" ? "border-danger" : "border-warning"
-          }`}>
-            <strong className="text-text-primary">Admin Notes:</strong>
-            <p className="text-text-secondary mt-2 m-0">
-              {profile.verificationNotes}
-            </p>
+            {verificationData?.profile?.verificationNotes && (
+              <div className={`mt-4 p-4 rounded-lg border ${
+                status === "REJECTED" ? "bg-danger/5 border-danger/20" : "bg-warning/5 border-warning/20"
+              }`}>
+                <div className="flex items-start gap-2">
+                  <FiAlertCircle className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
+                    status === "REJECTED" ? "text-danger" : "text-warning"
+                  }`} />
+                  <div className="flex-1">
+                    <strong className="text-text-primary text-sm">Admin Notes:</strong>
+                    <p className="text-text-secondary text-sm mt-1 m-0">
+                      {verificationData.profile.verificationNotes}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {status === "APPROVED" && verificationData?.profile?.verifiedAt && (
+              <p className="text-sm text-text-secondary mt-3 m-0">
+                Verified on: {new Date(verificationData.profile.verifiedAt).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric"
+                })}
+              </p>
+            )}
           </div>
-        )}
+        </div>
       </Card>
 
-      <Card title="Required Documents" subtitle="Upload the following documents for verification">
-        <div className="flex flex-col gap-4">
-          {documents.map((doc) => (
-            <div
-              key={doc.type}
-              className="border border-border rounded-lg p-4 flex justify-between items-center"
-            >
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-semibold text-text-primary">
-                    {doc.label}
-                  </span>
-                  {doc.required && (
-                    <Badge variant="danger" size="sm">Required</Badge>
-                  )}
-                </div>
-                <p className="text-text-secondary m-0 text-xs">
-                  Upload a clear copy of your {doc.label.toLowerCase()}
-                </p>
-              </div>
-              <Button
-                variant="secondary"
-                size="sm"
-                loading={uploadingType === doc.type}
-                onClick={() => openFilePicker(doc.type)}
-              >
-                Upload
-              </Button>
-            </div>
-          ))}
+      {/* Documents Section */}
+      <Card title="Verification Documents" className="mb-6">
+        <p className="text-text-secondary mb-6">
+          Upload the required documents to complete your verification. All documents are securely stored and reviewed by our admin team.
+        </p>
+
+        <div className="flex flex-col gap-4 mb-6">
+          {verificationData?.requiredDocuments?.map((doc) => renderDocumentCard(doc))}
         </div>
 
-        <div className="mt-6 p-4 bg-surface rounded-lg">
-          <h4 className="text-text-primary mb-2">
+        {/* Process Info */}
+        <div className="mt-6 p-5 bg-surface rounded-lg border border-border">
+          <h4 className="text-text-primary mb-3 flex items-center gap-2">
+            <FiShield className="w-5 h-5 text-primary" />
             Verification Process
           </h4>
-          <ol className="text-text-secondary pl-5 m-0">
-            <li className="mb-2">Upload all required documents</li>
-            <li className="mb-2">Our admin team will review your documents within 1-3 business days</li>
-            <li className="mb-2">Once approved, you'll receive a verification badge on your profile</li>
-            <li>Verified lawyers appear higher in search results and can receive more bookings</li>
+          <ol className="text-text-secondary space-y-2 pl-6 m-0 list-decimal">
+            <li>Upload all required documents (Bar License and Government ID)</li>
+            <li>Our admin team will review your documents within 1-3 business days</li>
+            <li>Once approved, you'll receive a verification badge on your profile</li>
+            <li>Verified lawyers appear higher in search results and can receive bookings</li>
           </ol>
         </div>
       </Card>
+
+      {/* Benefits Card */}
+      {status === "APPROVED" && (
+        <Card className="bg-success/5 border-success/20">
+          <h3 className="text-text-primary mb-2 flex items-center gap-2">
+            <FiCheckCircle className="w-5 h-5 text-success" />
+            Verification Benefits
+          </h3>
+          <ul className="text-text-secondary space-y-1 pl-6 m-0 list-disc">
+            <li>Verified badge displayed on your profile</li>
+            <li>Higher visibility in lawyer search results</li>
+            <li>Ability to receive bookings from clients</li>
+            <li>Increased trust and credibility</li>
+          </ul>
+        </Card>
+      )}
     </div>
   );
 }

@@ -33,6 +33,7 @@ import AdminSettingsPage from "../pages/admin/AdminSettingsPage.jsx";
 
 import SessionChat from "../pages/client/SessionChat.jsx";
 import ProtectedRoute from "./ProtectedRoute.jsx";
+import AuthRoute from "./AuthRoute.jsx";
 
 export default function RoutesRoot() {
   return (
@@ -117,10 +118,31 @@ export default function RoutesRoot() {
         }
       />
 
-      {/* Auth Routes */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/verify-email" element={<VerifyEmail />} />
+      {/* Auth Routes - Redirect authenticated users to dashboard */}
+      <Route 
+        path="/login" 
+        element={
+          <AuthRoute>
+            <Login />
+          </AuthRoute>
+        } 
+      />
+      <Route 
+        path="/register" 
+        element={
+          <AuthRoute>
+            <Register />
+          </AuthRoute>
+        } 
+      />
+      <Route 
+        path="/verify-email" 
+        element={
+          <AuthRoute>
+            <VerifyEmail />
+          </AuthRoute>
+        } 
+      />
 
       {/* Chat Route */}
       <Route
