@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { adminApi } from "../../services/admin.api";
-import { Card, Button, Badge, Modal, Textarea, Select } from "../../components/ui";
+import { Card, Button, Badge, Modal, Textarea, Select, StateHandler } from "../../components/ui";
 import { useToast } from "../../hooks/useToast";
+import { useStateHandler } from "../../hooks/useStateHandler";
 import { 
   FiCheckCircle, 
   FiXCircle, 
@@ -19,8 +20,6 @@ import {
 } from "react-icons/fi";
 
 export default function AdminVerificationPage() {
-  const [pendingLawyers, setPendingLawyers] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [verifyModal, setVerifyModal] = useState({ open: false, lawyer: null });
   const [documentsModal, setDocumentsModal] = useState({ open: false, lawyer: null, documents: [] });
   const [verifyData, setVerifyData] = useState({ status: "APPROVED", notes: "" });
@@ -28,22 +27,14 @@ export default function AdminVerificationPage() {
   const [loadingDocs, setLoadingDocs] = useState(false);
   const toast = useToast();
 
-  useEffect(() => {
-    loadPendingLawyers();
-  }, []);
-
-  const loadPendingLawyers = async () => {
-    try {
-      setLoading(true);
+  const { loading, error, data, retry } = useStateHandler(
+    async () => {
       const res = await adminApi.getPendingLawyers();
-      setPendingLawyers(res.data || []);
-    } catch (error) {
-      console.error("Failed to load pending lawyers:", error);
-      toast.error(error.response?.data?.message || "Failed to load pending verifications");
-    } finally {
-      setLoading(false);
+      return res.data || [];
     }
-  };
+  );
+
+  const pendingLawyers = data || [];
 
   const loadLawyerDocuments = async (lawyerUserId) => {
     try {
@@ -72,7 +63,7 @@ export default function AdminVerificationPage() {
       toast.success(`Lawyer ${verifyData.status === "APPROVED" ? "approved" : "rejected"} successfully`);
       setVerifyModal({ open: false, lawyer: null });
       setVerifyData({ status: "APPROVED", notes: "" });
-      loadPendingLawyers();
+      retry();
     } catch (error) {
       console.error("Failed to verify:", error);
       toast.error(error.response?.data?.message || "Failed to update verification");
@@ -106,19 +97,9 @@ export default function AdminVerificationPage() {
     );
   };
 
-  if (loading) {
-    return (
-      <div className="p-6 text-text-secondary flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Loading pending verifications...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div>
+    <StateHandler loading={loading} error={error} retry={retry}>
+      <div>
       <Card className="mb-6">
         <div className="mb-5">
           <h2 className="text-2xl font-bold text-text-primary mb-2 flex items-center gap-2">
@@ -356,6 +337,7 @@ export default function AdminVerificationPage() {
           </div>
         )}
       </Modal>
-    </div>
+      </div>
+    </StateHandler>
   );
 }

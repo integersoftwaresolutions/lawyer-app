@@ -1,27 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { adminApi } from "../../services/admin.api";
-import { Card, Button, Badge } from "../../components/ui";
+import { Card, Button, Badge, Table } from "../../components/ui";
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
 
-  useEffect(() => {
-    loadUsers();
-  }, [filter]);
-
-  const loadUsers = async () => {
-    try {
-      setLoading(true);
-      const params = filter ? { role: filter } : {};
-      const res = await adminApi.getUsers(params);
-      setUsers(res.data || []);
-    } catch (error) {
-      console.error("Failed to load users:", error);
-    } finally {
-      setLoading(false);
-    }
+  const fetchUsers = async () => {
+    const params = filter ? { role: filter } : {};
+    const res = await adminApi.getUsers(params);
+    return res.data || [];
   };
 
   const getRoleBadge = (role) => {
@@ -48,6 +35,32 @@ export default function AdminUsersPage() {
     { value: "ADMIN", label: "Admins" },
   ];
 
+  const columns = [
+    {
+      key: "email",
+      label: "Email",
+    },
+    {
+      key: "role",
+      label: "Role",
+      render: (value) => getRoleBadge(value),
+    },
+    {
+      key: "isEmailVerified",
+      label: "Email Verified",
+      render: (value) => (
+        <Badge variant={value ? "success" : "warning"}>
+          {value ? "Verified" : "Pending"}
+        </Badge>
+      ),
+    },
+    {
+      key: "createdAt",
+      label: "Joined",
+      render: (value) => formatDate(value),
+    },
+  ];
+
   return (
     <div>
       <Card>
@@ -69,38 +82,12 @@ export default function AdminUsersPage() {
           </div>
         </div>
 
-        {loading ? (
-          <p className="text-text-secondary">Loading...</p>
-        ) : users.length === 0 ? (
-          <div className="text-center py-10 text-text-secondary">
-            <p>No users found</p>
-          </div>
-        ) : (
-          <table className="w-full border-collapse">
-            <thead>
-              <tr>
-                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Email</th>
-                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Role</th>
-                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Email Verified</th>
-                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Joined</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user._id}>
-                  <td className="p-3 border-b border-border text-text-primary text-sm">{user.email}</td>
-                  <td className="p-3 border-b border-border text-text-primary text-sm">{getRoleBadge(user.role)}</td>
-                  <td className="p-3 border-b border-border text-text-primary text-sm">
-                    <Badge variant={user.isEmailVerified ? "success" : "warning"}>
-                      {user.isEmailVerified ? "Verified" : "Pending"}
-                    </Badge>
-                  </td>
-                  <td className="p-3 border-b border-border text-text-primary text-sm">{formatDate(user.createdAt)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <Table
+          columns={columns}
+          data={fetchUsers}
+          dependencies={[filter]}
+          emptyMessage="No users found"
+        />
       </Card>
     </div>
   );

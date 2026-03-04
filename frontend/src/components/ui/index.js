@@ -8,4 +8,7 @@ export { default as Textarea } from "./Textarea";
 export { default as StatCard } from "./StatCard";
 export { default as Checkbox } from "./Checkbox";
 export { default as Popover } from "./Popover";
+export { default as Table } from "./Table";
+export { default as Pagination } from "./Pagination";
 export { Toast, ToastContainer } from "./Toast";
+export { default as StateHandler } from "../StateHandler";

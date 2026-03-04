@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { bootstrapAuth } from "../store/slices/authSlice";
 import { useAuth } from "../hooks/useAuth";
-import { FiLoader } from "react-icons/fi";
 
 /**
  * Gateway Component
@@ -38,21 +37,17 @@ export default function Gateway({ children }) {
 /**
  * Loading Screen Component
  * Professional loading screen with theme-aware styling
+ * Consistent with StateHandler loading UI
  */
 function LoadingScreen({ message = "Loading..." }) {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="text-center">
-        <div className="relative inline-block">
-          <FiLoader className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
-          <div className="absolute inset-0 border-4 border-primary/20 rounded-full"></div>
+      <div className="flex flex-col items-center gap-4">
+        <div className="relative w-12 h-12">
+          <div className="absolute inset-0 border-2 border-primary/20 rounded-full"></div>
+          <div className="absolute inset-0 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
         </div>
-        <p className="text-text-secondary text-sm font-medium mt-4">{message}</p>
-        <div className="flex justify-center gap-1 mt-2">
-          <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-          <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-          <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-        </div>
+        <p className="text-sm text-text-secondary font-medium">{message}</p>
       </div>
     </div>
   );

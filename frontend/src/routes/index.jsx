@@ -32,6 +32,7 @@ import AdminVerificationPage from "../pages/admin/AdminVerificationPage.jsx";
 import AdminSettingsPage from "../pages/admin/AdminSettingsPage.jsx";
 
 import SessionChat from "../pages/client/SessionChat.jsx";
+import NotFoundPage from "../pages/NotFoundPage.jsx";
 import ProtectedRoute from "./ProtectedRoute.jsx";
 import AuthRoute from "./AuthRoute.jsx";
 
@@ -153,6 +154,9 @@ export default function RoutesRoot() {
           </ProtectedRoute>
         }
       />
+
+      {/* 404 Route - Must be last */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }

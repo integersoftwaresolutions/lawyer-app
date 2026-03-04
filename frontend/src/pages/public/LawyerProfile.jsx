@@ -1,17 +1,30 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { lawyerApi } from "../../services/lawyer.api";
 import { bookingApi } from "../../services/booking.api";
 import { useAuth } from "../../hooks/useAuth";
 import { Navbar } from "../../components/layout";
-import { Modal, Button, Input, Select } from "../../components/ui";
+import { Modal, Button, Input, Select, StateHandler, Card, Badge } from "../../components/ui";
+import { useStateHandler } from "../../hooks/useStateHandler";
+import { 
+  FiArrowLeft, 
+  FiStar, 
+  FiMapPin, 
+  FiBriefcase, 
+  FiDollarSign,
+  FiShield,
+  FiClock,
+  FiMessageCircle,
+  FiCalendar,
+  FiUser,
+  FiCheckCircle,
+  FiAlertCircle
+} from "react-icons/fi";
 
 export default function LawyerProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [lawyer, setLawyer] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [bookingModal, setBookingModal] = useState(false);
   const [availabilityDate, setAvailabilityDate] = useState("");
   const [availableSlots, setAvailableSlots] = useState([]);
@@ -133,197 +146,363 @@ export default function LawyerProfile() {
     }
   };
 
-  useEffect(() => {
-    async function loadProfile() {
-      try {
-        const res = await lawyerApi.profile(id);
-        setLawyer(res.data);
-      } catch (error) {
-        console.error("Failed to load lawyer profile:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadProfile();
-  }, [id]);
+  const { loading, error, data, retry } = useStateHandler(
+    async () => {
+      const res = await lawyerApi.profile(id);
+      return res.data;
+    },
+    { dependencies: [id] }
+  );
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background text-text-primary flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-[3px] border-border border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-text-secondary">Loading profile...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!lawyer) {
-    return (
-      <div className="min-h-screen bg-background text-text-primary flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-5xl mb-4">👤</div>
-          <h3 className="text-xl font-bold mb-2 text-text-primary">
-            Lawyer not found
-          </h3>
-          <p className="text-text-secondary">This lawyer profile doesn't exist</p>
-        </div>
-      </div>
-    );
-  }
+  const lawyer = data;
 
   const isClient = user?.role === "CLIENT";
 
   return (
-    <>
-      <Navbar />
-      <div className="min-h-screen bg-background text-text-primary p-6 max-w-[800px] mx-auto">
-        <button
-          onClick={() => navigate(-1)}
-          className="py-3 px-6 rounded border border-border bg-secondary text-secondary-text cursor-pointer mb-6 inline-flex items-center gap-2 hover:bg-secondary-hover transition-colors"
-        >
-          ← Back to Search
-        </button>
-
-        <div className="border border-border rounded-lg bg-card p-8 mb-6">
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <h1 className="text-3xl font-bold mb-2 text-text-primary">{lawyer.fullName || "Lawyer"}</h1>
-              <div className="flex items-center gap-2 mb-4">
-                <span>★</span>
-                <span>{lawyer.ratingAvg ? lawyer.ratingAvg.toFixed(1) : "0.0"}</span>
-                {lawyer.ratingCount && <span>({lawyer.ratingCount} reviews)</span>}
-                <span
-                  className={`py-1 px-3 rounded-full text-xs font-medium ${
-                    lawyer.verificationStatus === "APPROVED"
-                      ? "bg-success text-success-text"
-                      : "bg-warning text-warning-text"
-                  }`}
-                >
-                  {lawyer.verificationStatus}
-                </span>
+    <StateHandler loading={loading} error={error} retry={retry}>
+      <>
+        <Navbar />
+        {!lawyer ? (
+          <div className="min-h-screen bg-background text-text-primary flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-20 h-20 rounded-full bg-surface flex items-center justify-center mx-auto mb-6">
+                <FiUser className="w-10 h-10 text-text-secondary" />
               </div>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-text-primary">${lawyer.hourlyRate}</div>
-              <div className="text-sm text-text-secondary">per hour</div>
-            </div>
-          </div>
-
-          {lawyer.bio && (
-            <div>
-              <h3 className="text-lg font-bold mb-3 text-text-primary">About</h3>
-              <p className="text-base leading-relaxed text-text-secondary mb-6">{lawyer.bio}</p>
-            </div>
-          )}
-
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-6">
-            <div className="p-4 border border-border rounded bg-surface">
-              <div className="text-xs text-text-secondary mb-1">Location</div>
-              <div className="text-base font-medium text-text-primary">📍 {lawyer.city || "Not specified"}</div>
-            </div>
-            <div className="p-4 border border-border rounded bg-surface">
-              <div className="text-xs text-text-secondary mb-1">Experience</div>
-              <div className="text-base font-medium text-text-primary">💼 {lawyer.experienceYears} years</div>
-            </div>
-            <div className="p-4 border border-border rounded bg-surface">
-              <div className="text-xs text-text-secondary mb-1">Specialization</div>
-              <div className="text-base font-medium text-text-primary">
-                ⚖️{" "}
-                {lawyer.specialization && lawyer.specialization.length > 0
-                  ? lawyer.specialization.join(", ")
-                  : "General practice"}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {isClient && (
-          <div className="border border-border rounded-lg bg-card p-6 mb-6">
-            <h3 className="text-lg font-bold mb-4 text-text-primary">Book a Consultation</h3>
-            <div>
-              <button
-                className="py-3 px-6 rounded bg-primary text-primary-text cursor-pointer font-medium mr-3 hover:bg-primary-hover transition-colors"
-                onClick={() => {
-                  const today = new Date();
-                  const yyyy = today.getFullYear();
-                  const mm = String(today.getMonth() + 1).padStart(2, "0");
-                  const dd = String(today.getDate()).padStart(2, "0");
-                  const isoDate = `${yyyy}-${mm}-${dd}`;
-                  setAvailabilityDate((prev) => prev || isoDate);
-                  setBookingModal(true);
-                }}
-              >
-                Book Now
-              </button>
-              <button className="py-3 px-6 rounded border border-border bg-secondary text-secondary-text cursor-pointer font-medium hover:bg-secondary-hover transition-colors">
-                Send Message
-              </button>
-            </div>
-          </div>
-        )}
-
-        {isClient && (
-          <div className="border border-border rounded-lg bg-card p-6 mb-6">
-            <h3 className="text-lg font-bold mb-4 text-text-primary">Availability</h3>
-            <div className="flex gap-3 items-end flex-wrap">
-              <div className="min-w-[220px]">
-                <Input
-                  label="Select Date"
-                  type="date"
-                  value={availabilityDate}
-                  onChange={(e) => setAvailabilityDate(e.target.value)}
-                />
-              </div>
+              <h3 className="text-2xl font-bold mb-2 text-text-primary">
+                Lawyer not found
+              </h3>
+              <p className="text-text-secondary mb-6">This lawyer profile doesn't exist</p>
               <Button
+                onClick={() => navigate(-1)}
                 variant="secondary"
-                loading={slotsLoading}
-                onClick={loadSlots}
-                disabled={!availabilityDate}
+                className="inline-flex items-center gap-2"
               >
-                Load Slots
+                <FiArrowLeft className="w-4 h-4" />
+                Back to Search
               </Button>
             </div>
-            <div className="mt-3">
-              {slotsLoading ? (
-                <p className="text-text-secondary m-0">Loading slots...</p>
-              ) : availableSlots.length === 0 ? (
-                <p className="text-text-secondary m-0">
-                  {availabilityDate
-                    ? "No slots available for this date."
-                    : "Select a date to see available slots."}
-                </p>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {availableSlots.map((s) => (
-                    <span
-                      key={`${s.start}-${s.end}`}
-                      className="py-1.5 px-2.5 rounded-full border border-border bg-surface text-text-primary text-xs"
-                    >
-                      {s.start} - {s.end}
-                    </span>
-                  ))}
+          </div>
+        ) : (
+          <div className="min-h-screen bg-background text-text-primary">
+            <div className="max-w-6xl mx-auto px-6 py-8">
+              {/* Back Button */}
+              <Button
+                onClick={() => navigate(-1)}
+                variant="ghost"
+                className="mb-6 inline-flex items-center gap-2"
+              >
+                <FiArrowLeft className="w-4 h-4" />
+                Back to Search
+              </Button>
+
+              {/* Profile Header Card */}
+              <Card className="mb-6 overflow-hidden">
+                <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-8 border-b border-border">
+                  <div className="flex flex-col md:flex-row gap-6 items-start">
+                    {/* Profile Image/Avatar */}
+                    <div className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 border-4 border-card">
+                      {lawyer?.profileImage ? (
+                        <img
+                          src={lawyer.profileImage}
+                          alt={lawyer?.fullName}
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      ) : (
+                        <FiUser className="w-12 h-12 text-primary" />
+                      )}
+                    </div>
+
+                    {/* Profile Info */}
+                    <div className="flex-1">
+                      <div className="flex flex-wrap items-center gap-3 mb-3">
+                        <h1 className="text-3xl md:text-4xl font-bold text-text-primary">
+                          {lawyer?.fullName || "Lawyer"}
+                        </h1>
+                        {lawyer?.verificationStatus === "APPROVED" && (
+                          <Badge variant="success" className="flex items-center gap-1">
+                            <FiShield className="w-3 h-3" />
+                            Verified
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Rating */}
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="flex items-center gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <FiStar
+                              key={i}
+                              className={`w-5 h-5 ${
+                                i < Math.round(lawyer?.ratingAvg || 0)
+                                  ? "text-warning fill-warning"
+                                  : "text-text-muted"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-lg font-semibold text-text-primary">
+                          {lawyer?.ratingAvg ? lawyer.ratingAvg.toFixed(1) : "0.0"}
+                        </span>
+                        {lawyer?.ratingCount > 0 && (
+                          <span className="text-text-secondary">
+                            ({lawyer.ratingCount} {lawyer.ratingCount === 1 ? "review" : "reviews"})
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Quick Stats */}
+                      <div className="flex flex-wrap gap-4 text-sm">
+                        <div className="flex items-center gap-2 text-text-secondary">
+                          <FiMapPin className="w-4 h-4" />
+                          <span>{lawyer?.city || "Location not specified"}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-text-secondary">
+                          <FiBriefcase className="w-4 h-4" />
+                          <span>{lawyer?.experienceYears || 0} years experience</span>
+                        </div>
+                        {lawyer?.specialization && lawyer.specialization.length > 0 && (
+                          <div className="flex items-center gap-2 text-text-secondary">
+                            <FiCheckCircle className="w-4 h-4" />
+                            <span>{lawyer.specialization.length} {lawyer.specialization.length === 1 ? "specialization" : "specializations"}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Pricing Card */}
+                    <div className="bg-card border border-border rounded-xl p-6 text-center min-w-[180px]">
+                      <div className="text-3xl font-bold text-text-primary mb-1">
+                        ${lawyer?.hourlyRate || 0}
+                      </div>
+                      <div className="text-sm text-text-secondary mb-4">per hour</div>
+                      {isClient && (
+                        <Button
+                          fullWidth
+                          onClick={() => {
+                            const today = new Date();
+                            const yyyy = today.getFullYear();
+                            const mm = String(today.getMonth() + 1).padStart(2, "0");
+                            const dd = String(today.getDate()).padStart(2, "0");
+                            const isoDate = `${yyyy}-${mm}-${dd}`;
+                            setAvailabilityDate((prev) => prev || isoDate);
+                            setBookingModal(true);
+                          }}
+                          className="flex items-center justify-center gap-2"
+                        >
+                          <FiCalendar className="w-4 h-4" />
+                          Book Now
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 </div>
+
+                {/* Bio Section */}
+                {lawyer?.bio && (
+                  <div className="p-8">
+                    <h2 className="text-xl font-bold mb-4 text-text-primary flex items-center gap-2">
+                      <FiUser className="w-5 h-5" />
+                      About
+                    </h2>
+                    <p className="text-base leading-relaxed text-text-secondary whitespace-pre-line">
+                      {lawyer.bio}
+                    </p>
+                  </div>
+                )}
+              </Card>
+
+              {/* Details Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <Card className="p-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                      <FiMapPin className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="text-xs text-text-secondary mb-1">Location</div>
+                      <div className="text-base font-semibold text-text-primary">
+                        {lawyer?.city || "Not specified"}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card className="p-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                      <FiBriefcase className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="text-xs text-text-secondary mb-1">Experience</div>
+                      <div className="text-base font-semibold text-text-primary">
+                        {lawyer?.experienceYears || 0} years
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card className="p-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                      <FiDollarSign className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="text-xs text-text-secondary mb-1">Hourly Rate</div>
+                      <div className="text-base font-semibold text-text-primary">
+                        ${lawyer?.hourlyRate || 0}/hr
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+
+              {/* Specializations */}
+              {lawyer?.specialization && lawyer.specialization.length > 0 && (
+                <Card className="mb-6">
+                  <h2 className="text-xl font-bold mb-4 text-text-primary flex items-center gap-2">
+                    <FiCheckCircle className="w-5 h-5" />
+                    Specializations
+                  </h2>
+                  <div className="flex flex-wrap gap-2">
+                    {lawyer.specialization.map((spec) => (
+                      <Badge key={spec} variant="secondary" className="text-sm py-2 px-4">
+                        {spec}
+                      </Badge>
+                    ))}
+                  </div>
+                </Card>
               )}
+
+              {/* Booking Section - Only for Clients */}
+              {isClient && (
+                <>
+                  <Card className="mb-6">
+                    <h2 className="text-xl font-bold mb-6 text-text-primary flex items-center gap-2">
+                      <FiCalendar className="w-5 h-5" />
+                      Book a Consultation
+                    </h2>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Button
+                        onClick={() => {
+                          const today = new Date();
+                          const yyyy = today.getFullYear();
+                          const mm = String(today.getMonth() + 1).padStart(2, "0");
+                          const dd = String(today.getDate()).padStart(2, "0");
+                          const isoDate = `${yyyy}-${mm}-${dd}`;
+                          setAvailabilityDate((prev) => prev || isoDate);
+                          setBookingModal(true);
+                        }}
+                        className="flex items-center justify-center gap-2"
+                      >
+                        <FiCalendar className="w-4 h-4" />
+                        Book Consultation
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        className="flex items-center justify-center gap-2"
+                      >
+                        <FiMessageCircle className="w-4 h-4" />
+                        Send Message
+                      </Button>
+                    </div>
+                  </Card>
+
+                  <Card className="mb-6">
+                    <h2 className="text-xl font-bold mb-6 text-text-primary flex items-center gap-2">
+                      <FiClock className="w-5 h-5" />
+                      Check Availability
+                    </h2>
+                    <div className="flex gap-3 items-end flex-wrap mb-4">
+                      <div className="flex-1 min-w-[220px]">
+                        <Input
+                          label="Select Date"
+                          type="date"
+                          value={availabilityDate}
+                          onChange={(e) => setAvailabilityDate(e.target.value)}
+                        />
+                      </div>
+                      <Button
+                        variant="secondary"
+                        loading={slotsLoading}
+                        onClick={loadSlots}
+                        disabled={!availabilityDate}
+                        className="flex items-center gap-2"
+                      >
+                        <FiClock className="w-4 h-4" />
+                        Load Slots
+                      </Button>
+                    </div>
+                    <div className="mt-4">
+                      {slotsLoading ? (
+                        <div className="flex items-center gap-2 text-text-secondary">
+                          <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                          <span>Loading available slots...</span>
+                        </div>
+                      ) : availableSlots.length === 0 ? (
+                        <div className="p-4 bg-surface rounded-lg border border-border">
+                          <div className="flex items-center gap-2 text-text-secondary">
+                            <FiAlertCircle className="w-5 h-5" />
+                            <span>
+                              {availabilityDate
+                                ? "No slots available for this date."
+                                : "Select a date to see available slots."}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-wrap gap-2">
+                          {availableSlots.map((s) => (
+                            <Badge
+                              key={`${s.start}-${s.end}`}
+                              variant="secondary"
+                              className="text-sm py-2 px-4 cursor-pointer hover:bg-primary hover:text-primary-text transition-colors"
+                              onClick={() => {
+                                setBookingData((p) => ({ ...p, slot: `${s.start}-${s.end}` }));
+                                setBookingModal(true);
+                              }}
+                            >
+                              <FiClock className="w-3 h-3 inline mr-1" />
+                              {s.start} - {s.end}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                </>
+              )}
+
+              {/* Reviews Section */}
+              <Card>
+                <h2 className="text-xl font-bold mb-6 text-text-primary flex items-center gap-2">
+                  <FiStar className="w-5 h-5" />
+                  Client Reviews
+                </h2>
+                {lawyer?.ratingCount > 0 ? (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 rounded-full bg-warning/10 flex items-center justify-center mx-auto mb-4">
+                      <FiStar className="w-8 h-8 text-warning" />
+                    </div>
+                    <p className="text-text-secondary font-medium">Reviews coming soon</p>
+                    <p className="text-sm text-text-muted mt-2">
+                      Detailed reviews will be displayed here
+                    </p>
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 rounded-full bg-surface flex items-center justify-center mx-auto mb-4">
+                      <FiMessageCircle className="w-8 h-8 text-text-secondary" />
+                    </div>
+                    <p className="text-text-secondary font-medium mb-2">No reviews yet</p>
+                    <p className="text-sm text-text-muted">
+                      Be the first to review this lawyer after your consultation
+                    </p>
+                  </div>
+                )}
+              </Card>
             </div>
           </div>
         )}
-
-        <div className="border border-border rounded-lg bg-card p-6">
-          <h3 className="text-lg font-bold mb-4 text-text-primary">Client Reviews</h3>
-          {lawyer.ratingCount > 0 ? (
-            <div className="text-center py-8 text-text-secondary">
-              <div className="text-4xl mb-2">⭐</div>
-              <p>Reviews coming soon</p>
-            </div>
-          ) : (
-            <div className="text-center py-8 text-text-secondary">
-              <div className="text-4xl mb-2">💬</div>
-              <p>No reviews yet</p>
-              <p className="text-sm">Be the first to review this lawyer</p>
-            </div>
-          )}
-        </div>
 
       <Modal
         isOpen={bookingModal}
@@ -459,7 +638,7 @@ export default function LawyerProfile() {
           </p>
         </div>
       </Modal>
-      </div>
-    </>
+      </>
+    </StateHandler>
   );
 }

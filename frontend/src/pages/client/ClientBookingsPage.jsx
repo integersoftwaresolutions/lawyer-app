@@ -1,12 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { clientApi } from "../../services/client.api";
-import { Card, Button, Badge, Modal, Textarea, Input, Select } from "../../components/ui";
+import { Card, Button, Badge, Modal, Textarea, Input, Select, Table } from "../../components/ui";
 
 export default function ClientBookingsPage() {
   const navigate = useNavigate();
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
   const [reviewModal, setReviewModal] = useState({ open: false, booking: null });
   const [reviewData, setReviewData] = useState({ rating: 5, comment: "" });
@@ -15,22 +13,12 @@ export default function ClientBookingsPage() {
   const [deleteModal, setDeleteModal] = useState({ open: false, booking: null });
   const [editModal, setEditModal] = useState({ open: false, booking: null });
   const [editData, setEditData] = useState({ date: "", time: "", durationMinutes: 30 });
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  useEffect(() => {
-    loadBookings();
-  }, [filter]);
-
-  const loadBookings = async () => {
-    try {
-      setLoading(true);
-      const params = filter ? { status: filter } : {};
-      const res = await clientApi.getMyBookings(params);
-      setBookings(res.data || []);
-    } catch (error) {
-      console.error("Failed to load bookings:", error);
-    } finally {
-      setLoading(false);
-    }
+  const fetchBookings = async () => {
+    const params = filter ? { status: filter } : {};
+    const res = await clientApi.getMyBookings(params);
+    return res.data || [];
   };
 
   const handleDelete = async () => {
@@ -39,7 +27,7 @@ export default function ClientBookingsPage() {
       setSubmitting(true);
       await clientApi.deleteMyBooking(deleteModal.booking._id);
       setDeleteModal({ open: false, booking: null });
-      loadBookings();
+      setRefreshKey((k) => k + 1);
     } catch (error) {
       console.error("Failed to delete booking:", error);
       alert(error.response?.data?.message || "Failed to delete booking");
@@ -73,7 +61,7 @@ export default function ClientBookingsPage() {
         durationMinutes: Number(editData.durationMinutes)
       });
       setEditModal({ open: false, booking: null });
-      loadBookings();
+      setRefreshKey((k) => k + 1);
     } catch (error) {
       console.error("Failed to edit booking:", error);
       alert(error.response?.data?.message || "Failed to edit booking");
@@ -134,7 +122,7 @@ export default function ClientBookingsPage() {
       });
       setReviewModal({ open: false, booking: null });
       setReviewData({ rating: 5, comment: "" });
-      loadBookings();
+      setRefreshKey((k) => k + 1);
     } catch (error) {
       console.error("Failed to submit review:", error);
       alert(error.response?.data?.message || "Failed to submit review");
@@ -151,6 +139,81 @@ export default function ClientBookingsPage() {
     { value: "CANCELLED", label: "Cancelled" },
   ];
 
+  const columns = [
+    {
+      key: "lawyerUserId",
+      label: "Lawyer",
+      render: (_, row) => row.lawyerUserId?.email || "N/A",
+    },
+    {
+      key: "startAt",
+      label: "Date & Time",
+      render: (value) => formatDate(value),
+    },
+    {
+      key: "durationMinutes",
+      label: "Duration",
+      render: (value) => `${value} min`,
+    },
+    {
+      key: "consultationType",
+      label: "Type",
+      render: (value) => value || "CHAT",
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (value) => getStatusBadge(value),
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      render: (_, row) => (
+        <div className="flex gap-2 flex-wrap">
+          {isEditableOrViewable(row) && (
+            <>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => setViewModal({ open: true, booking: row })}
+              >
+                View
+              </Button>
+              {row.status === "BOOKED" && (
+                <Button size="sm" variant="secondary" onClick={() => handleOpenEdit(row)}>
+                  Edit
+                </Button>
+              )}
+            </>
+          )}
+
+          {row.status === "ACTIVE" && (
+            <Button size="sm" onClick={() => navigate(`/chat/${row._id}`)}>
+              Join Chat
+            </Button>
+          )}
+
+          {row.status === "COMPLETED" && !row.hasReview && (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => setReviewModal({ open: true, booking: row })}
+            >
+              Review
+            </Button>
+          )}
+
+          <Button
+            size="sm"
+            variant="danger"
+            onClick={() => setDeleteModal({ open: true, booking: row })}
+          >
+            Delete
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div>
@@ -173,84 +236,20 @@ export default function ClientBookingsPage() {
           </div>
         </div>
 
-        {loading ? (
-          <p className="text-text-secondary">Loading...</p>
-        ) : bookings.length === 0 ? (
-          <div className="text-center py-10 text-text-secondary">
-            <p>No bookings found</p>
-            <Button className="mt-4" onClick={() => navigate("/client/search")}>
-              Find Lawyers
-            </Button>
-          </div>
-        ) : (
-          <table className="w-full border-collapse">
-            <thead>
-              <tr>
-                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Lawyer</th>
-                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Date & Time</th>
-                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Duration</th>
-                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Type</th>
-                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Status</th>
-                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {bookings.map((booking) => (
-                <tr key={booking._id}>
-                  <td className="p-3 border-b border-border text-text-primary text-sm">{booking.lawyerUserId?.email || "N/A"}</td>
-                  <td className="p-3 border-b border-border text-text-primary text-sm">{formatDate(booking.startAt)}</td>
-                  <td className="p-3 border-b border-border text-text-primary text-sm">{booking.durationMinutes} min</td>
-                  <td className="p-3 border-b border-border text-text-primary text-sm">{booking.consultationType || "CHAT"}</td>
-                  <td className="p-3 border-b border-border text-text-primary text-sm">{getStatusBadge(booking.status)}</td>
-                  <td className="p-3 border-b border-border text-text-primary text-sm">
-                    <div className="flex gap-2 flex-wrap">
-                      {isEditableOrViewable(booking) && (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={() => setViewModal({ open: true, booking })}
-                          >
-                            View
-                          </Button>
-                          {booking.status === "BOOKED" && (
-                            <Button size="sm" variant="secondary" onClick={() => handleOpenEdit(booking)}>
-                              Edit
-                            </Button>
-                          )}
-                        </>
-                      )}
-
-                      {booking.status === "ACTIVE" && (
-                        <Button size="sm" onClick={() => navigate(`/chat/${booking._id}`)}>
-                          Join Chat
-                        </Button>
-                      )}
-
-                      {booking.status === "COMPLETED" && !booking.hasReview && (
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          onClick={() => setReviewModal({ open: true, booking })}
-                        >
-                          Review
-                        </Button>
-                      )}
-
-                      <Button
-                        size="sm"
-                        variant="danger"
-                        onClick={() => setDeleteModal({ open: true, booking })}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <Table
+          columns={columns}
+          data={fetchBookings}
+          dependencies={[filter, refreshKey]}
+          emptyMessage="No bookings found"
+          emptyIcon={
+            <div className="text-center">
+              <p className="mb-4">No bookings found</p>
+              <Button onClick={() => navigate("/client/search")}>
+                Find Lawyers
+              </Button>
+            </div>
+          }
+        />
       </Card>
 
       <Modal

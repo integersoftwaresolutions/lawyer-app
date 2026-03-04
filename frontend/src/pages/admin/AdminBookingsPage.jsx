@@ -1,27 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { adminApi } from "../../services/admin.api";
-import { Card, Button, Badge } from "../../components/ui";
+import { Card, Button, Badge, Table } from "../../components/ui";
 
 export default function AdminBookingsPage() {
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
 
-  useEffect(() => {
-    loadBookings();
-  }, [filter]);
-
-  const loadBookings = async () => {
-    try {
-      setLoading(true);
-      const params = filter ? { status: filter } : {};
-      const res = await adminApi.getBookings(params);
-      setBookings(res.data || []);
-    } catch (error) {
-      console.error("Failed to load bookings:", error);
-    } finally {
-      setLoading(false);
-    }
+  const fetchBookings = async () => {
+    const params = filter ? { status: filter } : {};
+    const res = await adminApi.getBookings(params);
+    return res.data || [];
   };
 
   const getStatusBadge = (status) => {
@@ -53,6 +40,44 @@ export default function AdminBookingsPage() {
     { value: "CANCELLED", label: "Cancelled" },
   ];
 
+  const columns = [
+    {
+      key: "clientId",
+      label: "Client",
+      render: (_, row) => row.clientId?.email || "N/A",
+    },
+    {
+      key: "lawyerUserId",
+      label: "Lawyer",
+      render: (_, row) => row.lawyerUserId?.email || "N/A",
+    },
+    {
+      key: "startAt",
+      label: "Date & Time",
+      render: (value) => formatDate(value),
+    },
+    {
+      key: "durationMinutes",
+      label: "Duration",
+      render: (value) => `${value} min`,
+    },
+    {
+      key: "amount",
+      label: "Amount",
+      render: (value) => `$${value || 0}`,
+    },
+    {
+      key: "platformFee",
+      label: "Platform Fee",
+      render: (value) => `$${value || 0}`,
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (value) => getStatusBadge(value),
+    },
+  ];
+
   return (
     <div>
       <Card>
@@ -74,40 +99,12 @@ export default function AdminBookingsPage() {
           </div>
         </div>
 
-        {loading ? (
-          <p className="text-text-secondary">Loading...</p>
-        ) : bookings.length === 0 ? (
-          <div className="text-center py-10 text-text-secondary">
-            <p>No bookings found</p>
-          </div>
-        ) : (
-          <table className="w-full border-collapse">
-            <thead>
-              <tr>
-                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Client</th>
-                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Lawyer</th>
-                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Date & Time</th>
-                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Duration</th>
-                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Amount</th>
-                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Platform Fee</th>
-                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {bookings.map((booking) => (
-                <tr key={booking._id}>
-                  <td className="p-3 border-b border-border text-text-primary text-sm">{booking.clientId?.email || "N/A"}</td>
-                  <td className="p-3 border-b border-border text-text-primary text-sm">{booking.lawyerUserId?.email || "N/A"}</td>
-                  <td className="p-3 border-b border-border text-text-primary text-sm">{formatDate(booking.startAt)}</td>
-                  <td className="p-3 border-b border-border text-text-primary text-sm">{booking.durationMinutes} min</td>
-                  <td className="p-3 border-b border-border text-text-primary text-sm">${booking.amount || 0}</td>
-                  <td className="p-3 border-b border-border text-text-primary text-sm">${booking.platformFee || 0}</td>
-                  <td className="p-3 border-b border-border text-text-primary text-sm">{getStatusBadge(booking.status)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <Table
+          columns={columns}
+          data={fetchBookings}
+          dependencies={[filter]}
+          emptyMessage="No bookings found"
+        />
       </Card>
     </div>
   );

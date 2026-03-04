@@ -1,7 +1,8 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { lawyerApi } from "../../services/lawyer.api";
-import { Card, Badge, Button } from "../../components/ui";
+import { Card, Badge, Button, StateHandler } from "../../components/ui";
 import { useToast } from "../../hooks/useToast";
+import { useStateHandler } from "../../hooks/useStateHandler";
 import { 
   FiCheckCircle, 
   FiXCircle, 
@@ -15,29 +16,19 @@ import {
 } from "react-icons/fi";
 
 export default function LawyerVerificationPage() {
-  const [verificationData, setVerificationData] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [uploadingType, setUploadingType] = useState(null);
   const fileInputRef = useRef(null);
   const pendingDocTypeRef = useRef(null);
   const toast = useToast();
 
-  useEffect(() => {
-    loadVerificationStatus();
-  }, []);
-
-  const loadVerificationStatus = async () => {
-    try {
-      setLoading(true);
+  const { loading, error, data, retry } = useStateHandler(
+    async () => {
       const res = await lawyerApi.getVerificationStatus();
-      setVerificationData(res.data);
-    } catch (error) {
-      console.error("Failed to load verification status:", error);
-      toast.error(error.response?.data?.message || "Failed to load verification status");
-    } finally {
-      setLoading(false);
+      return res.data;
     }
-  };
+  );
+
+  const verificationData = data;
 
   const openFilePicker = (docType) => {
     pendingDocTypeRef.current = docType;
@@ -69,7 +60,7 @@ export default function LawyerVerificationPage() {
       setUploadingType(docType);
       await lawyerApi.uploadVerificationDocument(docType, file);
       toast.success("Document uploaded successfully! It will be reviewed by our admin team.");
-      loadVerificationStatus();
+      retry();
     } catch (error) {
       console.error("Upload failed:", error);
       toast.error(error.response?.data?.message || "Failed to upload document");
@@ -78,17 +69,6 @@ export default function LawyerVerificationPage() {
       pendingDocTypeRef.current = null;
     }
   };
-
-  if (loading) {
-    return (
-      <div className="p-6 text-text-secondary flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Loading verification status...</p>
-        </div>
-      </div>
-    );
-  }
 
   const status = verificationData?.profile?.verificationStatus || "PENDING";
 
@@ -231,8 +211,9 @@ export default function LawyerVerificationPage() {
   };
 
   return (
-    <div>
-      <input
+    <StateHandler loading={loading} error={error} retry={retry}>
+      <div>
+        <input
         ref={fileInputRef}
         type="file"
         className="hidden"
@@ -331,6 +312,7 @@ export default function LawyerVerificationPage() {
           </ul>
         </Card>
       )}
-    </div>
+      </div>
+    </StateHandler>
   );
 }

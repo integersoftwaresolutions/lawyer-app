@@ -8,7 +8,7 @@ export default function Card({
   ...props 
 }) {
   return (
-    <div className={`border border-card-border rounded-lg bg-card ${padding} ${className}`} {...props}>
+    <div className={`border border-card-border rounded-lg bg-card shadow-sm ${padding} ${className}`} {...props}>
       {(title || headerAction) && (
         <div className={`flex justify-between items-center ${title || subtitle ? "mb-4" : ""}`}>
           <div>

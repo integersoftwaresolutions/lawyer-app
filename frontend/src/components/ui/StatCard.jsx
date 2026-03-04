@@ -8,10 +8,10 @@ export default function StatCard({
   ...props 
 }) {
   return (
-    <div className={`border border-card-border rounded-lg bg-card p-6 text-center transition-all duration-200 hover:shadow-md hover:border-primary-border ${className}`} {...props}>
+    <div className={`border border-card-border rounded-lg bg-card p-6 text-center transition-all duration-200 hover:shadow-md ${className}`} {...props}>
       {IconComponent && (
         <div className="flex justify-center mb-3">
-          <div className="w-12 h-12 rounded-lg bg-surface flex items-center justify-center text-primary">
+          <div className="w-12 h-12 rounded-lg bg-background border border-background-border flex items-center justify-center text-text">
             <IconComponent className="w-6 h-6" />
           </div>
         </div>

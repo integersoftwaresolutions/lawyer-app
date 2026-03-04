@@ -1,14 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { lawyerApi } from "../../services/lawyer.api";
 import { constantsApi } from "../../services/constants.api";
-import { Card, Button, Input, Select, Badge } from "../../components/ui";
+import { Card, Button, Input, Select, Badge, StateHandler } from "../../components/ui";
+import { useStateHandler } from "../../hooks/useStateHandler";
 
 export default function ClientSearchPage() {
   const navigate = useNavigate();
-  const [lawyers, setLawyers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [constants, setConstants] = useState({ specializations: [], cities: [] });
   const [filters, setFilters] = useState({
     q: "",
     city: "",
@@ -18,23 +16,18 @@ export default function ClientSearchPage() {
     sort: "rating",
   });
 
-  useEffect(() => {
-    loadConstants();
-    loadLawyers();
-  }, []);
-
-  const loadConstants = async () => {
-    try {
+  const { loading: constantsLoading, data: constantsData } = useStateHandler(
+    async () => {
       const res = await constantsApi.getConstants();
-      setConstants(res.data || { specializations: [], cities: [] });
-    } catch (error) {
-      console.error("Failed to load constants:", error);
-    }
-  };
+      return res.data || { specializations: [], cities: [] };
+    },
+    { autoFetch: true }
+  );
 
-  const loadLawyers = async () => {
-    try {
-      setLoading(true);
+  const constants = constantsData || { specializations: [], cities: [] };
+
+  const { loading, error, data, retry } = useStateHandler(
+    async () => {
       const params = {};
       if (filters.q) params.q = filters.q;
       if (filters.city) params.city = filters.city;
@@ -44,16 +37,15 @@ export default function ClientSearchPage() {
       if (filters.sort) params.sort = filters.sort;
       
       const res = await lawyerApi.search(params);
-      setLawyers(res.data || []);
-    } catch (error) {
-      console.error("Failed to load lawyers:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return res.data || [];
+    },
+    { dependencies: [filters.q, filters.city, filters.specialization, filters.minRate, filters.maxRate, filters.sort] }
+  );
+
+  const lawyers = data || [];
 
   const handleSearch = () => {
-    loadLawyers();
+    retry();
   };
 
   const handleFilterChange = (field, value) => {
@@ -120,11 +112,8 @@ export default function ClientSearchPage() {
         </div>
       </Card>
 
-      {loading ? (
-        <div className="text-center py-10 text-text-secondary">
-          Loading lawyers...
-        </div>
-      ) : lawyers.length === 0 ? (
+      <StateHandler loading={loading} error={error} retry={retry}>
+        {lawyers.length === 0 ? (
         <Card>
           <div className="text-center py-10 text-text-secondary">
             <p>No lawyers found matching your criteria.</p>
@@ -185,7 +174,8 @@ export default function ClientSearchPage() {
             </Card>
           ))}
         </div>
-      )}
+        )}
+      </StateHandler>
     </div>
   );
 }

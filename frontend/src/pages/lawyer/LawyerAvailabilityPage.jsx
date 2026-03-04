@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { lawyerApi } from "../../services/lawyer.api";
-import { Card, Button, Input, Checkbox } from "../../components/ui";
+import { Card, Button, Input, Checkbox, StateHandler } from "../../components/ui";
+import { useStateHandler } from "../../hooks/useStateHandler";
 
 const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 const DAY_LABELS = {
@@ -14,30 +15,23 @@ const DAY_LABELS = {
 };
 
 export default function LawyerAvailabilityPage() {
-  const [availability, setAvailability] = useState({});
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    loadAvailability();
-  }, []);
-
-  const loadAvailability = async () => {
-    try {
+  const { loading, error, data, retry, setData } = useStateHandler(
+    async () => {
       const res = await lawyerApi.getMyAvailability();
-      setAvailability(res.data || {});
-    } catch (error) {
-      console.error("Failed to load availability:", error);
-    } finally {
-      setLoading(false);
+      return res.data || {};
     }
-  };
+  );
+
+  const availability = data || {};
 
   const handleSave = async () => {
     try {
       setSaving(true);
       await lawyerApi.updateMyAvailability(availability);
       alert("Availability updated successfully!");
+      retry();
     } catch (error) {
       console.error("Failed to save availability:", error);
       alert(error.response?.data?.message || "Failed to save availability");
@@ -47,47 +41,48 @@ export default function LawyerAvailabilityPage() {
   };
 
   const toggleDay = (day) => {
-    setAvailability({
+    const updated = {
       ...availability,
       [day]: {
         ...availability[day],
         enabled: !availability[day]?.enabled,
       },
-    });
+    };
+    setData(updated);
   };
 
   const updateSlot = (day, index, field, value) => {
     const slots = [...(availability[day]?.slots || [])];
     slots[index] = { ...slots[index], [field]: value };
-    setAvailability({
+    const updated = {
       ...availability,
       [day]: { ...availability[day], slots },
-    });
+    };
+    setData(updated);
   };
 
   const addSlot = (day) => {
     const slots = [...(availability[day]?.slots || []), { start: "09:00", end: "17:00" }];
-    setAvailability({
+    const updated = {
       ...availability,
       [day]: { ...availability[day], slots },
-    });
+    };
+    setData(updated);
   };
 
   const removeSlot = (day, index) => {
     const slots = (availability[day]?.slots || []).filter((_, i) => i !== index);
-    setAvailability({
+    const updated = {
       ...availability,
       [day]: { ...availability[day], slots },
-    });
+    };
+    setData(updated);
   };
 
-  if (loading) {
-    return <div className="p-6 text-text-secondary">Loading...</div>;
-  }
-
   return (
-    <div>
-      <Card title="Weekly Availability" subtitle="Set your available hours for each day">
+    <StateHandler loading={loading} error={error} retry={retry}>
+      <div>
+        <Card title="Weekly Availability" subtitle="Set your available hours for each day">
         <div className="flex flex-col gap-4">
           {DAYS.map((day) => (
             <div
@@ -154,6 +149,7 @@ export default function LawyerAvailabilityPage() {
           </Button>
         </div>
       </Card>
-    </div>
+      </div>
+    </StateHandler>
   );
 }

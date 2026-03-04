@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { adminApi } from "../../services/admin.api";
-import { Card, Button, StatCard } from "../../components/ui";
+import { Card, Button, StatCard, StateHandler } from "../../components/ui";
+import { useStateHandler } from "../../hooks/useStateHandler";
 import { 
   FiUsers, 
   FiBriefcase, 
@@ -17,38 +17,27 @@ import {
 
 export default function AdminOverviewPage() {
   const navigate = useNavigate();
-  const [analytics, setAnalytics] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadAnalytics();
-  }, []);
-
-  const loadAnalytics = async () => {
-    try {
+  
+  const { loading, error, data, retry } = useStateHandler(
+    async () => {
       const res = await adminApi.getAnalytics();
-      setAnalytics(res.data);
-    } catch (error) {
-      console.error("Failed to load analytics:", error);
-    } finally {
-      setLoading(false);
+      return res.data;
     }
-  };
+  );
 
-  if (loading) {
-    return <div className="p-6 text-text-secondary">Loading...</div>;
-  }
+  const analytics = data;
 
   return (
-    <div>
-      <Card className="mb-6">
-        <h2 className="text-2xl font-bold mb-2 text-text-primary">
-          Platform Overview
-        </h2>
-        <p className="text-text-secondary">
-          Monitor and manage the lawyer marketplace platform
-        </p>
-      </Card>
+    <StateHandler loading={loading} error={error} retry={retry}>
+      <div>
+        <Card className="mb-6">
+          <h2 className="text-2xl font-bold mb-2 text-text-primary">
+            Platform Overview
+          </h2>
+          <p className="text-text-secondary">
+            Monitor and manage the lawyer marketplace platform
+          </p>
+        </Card>
 
       <h3 className="text-base font-semibold text-text-primary mb-4">
         Users
@@ -146,6 +135,7 @@ export default function AdminOverviewPage() {
           </div>
         </Card>
       </div>
-    </div>
+      </div>
+    </StateHandler>
   );
 }

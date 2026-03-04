@@ -1,29 +1,26 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { adminApi } from "../../services/admin.api";
-import { Card, Button, Input } from "../../components/ui";
+import { Card, Button, Input, StateHandler } from "../../components/ui";
+import { useStateHandler } from "../../hooks/useStateHandler";
 
 export default function AdminSettingsPage() {
-  const [settings, setSettings] = useState({
+  const [saving, setSaving] = useState(false);
+
+  const { loading, error, data, retry, setData } = useStateHandler(
+    async () => {
+      const res = await adminApi.getSettings();
+      return res.data || {
+        commissionPercent: 10,
+        verificationFee: 0,
+        monthlyCreditGrant: 30,
+      };
+    }
+  );
+
+  const settings = data || {
     commissionPercent: 10,
     verificationFee: 0,
     monthlyCreditGrant: 30,
-  });
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    loadSettings();
-  }, []);
-
-  const loadSettings = async () => {
-    try {
-      const res = await adminApi.getSettings();
-      setSettings(res.data || {});
-    } catch (error) {
-      console.error("Failed to load settings:", error);
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handleSave = async () => {
@@ -31,6 +28,7 @@ export default function AdminSettingsPage() {
       setSaving(true);
       await adminApi.updateSettings(settings);
       alert("Settings updated successfully!");
+      retry();
     } catch (error) {
       console.error("Failed to save settings:", error);
       alert(error.response?.data?.message || "Failed to save settings");
@@ -40,15 +38,12 @@ export default function AdminSettingsPage() {
   };
 
   const handleChange = (field, value) => {
-    setSettings({ ...settings, [field]: value });
+    setData({ ...settings, [field]: value });
   };
 
-  if (loading) {
-    return <div className="p-6 text-text-secondary">Loading...</div>;
-  }
-
   return (
-    <div>
+    <StateHandler loading={loading} error={error} retry={retry}>
+      <div>
       <Card title="Platform Settings" subtitle="Configure platform-wide settings">
         <div className="max-w-[500px]">
           <Input
@@ -104,6 +99,7 @@ export default function AdminSettingsPage() {
           </p>
         </div>
       </Card>
-    </div>
+      </div>
+    </StateHandler>
   );
 }

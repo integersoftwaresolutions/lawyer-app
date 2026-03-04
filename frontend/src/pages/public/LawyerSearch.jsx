@@ -1,36 +1,42 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { lawyerApi } from "../../services/lawyer.api";
 import { Link } from "react-router-dom";
 import { Navbar } from "../../components/layout";
-import { Input, Button, Card } from "../../components/ui";
+import { Input, Button, Card, StateHandler } from "../../components/ui";
+import { useStateHandler } from "../../hooks/useStateHandler";
 
 export default function LawyerSearch() {
   const [q, setQ] = useState("");
   const [city, setCity] = useState("");
-  const [items, setItems] = useState([]);
-  const [meta, setMeta] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [searchParams, setSearchParams] = useState({ q: "", city: "" });
 
-  async function load(params = {}) {
-    setLoading(true);
-    try {
-      const res = await lawyerApi.search(params);
-      setItems(res.data);
-      setMeta(res.meta);
-    } catch (error) {
-      console.error("Search failed:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
+  const { loading, error, data, retry } = useStateHandler(
+    async () => {
+      const res = await lawyerApi.search({ 
+        q: searchParams.q, 
+        city: searchParams.city, 
+        sort: "rating", 
+        page: 1, 
+        limit: 10 
+      });
+      return {
+        items: res.data || [],
+        meta: res.meta || null,
+      };
+    },
+    { dependencies: [searchParams.q, searchParams.city], autoFetch: true }
+  );
 
+  // Trigger search with debounce when q or city changes
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      load({ q, city, sort: "rating", page: 1, limit: 10 });
+      setSearchParams({ q, city });
     }, 300);
-
     return () => clearTimeout(timeoutId);
   }, [q, city]);
+
+  const items = data?.items || [];
+  const meta = data?.meta || null;
 
   return (
     <>
@@ -58,14 +64,18 @@ export default function LawyerSearch() {
           </div>
         </Card>
 
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="w-8 h-8 border-[3px] border-border border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-text-secondary">Searching lawyers...</p>
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
+        <StateHandler loading={loading} error={error} retry={retry}>
+          {items.length === 0 && !loading ? (
+            <div className="text-center py-12 text-text-secondary">
+              <div className="text-5xl mb-4">🔍</div>
+              <h3 className="text-xl font-bold mb-2 text-text-primary">
+                No lawyers found
+              </h3>
+              <p>Try adjusting your search criteria</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
               {items.map((lawyer) => (
                 <div
                   key={lawyer._id}
@@ -103,25 +113,16 @@ export default function LawyerSearch() {
                   </Link>
                 </div>
               ))}
-            </div>
-
-            {items.length === 0 && !loading && (
-              <div className="text-center py-12 text-text-secondary">
-                <div className="text-5xl mb-4">🔍</div>
-                <h3 className="text-xl font-bold mb-2 text-text-primary">
-                  No lawyers found
-                </h3>
-                <p>Try adjusting your search criteria</p>
               </div>
-            )}
 
-            {meta && meta.total > 0 && (
-              <div className="text-center mt-8 text-sm text-text-secondary">
-                Showing {items.length} of {meta.total} lawyers
-              </div>
-            )}
-          </>
-        )}
+              {meta && meta.total > 0 && (
+                <div className="text-center mt-8 text-sm text-text-secondary">
+                  Showing {items.length} of {meta.total} lawyers
+                </div>
+              )}
+            </>
+          )}
+        </StateHandler>
       </div>
     </>
   );

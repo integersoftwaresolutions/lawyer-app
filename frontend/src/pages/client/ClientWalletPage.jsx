@@ -1,32 +1,28 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { walletApi } from "../../services/wallet.api";
-import { Card, Button, Input, Modal, StatCard } from "../../components/ui";
+import { Card, Button, Input, Modal, StatCard, StateHandler, Table } from "../../components/ui";
+import { useStateHandler } from "../../hooks/useStateHandler";
 
 export default function ClientWalletPage() {
-  const [wallet, setWallet] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [ledger, setLedger] = useState([]);
-  const [ledgerLoading, setLedgerLoading] = useState(false);
   const [deleteModal, setDeleteModal] = useState({ open: false, item: null });
   const [topupModal, setTopupModal] = useState(false);
   const [topupAmount, setTopupAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  useEffect(() => {
-    loadWallet();
-    loadLedger();
-  }, []);
-
-  const loadWallet = async () => {
-    try {
+  const { loading, error, data, retry: retryWallet } = useStateHandler(
+    async () => {
       const res = await walletApi.me();
-      setWallet(res.data);
-    } catch (error) {
-      console.error("Failed to load wallet:", error);
-    } finally {
-      setLoading(false);
+      return res.data;
     }
+  );
+
+  const fetchLedger = async () => {
+    const res = await walletApi.ledger({ page: 1, limit: 20 });
+    return res.data || [];
   };
+
+  const wallet = data;
 
   const handleDeleteHistory = async () => {
     if (!deleteModal.item) return;
@@ -34,24 +30,12 @@ export default function ClientWalletPage() {
       setSubmitting(true);
       await walletApi.hideLedgerEntry(deleteModal.item._id);
       setDeleteModal({ open: false, item: null });
-      loadLedger();
+      setRefreshKey((k) => k + 1);
     } catch (error) {
       console.error("Failed to delete history:", error);
       alert(error.response?.data?.message || "Failed to delete history");
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  const loadLedger = async () => {
-    try {
-      setLedgerLoading(true);
-      const res = await walletApi.ledger({ page: 1, limit: 20 });
-      setLedger(res.data || []);
-    } catch (error) {
-      console.error("Failed to load ledger:", error);
-    } finally {
-      setLedgerLoading(false);
     }
   };
 
@@ -67,8 +51,8 @@ export default function ClientWalletPage() {
       await walletApi.topup({ amount, note: "Credit topup" });
       setTopupModal(false);
       setTopupAmount("");
-      loadWallet();
-      loadLedger();
+      retryWallet();
+      setRefreshKey((k) => k + 1);
     } catch (error) {
       console.error("Failed to topup:", error);
       alert(error.response?.data?.message || "Failed to topup");
@@ -87,10 +71,6 @@ export default function ClientWalletPage() {
     });
   };
 
-  if (loading) {
-    return <div className="p-6 text-text-secondary">Loading...</div>;
-  }
-
   const creditPackages = [
     { credits: 10, price: "$9.99", popular: false },
     { credits: 25, price: "$19.99", popular: true },
@@ -99,19 +79,20 @@ export default function ClientWalletPage() {
   ];
 
   return (
-    <div>
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-6">
-        <StatCard
-          icon="💳"
-          value={wallet?.balanceCredits || 0}
-          label="Current Balance"
-        />
-        <StatCard
-          icon="📅"
-          value={wallet?.monthlyCredits || 0}
-          label="Monthly Credits"
-        />
-      </div>
+    <StateHandler loading={loading} error={error} retry={retryWallet}>
+      <div>
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-6">
+          <StatCard
+            icon="💳"
+            value={wallet?.balanceCredits || 0}
+            label="Current Balance"
+          />
+          <StatCard
+            icon="📅"
+            value={wallet?.monthlyCredits || 0}
+            label="Monthly Credits"
+          />
+        </div>
 
       <Card title="Purchase Credits" className="mb-6">
         <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4">
@@ -163,54 +144,51 @@ export default function ClientWalletPage() {
       </Card>
 
       <Card title="Purchase History" className="mt-6">
-        {ledgerLoading ? (
-          <p className="text-text-secondary m-0">Loading history...</p>
-        ) : ledger.length === 0 ? (
-          <p className="text-text-secondary m-0">No transactions yet.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr>
-                  <th className="text-left p-2.5 border-b border-border text-text-secondary text-xs">Date</th>
-                  <th className="text-left p-2.5 border-b border-border text-text-secondary text-xs">Type</th>
-                  <th className="text-left p-2.5 border-b border-border text-text-secondary text-xs">Amount</th>
-                  <th className="text-left p-2.5 border-b border-border text-text-secondary text-xs">Note</th>
-                  <th className="text-left p-2.5 border-b border-border text-text-secondary text-xs">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ledger.map((tx) => (
-                  <tr key={tx._id}>
-                    <td className="p-2.5 border-b border-border text-text-primary text-sm">
-                      {formatLedgerDate(tx.createdAt)}
-                    </td>
-                    <td className="p-2.5 border-b border-border text-text-primary text-sm">
-                      {tx.type}
-                    </td>
-                    <td className={`p-2.5 border-b border-border text-sm font-semibold ${
-                      tx.amount >= 0 ? "text-text-primary" : "text-text-secondary"
-                    }`}>
-                      {tx.amount >= 0 ? `+${tx.amount}` : tx.amount}
-                    </td>
-                    <td className="p-2.5 border-b border-border text-text-secondary text-sm">
-                      {tx.note || "-"}
-                    </td>
-                    <td className="p-2.5 border-b border-border">
-                      <Button
-                        size="sm"
-                        variant="danger"
-                        onClick={() => setDeleteModal({ open: true, item: tx })}
-                      >
-                        Delete
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <Table
+          columns={[
+            {
+              key: "createdAt",
+              label: "Date",
+              render: (value) => formatLedgerDate(value),
+            },
+            {
+              key: "type",
+              label: "Type",
+            },
+            {
+              key: "amount",
+              label: "Amount",
+              render: (value) => (
+                <span className={`text-sm font-semibold ${
+                  value >= 0 ? "text-text-primary" : "text-text-secondary"
+                }`}>
+                  {value >= 0 ? `+${value}` : value}
+                </span>
+              ),
+            },
+            {
+              key: "note",
+              label: "Note",
+              render: (value) => value || "-",
+            },
+            {
+              key: "actions",
+              label: "Actions",
+              render: (_, row) => (
+                <Button
+                  size="sm"
+                  variant="danger"
+                  onClick={() => setDeleteModal({ open: true, item: row })}
+                >
+                  Delete
+                </Button>
+              ),
+            },
+          ]}
+          data={fetchLedger}
+          dependencies={[refreshKey]}
+          emptyMessage="No transactions yet"
+        />
       </Card>
 
       <Modal
@@ -259,6 +237,7 @@ export default function ClientWalletPage() {
           Note: In production, this would integrate with a payment gateway.
         </p>
       </Modal>
-    </div>
+      </div>
+    </StateHandler>
   );
 }

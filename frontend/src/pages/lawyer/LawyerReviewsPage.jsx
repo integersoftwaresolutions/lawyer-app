@@ -1,25 +1,16 @@
-import { useState, useEffect } from "react";
 import { lawyerApi } from "../../services/lawyer.api";
-import { Card, Badge } from "../../components/ui";
+import { Card, Badge, StateHandler } from "../../components/ui";
+import { useStateHandler } from "../../hooks/useStateHandler";
 
 export default function LawyerReviewsPage() {
-  const [reviews, setReviews] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadReviews();
-  }, []);
-
-  const loadReviews = async () => {
-    try {
+  const { loading, error, data, retry } = useStateHandler(
+    async () => {
       const res = await lawyerApi.getMyReviews({});
-      setReviews(res.data || []);
-    } catch (error) {
-      console.error("Failed to load reviews:", error);
-    } finally {
-      setLoading(false);
+      return res.data || [];
     }
-  };
+  );
+
+  const reviews = data || [];
 
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString("en-US", {
@@ -37,12 +28,9 @@ export default function LawyerReviewsPage() {
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
     : "0.0";
 
-  if (loading) {
-    return <div className="p-6 text-text-secondary">Loading...</div>;
-  }
-
   return (
-    <div>
+    <StateHandler loading={loading} error={error} retry={retry}>
+      <div>
       <Card className="mb-6">
         <div className="flex justify-around text-center">
           <div>
@@ -104,6 +92,7 @@ export default function LawyerReviewsPage() {
           </div>
         )}
       </Card>
-    </div>
+      </div>
+    </StateHandler>
   );
 }

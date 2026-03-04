@@ -1,25 +1,16 @@
-import { useState, useEffect } from "react";
 import { clientApi } from "../../services/client.api";
-import { Card, Badge } from "../../components/ui";
+import { Card, Badge, StateHandler } from "../../components/ui";
+import { useStateHandler } from "../../hooks/useStateHandler";
 
 export default function ClientReviewsPage() {
-  const [reviews, setReviews] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadReviews();
-  }, []);
-
-  const loadReviews = async () => {
-    try {
+  const { loading, error, data, retry } = useStateHandler(
+    async () => {
       const res = await clientApi.getMyReviews({});
-      setReviews(res.data || []);
-    } catch (error) {
-      console.error("Failed to load reviews:", error);
-    } finally {
-      setLoading(false);
+      return res.data || [];
     }
-  };
+  );
+
+  const reviews = data || [];
 
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString("en-US", {
@@ -33,14 +24,11 @@ export default function ClientReviewsPage() {
     return "★".repeat(rating) + "☆".repeat(5 - rating);
   };
 
-  if (loading) {
-    return <div className="p-6 text-text-secondary">Loading...</div>;
-  }
-
   return (
-    <div>
-      <Card title="My Reviews" subtitle="Reviews you've given to lawyers">
-        {reviews.length === 0 ? (
+    <StateHandler loading={loading} error={error} retry={retry}>
+      <div>
+        <Card title="My Reviews" subtitle="Reviews you've given to lawyers">
+          {reviews.length === 0 ? (
           <div className="text-center py-10 text-text-secondary">
             <p>You haven't written any reviews yet.</p>
             <p className="text-sm mt-2">
@@ -78,8 +66,9 @@ export default function ClientReviewsPage() {
               </div>
             ))}
           </div>
-        )}
-      </Card>
-    </div>
+          )}
+        </Card>
+      </div>
+    </StateHandler>
   );
 }

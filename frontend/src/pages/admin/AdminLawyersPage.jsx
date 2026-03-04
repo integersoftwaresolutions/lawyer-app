@@ -1,30 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { adminApi } from "../../services/admin.api";
-import { Card, Button, Badge, Modal, Textarea, Select } from "../../components/ui";
+import { Card, Button, Badge, Modal, Textarea, Select, Table } from "../../components/ui";
 
 export default function AdminLawyersPage() {
-  const [lawyers, setLawyers] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
   const [verifyModal, setVerifyModal] = useState({ open: false, lawyer: null });
   const [verifyData, setVerifyData] = useState({ status: "APPROVED", notes: "" });
   const [submitting, setSubmitting] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  useEffect(() => {
-    loadLawyers();
-  }, [filter]);
-
-  const loadLawyers = async () => {
-    try {
-      setLoading(true);
-      const params = filter ? { status: filter } : {};
-      const res = await adminApi.getLawyers(params);
-      setLawyers(res.data || []);
-    } catch (error) {
-      console.error("Failed to load lawyers:", error);
-    } finally {
-      setLoading(false);
-    }
+  const fetchLawyers = async () => {
+    const params = filter ? { status: filter } : {};
+    const res = await adminApi.getLawyers(params);
+    return res.data || [];
   };
 
   const handleVerify = async () => {
@@ -36,7 +24,7 @@ export default function AdminLawyersPage() {
       await adminApi.verifyLawyer(lawyerUserId, verifyData);
       setVerifyModal({ open: false, lawyer: null });
       setVerifyData({ status: "APPROVED", notes: "" });
-      loadLawyers();
+      setRefreshKey((k) => k + 1);
     } catch (error) {
       console.error("Failed to verify:", error);
       alert(error.response?.data?.message || "Failed to update verification");
@@ -69,6 +57,64 @@ export default function AdminLawyersPage() {
     { value: "REJECTED", label: "Rejected" },
   ];
 
+  const columns = [
+    {
+      key: "fullName",
+      label: "Name",
+    },
+    {
+      key: "email",
+      label: "Email",
+      render: (_, row) => row.userId?.email || "N/A",
+    },
+    {
+      key: "city",
+      label: "City",
+      render: (value) => value || "-",
+    },
+    {
+      key: "experienceYears",
+      label: "Experience",
+      render: (value) => `${value || 0} yrs`,
+    },
+    {
+      key: "hourlyRate",
+      label: "Rate",
+      render: (value) => `$${value || 0}/hr`,
+    },
+    {
+      key: "rating",
+      label: "Rating",
+      render: (_, row) => `${row.ratingAvg?.toFixed(1) || "0.0"} (${row.ratingCount || 0})`,
+    },
+    {
+      key: "verificationStatus",
+      label: "Status",
+      render: (value) => getStatusBadge(value),
+    },
+    {
+      key: "createdAt",
+      label: "Joined",
+      render: (value) => formatDate(value),
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      render: (_, row) => (
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => {
+            setVerifyData({ status: row.verificationStatus, notes: row.verificationNotes || "" });
+            setVerifyModal({ open: true, lawyer: row });
+          }}
+        >
+          Update Status
+        </Button>
+      ),
+    },
+  ];
+
   return (
     <div>
       <Card>
@@ -90,55 +136,12 @@ export default function AdminLawyersPage() {
           </div>
         </div>
 
-        {loading ? (
-          <p className="text-text-secondary">Loading...</p>
-        ) : lawyers.length === 0 ? (
-          <div className="text-center py-10 text-text-secondary">
-            <p>No lawyers found</p>
-          </div>
-        ) : (
-          <table className="w-full border-collapse">
-            <thead>
-              <tr>
-                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Name</th>
-                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Email</th>
-                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">City</th>
-                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Experience</th>
-                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Rate</th>
-                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Rating</th>
-                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Status</th>
-                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Joined</th>
-                <th className="text-left p-3 border-b border-border text-text-secondary text-xs font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {lawyers.map((lawyer) => (
-                <tr key={lawyer._id}>
-                  <td className="p-3 border-b border-border text-text-primary text-sm">{lawyer.fullName}</td>
-                  <td className="p-3 border-b border-border text-text-primary text-sm">{lawyer.userId?.email || "N/A"}</td>
-                  <td className="p-3 border-b border-border text-text-primary text-sm">{lawyer.city || "-"}</td>
-                  <td className="p-3 border-b border-border text-text-primary text-sm">{lawyer.experienceYears || 0} yrs</td>
-                  <td className="p-3 border-b border-border text-text-primary text-sm">${lawyer.hourlyRate || 0}/hr</td>
-                  <td className="p-3 border-b border-border text-text-primary text-sm">{lawyer.ratingAvg?.toFixed(1) || "0.0"} ({lawyer.ratingCount || 0})</td>
-                  <td className="p-3 border-b border-border text-text-primary text-sm">{getStatusBadge(lawyer.verificationStatus)}</td>
-                  <td className="p-3 border-b border-border text-text-primary text-sm">{formatDate(lawyer.createdAt)}</td>
-                  <td className="p-3 border-b border-border text-text-primary text-sm">
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => {
-                        setVerifyData({ status: lawyer.verificationStatus, notes: lawyer.verificationNotes || "" });
-                        setVerifyModal({ open: true, lawyer });
-                      }}
-                    >
-                      Update Status
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <Table
+          columns={columns}
+          data={fetchLawyers}
+          dependencies={[filter, refreshKey]}
+          emptyMessage="No lawyers found"
+        />
       </Card>
 
       <Modal
