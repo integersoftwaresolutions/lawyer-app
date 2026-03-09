@@ -2,7 +2,6 @@ import { Outlet } from "react-router-dom";
 import { DashboardLayout } from "../../components/layout";
 import { 
   FiHome, 
-  FiSearch, 
   FiCalendar, 
   FiCreditCard, 
   FiStar, 
@@ -11,7 +10,6 @@ import {
 
 const menuItems = [
   { id: "overview", label: "Overview", icon: FiHome },
-  { id: "search", label: "Find Lawyers", icon: FiSearch },
   { id: "bookings", label: "My Bookings", icon: FiCalendar },
   { id: "wallet", label: "Wallet & Credits", icon: FiCreditCard },
   { id: "reviews", label: "My Reviews", icon: FiStar },

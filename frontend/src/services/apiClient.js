@@ -2,7 +2,7 @@ import axios from "axios";
 import { storage } from "../utils/storage.js";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE,
+  baseURL: `${import.meta.env.VITE_API_BASE}/api`,
   withCredentials: true
 });
 

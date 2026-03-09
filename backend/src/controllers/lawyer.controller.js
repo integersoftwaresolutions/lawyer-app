@@ -94,13 +94,11 @@ export const uploadVerificationDocument = asyncHandler(async (req, res) => {
     return sendSuccess(res, { statusCode: 400, message: "documentType is required", data: null });
   }
 
-  const documentUrl = `/uploads/${req.file.filename}`;
-
+  // Use MediaService through verification service
   const doc = await verificationService.uploadVerificationDocument({
+    file: req.file,
     lawyerUserId: req.user.id,
-    documentType,
-    documentUrl,
-    fileName: req.file.originalname || req.file.filename
+    documentType
   });
 
   return sendSuccess(res, { statusCode: 201, message: "Document uploaded successfully", data: doc });

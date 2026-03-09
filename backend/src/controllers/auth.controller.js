@@ -2,6 +2,8 @@ import { sendSuccess } from "../helpers/response.helper.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import * as authService from "../services/auth.service.js";
 import { env } from "../config/env.js";
+import { uploadSingle } from "../middlewares/upload.middleware.js";
+import User from "../models/User.js";
 
 function setRefreshCookie(res, refreshToken) {
   res.cookie("refreshToken", refreshToken, {
@@ -38,7 +40,32 @@ export const logout = asyncHandler(async (req, res) => {
 });
 
 export const me = asyncHandler(async (req, res) => {
-  return sendSuccess(res, { message: "Me", data: req.user });
+  // Get full user with populated profile image
+  const user = await User.findById(req.user.id).populate("profileImageMediaId").lean();
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+  
+  // Get profile image URL - prefer populated Media URL, fallback to user.profileImage
+  let profileImageUrl = "";
+  if (user.profileImageMediaId?.url) {
+    profileImageUrl = user.profileImageMediaId.url;
+  } else if (user.profileImage && user.profileImage.trim() !== "") {
+    profileImageUrl = user.profileImage;
+  }
+  
+  const userData = {
+    id: user._id.toString(),
+    email: user.email,
+    role: user.role,
+    isEmailVerified: user.isEmailVerified,
+    profileImage: profileImageUrl, // Will be empty string if no image
+    profileImageMediaId: user.profileImageMediaId?._id?.toString() || null,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt
+  };
+  
+  return sendSuccess(res, { message: "Me", data: userData });
 });
 
 export const sendOtp = asyncHandler(async (req, res) => {
@@ -57,4 +84,99 @@ export const resendOtp = asyncHandler(async (req, res) => {
   const { email } = req.body;
   await authService.resendOtp(email);
   return sendSuccess(res, { message: "Verification code resent to your email" });
+});
+
+// Profile picture management
+export const uploadProfilePicture = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    return sendSuccess(res, { statusCode: 400, message: "No file uploaded", data: null });
+  }
+
+  const { mediaService } = await import("../services/media.service.js");
+  const user = await User.findById(req.user.id);
+  if (!user) {
+    return sendSuccess(res, { statusCode: 404, message: "User not found", data: null });
+  }
+
+  // Delete old profile picture if exists
+  if (user.profileImageMediaId) {
+    try {
+      await mediaService.delete(user.profileImageMediaId.toString(), { hardDelete: true });
+    } catch (error) {
+      console.error("Failed to delete old profile picture:", error);
+    }
+  }
+
+  // Upload new profile picture
+  const media = await mediaService.upload(req.file, {
+    mediaType: "PROFILE_IMAGE",
+    uploadedBy: req.user.id,
+    relatedEntityType: "User",
+    relatedEntityId: user._id,
+    validation: {
+      maxSize: 2 * 1024 * 1024, // 2MB
+      allowedMimeTypes: ["image/jpeg", "image/jpg", "image/png", "image/webp"],
+      allowedExtensions: [".jpg", ".jpeg", ".png", ".webp"]
+    },
+    folder: "profile-images"
+  });
+
+  // Update user
+  user.profileImageMediaId = media._id;
+  await user.save();
+
+  // Reload user with populated media
+  await user.populate("profileImageMediaId");
+  
+  // Get the URL from media
+  const profileImageUrl = media.url || user.profileImageMediaId?.url || "";
+  
+  const userData = {
+    id: user._id.toString(),
+    email: user.email,
+    role: user.role,
+    isEmailVerified: user.isEmailVerified,
+    profileImage: profileImageUrl,
+    profileImageMediaId: media._id.toString()
+  };
+
+  return sendSuccess(res, { 
+    statusCode: 201, 
+    message: "Profile picture uploaded successfully", 
+    data: userData 
+  });
+});
+
+export const deleteProfilePicture = asyncHandler(async (req, res) => {
+  const { mediaService } = await import("../services/media.service.js");
+  const user = await User.findById(req.user.id);
+  if (!user) {
+    return sendSuccess(res, { statusCode: 404, message: "User not found", data: null });
+  }
+
+  if (!user.profileImageMediaId) {
+    return sendSuccess(res, { statusCode: 400, message: "No profile picture to delete", data: null });
+  }
+
+  // Delete media
+  await mediaService.delete(user.profileImageMediaId.toString(), { hardDelete: true });
+
+  // Update user
+  user.profileImageMediaId = null;
+  user.profileImage = "";
+  await user.save();
+
+  const userData = {
+    id: user._id.toString(),
+    email: user.email,
+    role: user.role,
+    isEmailVerified: user.isEmailVerified,
+    profileImage: "",
+    profileImageMediaId: null
+  };
+
+  return sendSuccess(res, { 
+    message: "Profile picture deleted successfully", 
+    data: userData 
+  });
 });

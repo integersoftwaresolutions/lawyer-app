@@ -8,12 +8,12 @@ export default function DashboardLayout({
   basePath = "",
 }) {
   return (
-    <div className="min-h-screen bg-background text-text-primary flex flex-col">
+    <div className="h-screen bg-background text-text-primary flex flex-col overflow-hidden">
       <Navbar />
       
-      <div className="flex">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         <Sidebar items={menuItems} basePath={basePath} />
-        <main className="flex-1 min-w-0 ml-[280px] p-6 overflow-y-auto min-h-screen">
+        <main className="flex-1 min-w-0 p-4 md:p-6 overflow-y-auto">
           {children}
         </main>
       </div>

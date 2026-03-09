@@ -1,5 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
+import SidebarBase from "../ui/Sidebar";
 
+/**
+ * Dashboard Navigation Sidebar
+ * 
+ * A specialized sidebar for dashboard navigation that uses the base Sidebar component
+ * with built-in mobile toggle functionality.
+ */
 export default function Sidebar({ 
   items = [], 
   basePath = "",
@@ -8,8 +15,13 @@ export default function Sidebar({
   const location = useLocation();
 
   return (
-    <nav className={`w-[280px] min-w-[280px] border-r border-border bg-card h-[calc(100vh-64px)] fixed top-16 left-0 overflow-y-auto z-[999] ${className}`}>
-      <div className="p-4">
+    <SidebarBase
+      width="w-[280px]"
+      className={className}
+      defaultOpen={true}
+      showCloseButton={false}
+    >
+      <div className="space-y-1">
         {items.map((item) => {
           const path = `${basePath}/${item.id}`;
           const isActive = location.pathname === path;
@@ -19,7 +31,7 @@ export default function Sidebar({
             <Link
               key={item.id}
               to={path}
-              className={`group flex items-center gap-3 py-3 px-4 rounded-lg mb-1 no-underline transition-all duration-200 cursor-pointer relative ${
+              className={`group flex items-center gap-3 py-3 px-4 rounded-lg no-underline transition-all duration-200 cursor-pointer relative ${
                 isActive 
                   ? "bg-primary text-primary-text shadow-md" 
                   : "bg-transparent text-text-secondary hover:bg-surface-hover hover:text-text-primary"
@@ -42,6 +54,6 @@ export default function Sidebar({
           );
         })}
       </div>
-    </nav>
+    </SidebarBase>
   );
 }

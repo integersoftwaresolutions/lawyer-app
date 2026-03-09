@@ -1,24 +1,28 @@
-import fs from "fs";
-import path from "path";
 import multer from "multer";
 
-const uploadsDir = path.join(process.cwd(), "uploads");
+/**
+ * Upload Middleware
+ * 
+ * Uses memory storage so MediaService can handle the actual file storage.
+ * This keeps storage logic centralized in MediaService.
+ */
 
-function ensureUploadsDir() {
-  if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
+// Memory storage - files are stored in memory as buffers
+// MediaService will handle actual storage (local or S3)
+const storage = multer.memoryStorage();
+
+// File size limit: 10MB (can be overridden per route)
+export const uploadSingle = multer({ 
+  storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB default
   }
-}
+}).single("file");
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    ensureUploadsDir();
-    cb(null, uploadsDir);
-  },
-  filename: (_req, file, cb) => {
-    const safeOriginal = (file.originalname || "file").replace(/[^a-zA-Z0-9._-]/g, "_");
-    cb(null, `${Date.now()}_${safeOriginal}`);
+// For multiple files (if needed in future)
+export const uploadMultiple = multer({
+  storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024
   }
-});
-
-export const uploadSingle = multer({ storage }).single("file");
+}).array("files", 10); // Max 10 files

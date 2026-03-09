@@ -10,19 +10,7 @@ export default function ClientOverview() {
         <p className="opacity-90">Manage your legal consultations and connect with expert lawyers</p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6">
-        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-          <div className="text-3xl mb-3">🔍</div>
-          <h3 className="text-lg font-semibold mb-2">Search Lawyers</h3>
-          <p className="text-gray-300 text-sm mb-4">Find qualified lawyers for your legal needs</p>
-          <a
-            href="/client/dashboard/search"
-            className="inline-block bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-sm transition-colors"
-          >
-            Browse Lawyers
-          </a>
-        </div>
-
+      <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
           <div className="text-3xl mb-3">📅</div>
           <h3 className="text-lg font-semibold mb-2">My Bookings</h3>

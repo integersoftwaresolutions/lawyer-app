@@ -19,12 +19,22 @@ const fetchUserWithProfile = async (user) => {
     const profileRes = await api.getMyProfile();
     const profile = profileRes.data || {};
     
-    // Merge profile data into user
-    return {
+    // IMPORTANT: Preserve profileImage from user (it's stored in User model, not in LawyerProfile/ClientProfile)
+    // The profile object might have empty profileImage which would overwrite the user's profileImage
+    const userProfileImage = user.profileImage;
+    const userProfileImageMediaId = user.profileImageMediaId;
+    
+    // Merge profile data into user, but preserve user's profileImage fields
+    const merged = {
       ...user,
-      ...profile, // Profile data takes precedence
+      ...profile, // Profile data takes precedence for other fields
+      // Override with user's profileImage (from User model) - this is the source of truth
+      profileImage: userProfileImage || "",
+      profileImageMediaId: userProfileImageMediaId || null,
       profile // Keep full profile as nested object for detailed access
     };
+    
+    return merged;
   } catch (error) {
     // If profile fetch fails, return user without profile
     console.warn("Failed to fetch profile:", error);

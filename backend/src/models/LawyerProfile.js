@@ -24,6 +24,9 @@ const LawyerProfileSchema = new mongoose.Schema(
     ratingCount: { type: Number, default: 0 },
     totalConsultations: { type: Number, default: 0 },
     bio: { type: String, default: "" },
+    // Reference to Media model instead of storing raw URL
+    profileImageMediaId: { type: mongoose.Schema.Types.ObjectId, ref: "Media", default: null },
+    // Legacy field for backward compatibility (will be populated from Media)
     profileImage: { type: String, default: "" },
     // Featured status
     isFeatured: { type: Boolean, default: false, index: true },
@@ -35,5 +38,25 @@ const LawyerProfileSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Pre-save hook to sync legacy profileImage field from Media (for backward compatibility)
+LawyerProfileSchema.pre("save", async function() {
+  if (this.isNew || this.isModified("profileImageMediaId")) {
+    if (this.profileImageMediaId) {
+      try {
+        const Media = mongoose.model("Media");
+        const media = await Media.findById(this.profileImageMediaId);
+        if (media) {
+          this.profileImage = media.url;
+        }
+      } catch (error) {
+        // If Media model not available or error, skip sync
+        console.warn("Failed to sync Media fields:", error.message);
+      }
+    } else if (!this.profileImageMediaId && !this.profileImage) {
+      this.profileImage = "";
+    }
+  }
+});
 
 export default mongoose.model("LawyerProfile", LawyerProfileSchema);

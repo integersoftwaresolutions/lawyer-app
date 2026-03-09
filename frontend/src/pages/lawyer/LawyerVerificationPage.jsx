@@ -1,8 +1,9 @@
 import { useRef, useState } from "react";
 import { lawyerApi } from "../../services/lawyer.api";
-import { Card, Badge, Button, StateHandler } from "../../components/ui";
+import { Card, Badge, Button, StateHandler, Modal } from "../../components/ui";
 import { useToast } from "../../hooks/useToast";
 import { useStateHandler } from "../../hooks/useStateHandler";
+import { getProfilePictureUrl } from "../../utils/profilePicture";
 import { 
   FiCheckCircle, 
   FiXCircle, 
@@ -17,6 +18,7 @@ import {
 
 export default function LawyerVerificationPage() {
   const [uploadingType, setUploadingType] = useState(null);
+  const [viewingDoc, setViewingDoc] = useState(null);
   const fileInputRef = useRef(null);
   const pendingDocTypeRef = useRef(null);
   const toast = useToast();
@@ -116,6 +118,22 @@ export default function LawyerVerificationPage() {
     return { status: latestDoc.status, doc: latestDoc };
   };
 
+  const getDocumentUrl = (doc) => {
+    if (!doc) return null;
+    // Prefer mediaId.url (from Media model), fallback to documentUrl (legacy)
+    const url = doc.mediaId?.url || doc.documentUrl || "";
+    return url ? getProfilePictureUrl(url) : null;
+  };
+
+  const handleViewDocument = (doc) => {
+    const url = getDocumentUrl(doc);
+    if (url) {
+      setViewingDoc({ url, fileName: doc.fileName || doc.mediaId?.originalFileName || "Document" });
+    } else {
+      toast.error("Document URL not available");
+    }
+  };
+
   const renderDocumentCard = (docConfig) => {
     const docStatus = getDocumentStatus(docConfig.type);
     const hasDocument = docStatus.doc !== null;
@@ -187,7 +205,7 @@ export default function LawyerVerificationPage() {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => window.open(docStatus.doc.documentUrl, '_blank')}
+                onClick={() => handleViewDocument(docStatus.doc)}
                 className="flex items-center gap-1"
               >
                 <FiEye className="w-4 h-4" />
@@ -312,6 +330,49 @@ export default function LawyerVerificationPage() {
           </ul>
         </Card>
       )}
+
+      {/* Document View Modal */}
+      <Modal
+        isOpen={!!viewingDoc}
+        onClose={() => setViewingDoc(null)}
+        title={viewingDoc?.fileName || "View Document"}
+        size="xl"
+      >
+        {viewingDoc && (
+          <div className="flex justify-center items-center min-h-[400px]">
+            {viewingDoc.url.endsWith('.pdf') || viewingDoc.url.includes('application/pdf') ? (
+              <iframe
+                src={viewingDoc.url}
+                className="w-full h-[70vh] border border-border rounded-lg"
+                title="Document Viewer"
+              />
+            ) : (
+              <img
+                src={viewingDoc.url}
+                alt={viewingDoc.fileName}
+                className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                onError={(e) => {
+                  e.target.style.display = "none";
+                  const errorDiv = e.target.nextElementSibling;
+                  if (errorDiv) errorDiv.style.display = "flex";
+                }}
+              />
+            )}
+            <div className="hidden flex-col items-center justify-center py-12">
+              <FiFile className="w-16 h-16 text-text-muted mb-4" />
+              <p className="text-text-secondary">Unable to load document</p>
+              <Button
+                variant="primary"
+                size="sm"
+                className="mt-4"
+                onClick={() => window.open(viewingDoc.url, '_blank')}
+              >
+                Open in New Tab
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
       </div>
     </StateHandler>
   );

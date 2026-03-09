@@ -11,14 +11,24 @@ export async function authMiddleware(req, _res, next) {
     if (!token) return next(new ApiError(401, "Missing access token"));
 
     const payload = jwt.verify(token, env.jwtAccessSecret);
-    const user = await User.findById(payload.sub).lean();
+    const user = await User.findById(payload.sub).populate("profileImageMediaId").lean();
     if (!user) return next(new ApiError(401, "User not found"));
+
+    // Get profile image URL - prefer populated Media URL, fallback to user.profileImage
+    let profileImageUrl = "";
+    if (user.profileImageMediaId?.url) {
+      profileImageUrl = user.profileImageMediaId.url;
+    } else if (user.profileImage && user.profileImage.trim() !== "") {
+      profileImageUrl = user.profileImage;
+    }
 
     req.user = { 
       id: user._id.toString(), 
       role: user.role, 
       email: user.email,
-      isEmailVerified: user.isEmailVerified 
+      isEmailVerified: user.isEmailVerified,
+      profileImage: profileImageUrl,
+      profileImageMediaId: user.profileImageMediaId?._id?.toString() || null
     };
     return next();
   } catch {

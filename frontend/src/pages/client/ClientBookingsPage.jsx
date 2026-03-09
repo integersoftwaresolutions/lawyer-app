@@ -241,14 +241,6 @@ export default function ClientBookingsPage() {
           data={fetchBookings}
           dependencies={[filter, refreshKey]}
           emptyMessage="No bookings found"
-          emptyIcon={
-            <div className="text-center">
-              <p className="mb-4">No bookings found</p>
-              <Button onClick={() => navigate("/client/search")}>
-                Find Lawyers
-              </Button>
-            </div>
-          }
         />
       </Card>
 
