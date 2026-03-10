@@ -7,6 +7,17 @@ export default function Checkbox({
   containerClassName = "",
   ...props 
 }) {
+  const handleChange = (e) => {
+    if (onChange) {
+      // Support both function(checked) and function(event) patterns
+      if (onChange.length === 1) {
+        onChange(e.target.checked);
+      } else {
+        onChange(e);
+      }
+    }
+  };
+
   return (
     <div>
       <div className={`flex items-start gap-2.5 mb-4 ${containerClassName}`}>
@@ -15,7 +26,7 @@ export default function Checkbox({
             type="checkbox" 
             id={id}
             checked={checked}
-            onChange={onChange}
+            onChange={handleChange}
             className={`w-[18px] h-[18px] min-w-[18px] rounded border ${
               error ? "border-danger" : "border-input-border"
             } ${checked ? "bg-primary" : "bg-input-background"} cursor-pointer appearance-none relative mt-0.5`}

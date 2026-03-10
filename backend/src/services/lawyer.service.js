@@ -1,5 +1,6 @@
 import { ApiError } from "../helpers/apiError.js";
 import LawyerProfile from "../models/LawyerProfile.js";
+import User from "../models/User.js";
 import Booking from "../models/Booking.js";
 import Wallet from "../models/Wallet.js";
 import LedgerEntry from "../models/LedgerEntry.js";
@@ -38,9 +39,58 @@ export async function searchLawyers(query) {
   if (query.sort === "rating") sort = { isFeatured: -1, ratingAvg: -1 };
 
   const [items, total] = await Promise.all([
-    LawyerProfile.find(filter).sort(sort).skip(skip).limit(limit).lean(),
+    LawyerProfile.find(filter)
+      .populate("profileImageMediaId", "url")
+      .populate({
+        path: "userId",
+        select: "profileImageMediaId profileImage",
+        populate: {
+          path: "profileImageMediaId",
+          select: "url"
+        }
+      })
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .lean(),
     LawyerProfile.countDocuments(filter)
   ]);
+
+  // Sync profileImage from User's profileImageMediaId (primary) or LawyerProfile's profileImageMediaId (fallback)
+  items.forEach(item => {
+    // Get populated user data BEFORE converting userId to string
+    const populatedUser = item.userId && typeof item.userId === 'object' ? item.userId : null;
+    
+    // Store the userId as string (for frontend navigation) - extract from populated object or use original
+    if (populatedUser?._id) {
+      item.userId = populatedUser._id.toString();
+    } else if (item.userId && typeof item.userId === 'object') {
+      item.userId = item.userId.toString();
+    } else if (item.userId) {
+      item.userId = item.userId.toString();
+    }
+    
+    // Priority 1: User's profileImageMediaId (from User model)
+    if (populatedUser?.profileImageMediaId?.url) {
+      item.profileImage = populatedUser.profileImageMediaId.url;
+    }
+    // Priority 2: User's legacy profileImage field
+    else if (populatedUser?.profileImage && populatedUser.profileImage.trim() !== "") {
+      item.profileImage = populatedUser.profileImage;
+    }
+    // Priority 3: LawyerProfile's profileImageMediaId (legacy)
+    else if (item.profileImageMediaId?.url) {
+      item.profileImage = item.profileImageMediaId.url;
+    }
+    // Priority 4: LawyerProfile's legacy profileImage field
+    else if (item.profileImage && item.profileImage.trim() !== "") {
+      // Keep existing profileImage
+    }
+    // Fallback: empty string
+    else {
+      item.profileImage = "";
+    }
+  });
 
   return {
     items,
@@ -49,13 +99,105 @@ export async function searchLawyers(query) {
 }
 
 export async function getLawyerProfile(lawyerUserId) {
-  const profile = await LawyerProfile.findOne({ userId: lawyerUserId }).lean();
+  const profile = await LawyerProfile.findOne({ userId: lawyerUserId })
+    .populate("profileImageMediaId", "url")
+    .populate({
+      path: "userId",
+      select: "profileImageMediaId profileImage",
+      populate: {
+        path: "profileImageMediaId",
+        select: "url"
+      }
+    })
+    .lean();
+  
+  // Sync profileImage from User's profileImageMediaId (primary) or LawyerProfile's profileImageMediaId (fallback)
+  if (profile) {
+    // Get populated user data BEFORE converting userId to string
+    const populatedUser = profile.userId && typeof profile.userId === 'object' ? profile.userId : null;
+    
+    // Store the userId as string (for consistency) - extract from populated object or use original
+    if (populatedUser?._id) {
+      profile.userId = populatedUser._id.toString();
+    } else if (profile.userId && typeof profile.userId === 'object') {
+      profile.userId = profile.userId.toString();
+    } else if (profile.userId) {
+      profile.userId = profile.userId.toString();
+    }
+    
+    // Priority 1: User's profileImageMediaId (from User model)
+    if (populatedUser?.profileImageMediaId?.url) {
+      profile.profileImage = populatedUser.profileImageMediaId.url;
+    }
+    // Priority 2: User's legacy profileImage field
+    else if (populatedUser?.profileImage && populatedUser.profileImage.trim() !== "") {
+      profile.profileImage = populatedUser.profileImage;
+    }
+    // Priority 3: LawyerProfile's profileImageMediaId (legacy)
+    else if (profile.profileImageMediaId?.url) {
+      profile.profileImage = profile.profileImageMediaId.url;
+    }
+    // Priority 4: LawyerProfile's legacy profileImage field
+    else if (profile.profileImage && profile.profileImage.trim() !== "") {
+      // Keep existing profileImage
+    }
+    // Fallback: empty string
+    else {
+      profile.profileImage = "";
+    }
+  }
+  
   return profile;
 }
 
 export async function getMyLawyerProfile(userId) {
-  const profile = await LawyerProfile.findOne({ userId }).lean();
+  const profile = await LawyerProfile.findOne({ userId })
+    .populate("profileImageMediaId", "url")
+    .populate({
+      path: "userId",
+      select: "profileImageMediaId profileImage",
+      populate: {
+        path: "profileImageMediaId",
+        select: "url"
+      }
+    })
+    .lean();
   if (!profile) throw new ApiError(404, "Lawyer profile not found");
+  
+  // Sync profileImage from User's profileImageMediaId (primary) or LawyerProfile's profileImageMediaId (fallback)
+  // Get populated user data BEFORE converting userId to string
+  const populatedUser = profile.userId && typeof profile.userId === 'object' ? profile.userId : null;
+  
+  // Store the userId as string (for consistency) - extract from populated object or use original
+  if (populatedUser?._id) {
+    profile.userId = populatedUser._id.toString();
+  } else if (profile.userId && typeof profile.userId === 'object') {
+    profile.userId = profile.userId.toString();
+  } else if (profile.userId) {
+    profile.userId = profile.userId.toString();
+  }
+  
+  // Priority 1: User's profileImageMediaId (from User model)
+  if (populatedUser?.profileImageMediaId?.url) {
+    profile.profileImage = populatedUser.profileImageMediaId.url;
+  }
+  // Priority 2: User's legacy profileImage field
+  else if (populatedUser?.profileImage && populatedUser.profileImage.trim() !== "") {
+    profile.profileImage = populatedUser.profileImage;
+  }
+  // Priority 3: LawyerProfile's profileImageMediaId (legacy)
+  else if (profile.profileImageMediaId?.url) {
+    profile.profileImage = profile.profileImageMediaId.url;
+  }
+  // Priority 4: LawyerProfile's legacy profileImage field
+  else if (profile.profileImage && profile.profileImage.trim() !== "") {
+    // Keep existing profileImage
+  }
+  // Fallback: empty string
+  else {
+    profile.profileImage = "";
+  }
+  
   return profile;
 }
 

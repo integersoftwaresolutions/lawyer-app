@@ -4,7 +4,7 @@ import { lawyerApi } from "../../services/lawyer.api";
 import { bookingApi } from "../../services/booking.api";
 import { useAuth } from "../../hooks/useAuth";
 import { Navbar } from "../../components/layout";
-import { Modal, Button, Input, Select, StateHandler, Card, Badge } from "../../components/ui";
+import { Modal, Button, Input, Select, StateHandler, Card, Badge, Avatar } from "../../components/ui";
 import { useStateHandler } from "../../hooks/useStateHandler";
 import { 
   FiArrowLeft, 
@@ -200,17 +200,12 @@ export default function LawyerProfile() {
                 <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-8 border-b border-border">
                   <div className="flex flex-col md:flex-row gap-6 items-start">
                     {/* Profile Image/Avatar */}
-                    <div className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 border-4 border-card">
-                      {lawyer?.profileImage ? (
-                        <img
-                          src={lawyer.profileImage}
-                          alt={lawyer?.fullName}
-                          className="w-full h-full rounded-full object-cover"
-                        />
-                      ) : (
-                        <FiUser className="w-12 h-12 text-primary" />
-                      )}
-                    </div>
+                    <Avatar
+                      user={lawyer}
+                      size="2xl"
+                      showBorder={true}
+                      className="border-4 border-card"
+                    />
 
                     {/* Profile Info */}
                     <div className="flex-1">

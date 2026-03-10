@@ -8,7 +8,6 @@ import VerifyEmail from "../pages/auth/VerifyEmail.jsx";
 
 import ClientDashboardLayout from "../pages/client/ClientDashboardLayout.jsx";
 import ClientOverviewPage from "../pages/client/ClientOverviewPage.jsx";
-import ClientSearchPage from "../pages/client/ClientSearchPage.jsx";
 import ClientBookingsPage from "../pages/client/ClientBookingsPage.jsx";
 import ClientWalletPage from "../pages/client/ClientWalletPage.jsx";
 import ClientReviewsPage from "../pages/client/ClientReviewsPage.jsx";
@@ -54,7 +53,6 @@ export default function RoutesRoot() {
       >
         <Route index element={<Navigate to="overview" replace />} />
         <Route path="overview" element={<ClientOverviewPage />} />
-        <Route path="search" element={<ClientSearchPage />} />
         <Route path="bookings" element={<ClientBookingsPage />} />
         <Route path="wallet" element={<ClientWalletPage />} />
         <Route path="reviews" element={<ClientReviewsPage />} />

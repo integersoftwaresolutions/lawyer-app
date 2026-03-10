@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../hooks/useToast";
 import { constantsApi } from "../../services/constants.api";
-import { Card, Button, Input, Select, Textarea } from "../../components/ui";
+import { Card, Button, Input, Select, Textarea, ProfilePicture } from "../../components/ui";
 import AuthLayout, { FormSection, FormRow } from "../auth/AuthLayout";
 
 const BAR_COUNCILS = [
@@ -151,6 +151,30 @@ export default function LawyerProfilePage() {
       </div>
 
       <form onSubmit={handleSave}>
+        <Card className="mb-6">
+          <FormSection title="Profile Picture">
+            <div className="flex items-center gap-6">
+              <ProfilePicture
+                user={user}
+                imageUrl={user?.profileImage}
+                onUpdate={(data) => {
+                  // Profile picture updated, user data will be refreshed automatically
+                }}
+                size="lg"
+                editable={true}
+              />
+              <div className="flex-1">
+                <p className="text-sm text-text-secondary mb-2">
+                  Upload a professional profile picture to build trust with clients
+                </p>
+                <p className="text-xs text-text-muted">
+                  Supported formats: JPG, PNG, WEBP (max 2MB)
+                </p>
+              </div>
+            </div>
+          </FormSection>
+        </Card>
+
         <Card className="mb-6">
           <FormSection title="Personal Information">
             <FormRow>

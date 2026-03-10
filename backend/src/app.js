@@ -12,14 +12,21 @@ import { sendSuccess } from "./helpers/response.helper.js";
 export function createApp() {
   const app = express();
 
-  app.use(helmet());
+  app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+  }));
   app.use(corsMiddleware);
   app.use(rateLimitMiddleware);
   app.use(express.json({ limit: "1mb" }));
   app.use(cookieParser());
   app.use(morgan("dev"));
 
-  app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+  // Serve static files with CORS headers
+  app.use("/uploads", (req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET");
+    next();
+  }, express.static(path.join(process.cwd(), "uploads")));
 
   app.get("/health", (req, res) => sendSuccess(res, { message: "OK", data: { uptime: process.uptime() } }));
 

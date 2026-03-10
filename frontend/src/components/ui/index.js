@@ -1,3 +1,4 @@
+export { default as Avatar } from "./Avatar";
 export { default as Button } from "./Button";
 export { default as Input } from "./Input";
 export { default as Card } from "./Card";
@@ -8,7 +9,9 @@ export { default as Textarea } from "./Textarea";
 export { default as StatCard } from "./StatCard";
 export { default as Checkbox } from "./Checkbox";
 export { default as Popover } from "./Popover";
+export { default as ProfilePicture } from "./ProfilePicture";
 export { default as Table } from "./Table";
 export { default as Pagination } from "./Pagination";
+export { default as Sidebar } from "./Sidebar";
 export { Toast, ToastContainer } from "./Toast";
 export { default as StateHandler } from "../StateHandler";

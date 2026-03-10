@@ -69,9 +69,6 @@ export default function ClientOverviewPage() {
         <div className="grid grid-cols-2 gap-6">
           <Card title="Quick Actions">
             <div className="flex flex-col gap-3">
-              <Button fullWidth onClick={() => navigate("/client/search")}>
-                Find Lawyers
-              </Button>
               <Button variant="secondary" fullWidth onClick={() => navigate("/client/bookings")}>
                 View My Bookings
               </Button>

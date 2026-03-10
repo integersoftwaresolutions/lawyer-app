@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import LawyerSearch from "../public/LawyerSearch.jsx";
 
 export default function ClientDashboard() {
   const { user, logout } = useAuth();
@@ -10,7 +9,6 @@ export default function ClientDashboard() {
 
   const menuItems = [
     { id: "overview", label: "Overview", icon: "🏠" },
-    { id: "search", label: "Search Lawyers", icon: "🔍" },
     { id: "bookings", label: "My Bookings", icon: "📅" },
     { id: "wallet", label: "Wallet & Credits", icon: "💳" },
     { id: "reviews", label: "My Reviews", icon: "⭐" },
@@ -76,9 +74,6 @@ export default function ClientDashboard() {
               <div className="border border-border rounded-lg bg-card p-6 mb-6">
                 <h3 className="text-xl font-bold mb-4 text-text-primary">Quick Actions</h3>
                 <div className="flex flex-col gap-3">
-                  <button className="py-3 px-6 rounded border-none bg-primary text-primary-text cursor-pointer font-medium" onClick={() => setActiveTab("search")}>
-                    Find Lawyers
-                  </button>
                   <button className="py-3 px-6 rounded border border-border bg-secondary text-secondary-text cursor-pointer font-medium">
                     Book Session
                   </button>
@@ -87,9 +82,6 @@ export default function ClientDashboard() {
             </div>
           </div>
         );
-
-      case "search":
-        return <LawyerSearch />;
 
       case "bookings":
         return (

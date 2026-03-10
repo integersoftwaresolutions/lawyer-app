@@ -1,8 +1,19 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 
-export default function Popover({ trigger, children, placement = "bottom-end", className = "" }) {
-  const [isOpen, setIsOpen] = useState(false);
+export default function Popover({ 
+  trigger, 
+  children, 
+  placement = "bottom-end", 
+  className = "",
+  isOpen: controlledIsOpen,
+  onClose: controlledOnClose,
+  onToggle: controlledOnToggle
+}) {
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  const isControlled = controlledIsOpen !== undefined;
+  const isOpen = isControlled ? controlledIsOpen : internalIsOpen;
+  
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const triggerRef = useRef(null);
   const popoverRef = useRef(null);
@@ -121,7 +132,11 @@ export default function Popover({ trigger, children, placement = "bottom-end", c
         !popoverRef.current.contains(event.target) &&
         !triggerRef.current.contains(event.target)
       ) {
-        setIsOpen(false);
+        if (isControlled) {
+          controlledOnClose?.();
+        } else {
+          setInternalIsOpen(false);
+        }
       }
     };
 
@@ -131,11 +146,19 @@ export default function Popover({ trigger, children, placement = "bottom-end", c
         document.removeEventListener("mousedown", handleClickOutside);
       };
     }
-  }, [isOpen]);
+  }, [isOpen, isControlled, controlledOnClose]);
 
   const handleTriggerClick = (e) => {
     e.stopPropagation();
-    setIsOpen(!isOpen);
+    if (isControlled) {
+      if (controlledOnToggle) {
+        controlledOnToggle();
+      } else if (controlledOnClose && isOpen) {
+        controlledOnClose();
+      }
+    } else {
+      setInternalIsOpen(!internalIsOpen);
+    }
   };
 
   return (
