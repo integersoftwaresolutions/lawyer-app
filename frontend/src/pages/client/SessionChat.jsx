@@ -4,6 +4,7 @@ import { createSocket } from "../../services/socket";
 import { useAuth } from "../../hooks/useAuth";
 import { bookingApi } from "../../services/booking.api";
 import { Button, Input } from "../../components/ui";
+import VideoCall from "../../components/video/VideoCall";
 
 export default function SessionChat() {
   const { bookingId } = useParams();
@@ -14,8 +15,10 @@ export default function SessionChat() {
 
   const socket = useMemo(() => createSocket(), []);
   const [sessionId, setSessionId] = useState(null);
+  const [session, setSession] = useState(null);
   const [booking, setBooking] = useState(null);
   const [items, setItems] = useState([]);
+  const [showVideoPanel, setShowVideoPanel] = useState(true);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -39,6 +42,7 @@ export default function SessionChat() {
         ]);
         const sid = sessionRes.data._id;
         setSessionId(sid);
+        setSession(sessionRes.data);
         setBooking(bookingRes.data);
 
         socket.auth = { token: localStorage.getItem("accessToken") };
@@ -117,6 +121,24 @@ export default function SessionChat() {
             ← Back
           </Button>
         </div>
+
+        {session?.allowVideo && (
+          <div className="mb-6">
+            {showVideoPanel ? (
+              <VideoCall
+                sessionId={sessionId}
+                socket={socket}
+                durationMinutes={booking?.durationMinutes || 30}
+                otherUserName={user?.role === "CLIENT" ? "Lawyer" : "Client"}
+                onEnd={() => setShowVideoPanel(false)}
+              />
+            ) : (
+              <Button variant="secondary" onClick={() => setShowVideoPanel(true)}>
+                Open Video Call
+              </Button>
+            )}
+          </div>
+        )}
 
         <div className="border border-border rounded-lg bg-card h-[500px] flex flex-col">
           <div className="flex-1 overflow-y-auto p-4">
