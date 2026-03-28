@@ -1,9 +1,12 @@
+import mongoose from "mongoose";
 import { ApiError } from "../helpers/apiError.js";
 import LawyerProfile from "../models/LawyerProfile.js";
 import User from "../models/User.js";
 import Booking from "../models/Booking.js";
+import Dispute from "../models/Dispute.js";
 import Wallet from "../models/Wallet.js";
 import LedgerEntry from "../models/LedgerEntry.js";
+import AdminSetting from "../models/AdminSetting.js";
 import { getPagination } from "../utils/pagination.js";
 import { BOOKING_STATUS, LEDGER_TYPES } from "../config/constants.js";
 
@@ -11,6 +14,17 @@ export async function searchLawyers(query) {
   const { page, limit, skip } = getPagination(query);
 
   const filter = {};
+
+  const settings = await AdminSetting.findOne();
+  const verificationFee = settings?.verificationFee || 0;
+  const now = new Date();
+
+  // Expire featured status automatically so clients never see outdated boosts.
+  // (We update in DB so query sorting by `isFeatured` stays correct.)
+  await LawyerProfile.updateMany(
+    { isFeatured: true, featuredUntil: { $ne: null, $lt: now } },
+    { $set: { isFeatured: false, featuredUntil: null } }
+  );
 
   if (query.verified === "true") {
     filter.verificationStatus = "APPROVED";
@@ -90,6 +104,22 @@ export async function searchLawyers(query) {
     else {
       item.profileImage = "";
     }
+    // Mask contact details in search results
+    delete item.phone;
+    delete item.email;
+    delete item.whatsapp;
+    delete item.officeAddress;
+
+    // Treat verification as expired when the annual/cycle fee isn't fresh.
+    if (
+      verificationFee > 0 &&
+      item.verificationStatus === "APPROVED" &&
+      (!item.verificationFeePaidAt ||
+        now.getTime() - new Date(item.verificationFeePaidAt).getTime() > 365 * 24 * 60 * 60 * 1000)
+    ) {
+      item.verificationStatus = "PENDING";
+      item.verifiedAt = null;
+    }
   });
 
   return {
@@ -147,7 +177,62 @@ export async function getLawyerProfile(lawyerUserId) {
     }
   }
   
+  // Always exclude contact details from public profile - use /contact endpoint for clients with access
+  if (profile) {
+    delete profile.phone;
+    delete profile.email;
+    delete profile.whatsapp;
+    delete profile.officeAddress;
+  }
+
+  // Auto-expire profile boost so the public profile never shows stale "Featured"
+  if (profile?.isFeatured && profile.featuredUntil) {
+    const now = new Date();
+    const featuredUntil = new Date(profile.featuredUntil);
+    if (featuredUntil <= now) {
+      await LawyerProfile.updateOne(
+        { userId: lawyerUserId },
+        { $set: { isFeatured: false, featuredUntil: null } }
+      );
+      profile.isFeatured = false;
+      profile.featuredUntil = null;
+    }
+  }
+
   return profile;
+}
+
+/**
+ * Get lawyer contact details (phone, email, whatsapp) - only for clients who have
+ * an ACTIVE or COMPLETED booking with this lawyer (contact masking until payment/consultation)
+ */
+export async function getLawyerContactDetails(lawyerUserId, clientId) {
+  const profile = await LawyerProfile.findOne({ userId: lawyerUserId }).lean();
+  if (!profile) throw new ApiError(404, "Lawyer not found");
+
+  const hasAccess = await Booking.exists({
+    lawyerUserId,
+    clientId,
+    deletedByClient: { $ne: true },
+    deletedByLawyer: { $ne: true },
+    status: { $in: [BOOKING_STATUS.ACTIVE, BOOKING_STATUS.COMPLETED] }
+  });
+
+  if (!hasAccess) {
+    throw new ApiError(403, "Contact details are available after you complete a consultation with this lawyer");
+  }
+
+  let email = profile.email || "";
+  if (!email && profile.userId) {
+    const user = await User.findById(profile.userId).select("email").lean();
+    email = user?.email || "";
+  }
+
+  return {
+    phone: profile.phone || "",
+    email,
+    whatsapp: profile.whatsapp || ""
+  };
 }
 
 export async function getMyLawyerProfile(userId) {
@@ -240,8 +325,32 @@ export async function getLawyerBookings(lawyerUserId, { status, page = 1, limit 
     Booking.countDocuments(filter)
   ]);
 
+  const bookingIds = items.map((b) => b._id);
+  const disputes = await Dispute.find({ bookingId: { $in: bookingIds } })
+    .select("bookingId status reason description raisedBy resolution refundAmount resolutionNote")
+    .lean();
+  const disputeByBooking = Object.fromEntries(
+    disputes.map((d) => [
+      d.bookingId.toString(),
+      {
+        status: d.status,
+        reason: d.reason,
+        description: d.description,
+        raisedBy: d.raisedBy?.toString(),
+        resolution: d.resolution,
+        refundAmount: d.refundAmount,
+        resolutionNote: d.resolutionNote
+      }
+    ])
+  );
+
+  const itemsWithDispute = items.map((b) => ({
+    ...b,
+    dispute: disputeByBooking[b._id.toString()] || null
+  }));
+
   return {
-    items,
+    items: itemsWithDispute,
     meta: { page, limit, total, pages: Math.ceil(total / limit) }
   };
 }
@@ -277,21 +386,29 @@ export async function getLawyerStats(lawyerUserId) {
 
 export async function getLawyerEarnings(lawyerUserId, { page = 1, limit = 10 }) {
   const skip = (page - 1) * limit;
+  const uid = typeof lawyerUserId === "string" ? new mongoose.Types.ObjectId(lawyerUserId) : lawyerUserId;
+
+  const profile = await LawyerProfile.findOne({ userId: uid }).lean();
+  const includeSpend = profile?.verificationStatus === "APPROVED";
+
+  const itemTypes = includeSpend
+    ? [LEDGER_TYPES.EARNING, LEDGER_TYPES.PAYOUT, LEDGER_TYPES.SPEND]
+    : [LEDGER_TYPES.EARNING, LEDGER_TYPES.PAYOUT];
 
   const [items, total, summary] = await Promise.all([
-    LedgerEntry.find({ userId: lawyerUserId, isHidden: { $ne: true }, type: { $in: [LEDGER_TYPES.EARNING, LEDGER_TYPES.PAYOUT] } })
+    LedgerEntry.find({ userId: uid, isHidden: { $ne: true }, type: { $in: itemTypes } })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean(),
-    LedgerEntry.countDocuments({ userId: lawyerUserId, isHidden: { $ne: true }, type: { $in: [LEDGER_TYPES.EARNING, LEDGER_TYPES.PAYOUT] } }),
+    LedgerEntry.countDocuments({ userId: uid, isHidden: { $ne: true }, type: { $in: itemTypes } }),
     LedgerEntry.aggregate([
-      { $match: { userId: lawyerUserId } },
+      { $match: { userId: uid, type: { $in: [LEDGER_TYPES.EARNING, LEDGER_TYPES.PAYOUT] } } },
       { $group: { _id: "$type", total: { $sum: "$amount" } } }
     ])
   ]);
 
-  const wallet = await Wallet.findOne({ userId: lawyerUserId }).lean();
+  const wallet = await Wallet.findOne({ userId: uid }).lean();
 
   return {
     items,

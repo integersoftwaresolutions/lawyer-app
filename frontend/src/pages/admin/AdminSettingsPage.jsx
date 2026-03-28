@@ -13,6 +13,8 @@ export default function AdminSettingsPage() {
         commissionPercent: 10,
         verificationFee: 0,
         monthlyCreditGrant: 30,
+        profileBoostFee7Days: 0,
+        profileBoostFee30Days: 0
       };
     }
   );
@@ -21,6 +23,8 @@ export default function AdminSettingsPage() {
     commissionPercent: 10,
     verificationFee: 0,
     monthlyCreditGrant: 30,
+    profileBoostFee7Days: 0,
+    profileBoostFee30Days: 0
   };
 
   const handleSave = async () => {
@@ -67,6 +71,27 @@ export default function AdminSettingsPage() {
             onChange={(e) => handleChange("monthlyCreditGrant", parseInt(e.target.value) || 0)}
             helperText="Number of free credits given to new users monthly"
           />
+
+          <div className="mt-4">
+            <Input
+              label="Profile Boost Fee (7 days) ($)"
+              type="number"
+              value={settings.profileBoostFee7Days || 0}
+              onChange={(e) =>
+                handleChange("profileBoostFee7Days", parseFloat(e.target.value) || 0)
+              }
+              helperText="Credits are deducted from a lawyer wallet when they buy this boost package"
+            />
+            <Input
+              label="Profile Boost Fee (30 days) ($)"
+              type="number"
+              value={settings.profileBoostFee30Days || 0}
+              onChange={(e) =>
+                handleChange("profileBoostFee30Days", parseFloat(e.target.value) || 0)
+              }
+              helperText="Credits are deducted from a lawyer wallet when they buy this boost package"
+            />
+          </div>
         </div>
         <div className="mt-6">
           <Button onClick={handleSave} loading={saving}>

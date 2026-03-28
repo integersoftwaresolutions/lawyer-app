@@ -21,6 +21,7 @@ export default function LawyerVerificationPage() {
   const [viewingDoc, setViewingDoc] = useState(null);
   const fileInputRef = useRef(null);
   const pendingDocTypeRef = useRef(null);
+  const [payingFee, setPayingFee] = useState(false);
   const toast = useToast();
 
   const { loading, error, data, retry } = useStateHandler(
@@ -73,6 +74,36 @@ export default function LawyerVerificationPage() {
   };
 
   const status = verificationData?.profile?.verificationStatus || "PENDING";
+  const verificationFeeAmount = verificationData?.profile?.verificationFee?.amount || 0;
+  const isVerificationFeeRequired = verificationData?.profile?.verificationFee?.isRequired || false;
+  const verificationFeePaidAt = verificationData?.profile?.verificationFee?.paidAt;
+
+  const documentsByType = verificationData?.documents || {};
+  const requiredDocTypes = (verificationData?.requiredDocuments || [])
+    .filter((d) => d.required)
+    .map((d) => d.type);
+  const hasAnyUploadedDocs = Object.values(documentsByType).some(
+    (arr) => Array.isArray(arr) && arr.length > 0
+  );
+  const hasRequiredDocsUploaded =
+    requiredDocTypes.length > 0
+      ? requiredDocTypes.every((t) => (documentsByType[t] || []).length > 0)
+      : false;
+
+  const handlePayVerificationFee = async () => {
+    if (!verificationFeeAmount || verificationFeeAmount <= 0) return;
+    try {
+      setPayingFee(true);
+      await lawyerApi.payVerificationFee();
+      toast.success("Verification fee paid successfully. You can now upload documents.");
+      retry();
+    } catch (error) {
+      console.error("Failed to pay verification fee:", error);
+      toast.error(error.response?.data?.message || "Failed to pay verification fee");
+    } finally {
+      setPayingFee(false);
+    }
+  };
 
   const getStatusConfig = (status) => {
     const configs = {
@@ -101,7 +132,9 @@ export default function LawyerVerificationPage() {
         borderColor: "border-warning",
         badge: "warning",
         title: "Verification Pending",
-        description: "Your verification is under review by our admin team. This usually takes 1-3 business days."
+        description: hasAnyUploadedDocs
+          ? "Your verification is under review by our admin team. This usually takes 1-3 business days."
+          : "Upload your required documents to start verification. Once submitted, our admin team will review them within 1-3 business days."
       }
     };
     return configs[status] || configs.PENDING;
@@ -218,6 +251,7 @@ export default function LawyerVerificationPage() {
               loading={uploadingType === docConfig.type}
               onClick={() => openFilePicker(docConfig.type)}
               className="flex items-center gap-1"
+              disabled={isVerificationFeeRequired}
             >
               <FiUpload className="w-4 h-4" />
               {hasDocument ? "Replace" : "Upload"}
@@ -290,6 +324,37 @@ export default function LawyerVerificationPage() {
         </div>
       </Card>
 
+      {/* Verification Fee Card */}
+      {verificationFeeAmount > 0 && (
+        <Card className="mb-6 border border-border bg-surface/50">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h3 className="text-text-primary font-semibold m-0">
+                Verification Fee: ${verificationFeeAmount}
+              </h3>
+              {isVerificationFeeRequired ? (
+                <p className="text-text-secondary m-0 mt-1 text-sm">
+                  Pay to unlock document uploads and start the verification review.
+                </p>
+              ) : (
+                <p className="text-text-secondary m-0 mt-1 text-sm">
+                  Paid{verificationFeePaidAt ? ` on ${new Date(verificationFeePaidAt).toLocaleDateString("en-US")}` : ""}.
+                </p>
+              )}
+            </div>
+            {isVerificationFeeRequired ? (
+              <Button variant="primary" size="sm" loading={payingFee} onClick={handlePayVerificationFee}>
+                Pay Fee
+              </Button>
+            ) : (
+              <Badge variant="success" size="sm">
+                Fee Paid
+              </Badge>
+            )}
+          </div>
+        </Card>
+      )}
+
       {/* Documents Section */}
       <Card title="Verification Documents" className="mb-6">
         <p className="text-text-secondary mb-6">
@@ -307,9 +372,13 @@ export default function LawyerVerificationPage() {
             Verification Process
           </h4>
           <ol className="text-text-secondary space-y-2 pl-6 m-0 list-decimal">
-            <li>Upload all required documents (Bar License and Government ID)</li>
-            <li>Our admin team will review your documents within 1-3 business days</li>
-            <li>Once approved, you'll receive a verification badge on your profile</li>
+            <li>
+              Upload required documents (Bar License and Government ID) to start verification
+              {verificationFeeAmount > 0 ? " (and pay the verification fee if required)" : ""}
+            </li>
+            <li>After you submit, our admin team reviews your documents within 1-3 business days</li>
+            <li>If approved, you receive a verified badge on your profile</li>
+            <li>If rejected, you will see admin notes and can resubmit</li>
             <li>Verified lawyers appear higher in search results and can receive bookings</li>
           </ol>
         </div>

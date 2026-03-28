@@ -10,8 +10,18 @@ export const lawyerApi = {
   
   getLawyerReviews: (lawyerUserId, params) => 
     api.get(`/lawyers/${lawyerUserId}/reviews`, { params }).then((r) => r.data),
+
+  getContactDetails: (lawyerUserId) =>
+    api.get(`/lawyers/${lawyerUserId}/contact`).then((r) => r.data),
   
   getMyProfile: () => api.get("/lawyers/me/profile").then((r) => r.data),
+
+  getMyProfileBoostInfo: () => api.get("/lawyers/me/profile-boost").then((r) => r.data),
+
+  purchaseProfileBoost: (durationDays) =>
+    api
+      .post("/lawyers/me/profile-boost", { durationDays })
+      .then((r) => r.data),
   
   updateMyProfile: (payload) => api.put("/lawyers/me/profile", payload).then((r) => r.data),
   
@@ -26,6 +36,10 @@ export const lawyerApi = {
   getMyEarnings: (params) => api.get("/lawyers/me/earnings", { params }).then((r) => r.data),
 
   hideEarningHistory: (entryId) => api.delete(`/wallet/ledger/${entryId}`).then((r) => r.data),
+
+  raiseDispute: (bookingId, payload) =>
+    api.post(`/lawyers/me/bookings/${bookingId}/dispute`, payload).then((r) => r.data),
+  getMyDisputes: (params) => api.get("/lawyers/me/disputes", { params }).then((r) => r.data),
   
   getMyAvailability: () => api.get("/lawyers/me/availability").then((r) => r.data),
   
@@ -34,6 +48,7 @@ export const lawyerApi = {
   getMyReviews: (params) => api.get("/lawyers/me/reviews", { params }).then((r) => r.data),
 
   getVerificationStatus: () => api.get("/lawyers/me/verification/status").then((r) => r.data),
+  payVerificationFee: () => api.post("/lawyers/me/verification/fee").then((r) => r.data),
 
   uploadVerificationDocument: (documentType, file) => {
     const form = new FormData();

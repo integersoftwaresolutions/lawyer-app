@@ -1,6 +1,7 @@
 import { ApiError } from "../helpers/apiError.js";
 import ClientProfile from "../models/ClientProfile.js";
 import Booking from "../models/Booking.js";
+import Dispute from "../models/Dispute.js";
 import { BOOKING_STATUS } from "../config/constants.js";
 
 export async function getClientProfile(userId) {
@@ -51,9 +52,33 @@ export async function getClientBookings(clientId, { status, page = 1, limit = 10
       .lean(),
     Booking.countDocuments(filter)
   ]);
-  
+
+  const bookingIds = items.map((b) => b._id);
+  const disputes = await Dispute.find({ bookingId: { $in: bookingIds } })
+    .select("bookingId status reason description raisedBy resolution refundAmount resolutionNote")
+    .lean();
+  const disputeByBooking = Object.fromEntries(
+    disputes.map((d) => [
+      d.bookingId.toString(),
+      {
+        status: d.status,
+        reason: d.reason,
+        description: d.description,
+        raisedBy: d.raisedBy?.toString(),
+        resolution: d.resolution,
+        refundAmount: d.refundAmount,
+        resolutionNote: d.resolutionNote
+      }
+    ])
+  );
+
+  const itemsWithDispute = items.map((b) => ({
+    ...b,
+    dispute: disputeByBooking[b._id.toString()] || null
+  }));
+
   return {
-    items,
+    items: itemsWithDispute,
     meta: { page, limit, total, pages: Math.ceil(total / limit) }
   };
 }

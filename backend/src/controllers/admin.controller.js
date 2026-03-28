@@ -2,6 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendSuccess } from "../helpers/response.helper.js";
 import * as adminService from "../services/admin.service.js";
 import * as verificationService from "../services/verification.service.js";
+import * as disputeService from "../services/dispute.service.js";
 
 export const pendingLawyers = asyncHandler(async (req, res) => {
   const out = await verificationService.getPendingVerifications(req.query);
@@ -66,4 +67,33 @@ export const reviewDocument = asyncHandler(async (req, res) => {
 export const getLawyerVerificationStatus = asyncHandler(async (req, res) => {
   const out = await verificationService.getVerificationStatus(req.params.lawyerUserId);
   return sendSuccess(res, { message: "Verification status", data: out });
+});
+
+export const getDisputes = asyncHandler(async (req, res) => {
+  const out = await disputeService.getDisputesAdmin(req.query);
+  return sendSuccess(res, { message: "Disputes", data: out.items, meta: out.meta });
+});
+
+export const getDisputeById = asyncHandler(async (req, res) => {
+  const out = await disputeService.getDisputeById(req.params.disputeId);
+  return sendSuccess(res, { message: "Dispute", data: out });
+});
+
+export const updateDisputeStatus = asyncHandler(async (req, res) => {
+  const out = await disputeService.updateDisputeStatus({
+    disputeId: req.params.disputeId,
+    status: req.body.status
+  });
+  return sendSuccess(res, { message: "Status updated", data: out });
+});
+
+export const resolveDispute = asyncHandler(async (req, res) => {
+  const out = await disputeService.resolveDispute({
+    disputeId: req.params.disputeId,
+    adminId: req.user.id,
+    resolution: req.body.resolution,
+    resolutionNote: req.body.resolutionNote,
+    refundAmount: req.body.refundAmount
+  });
+  return sendSuccess(res, { message: "Dispute resolved", data: out });
 });

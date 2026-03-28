@@ -26,4 +26,11 @@ export const adminApi = {
   getSettings: () => api.get("/admin/settings").then((r) => r.data),
   
   updateSettings: (payload) => api.put("/admin/settings", payload).then((r) => r.data),
+
+  getDisputes: (params) => api.get("/admin/disputes", { params }).then((r) => r.data),
+  getDispute: (disputeId) => api.get(`/admin/disputes/${disputeId}`).then((r) => r.data),
+  updateDisputeStatus: (disputeId, payload) =>
+    api.patch(`/admin/disputes/${disputeId}/status`, payload).then((r) => r.data),
+  resolveDispute: (disputeId, payload) =>
+    api.post(`/admin/disputes/${disputeId}/resolve`, payload).then((r) => r.data),
 };

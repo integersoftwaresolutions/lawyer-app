@@ -70,3 +70,32 @@ export async function spendCredits(userId, { amount, note, refId }) {
 
   return wallet.toObject();
 }
+
+export async function refundCredits(userId, { amount, note, refId }) {
+  const wallet = await Wallet.findOne({ userId });
+  if (!wallet) {
+    const created = await Wallet.create({
+      userId,
+      balanceCredits: amount,
+      monthlyCredits: 0
+    });
+    await LedgerEntry.create({
+      userId,
+      type: LEDGER_TYPES.REFUND,
+      amount,
+      note: note || "Refund",
+      refId: refId || null
+    });
+    return created.toObject();
+  }
+  wallet.balanceCredits += amount;
+  await wallet.save();
+  await LedgerEntry.create({
+    userId,
+    type: LEDGER_TYPES.REFUND,
+    amount,
+    note: note || "Refund",
+    refId: refId || null
+  });
+  return wallet.toObject();
+}

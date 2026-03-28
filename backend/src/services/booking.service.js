@@ -6,6 +6,7 @@ import AdminSetting from "../models/AdminSetting.js";
 import LedgerEntry from "../models/LedgerEntry.js";
 import Wallet from "../models/Wallet.js";
 import * as availabilityService from "./availability.service.js";
+import * as walletService from "./wallet.service.js";
 import { BOOKING_STATUS, CONSULTATION_TYPE, LEDGER_TYPES } from "../config/constants.js";
 import { toDate, now } from "../utils/time.js";
 
@@ -80,11 +81,23 @@ export async function createBooking({ clientId, lawyerUserId, startAt, durationM
   if (!lawyerProfile) throw new ApiError(404, "Lawyer not found");
 
   const settings = await getAdminSettings();
-  
+
   const hourlyRate = lawyerProfile.hourlyRate || 0;
   const amount = Math.round((hourlyRate * durationMinutes) / 60);
   const platformFee = Math.round(amount * (settings.commissionPercent / 100));
   const lawyerEarning = amount - platformFee;
+
+  // Check client has enough credits (when amount > 0)
+  if (amount > 0) {
+    const wallet = await Wallet.findOne({ userId: clientId });
+    if (!wallet) throw new ApiError(400, "Wallet not found. Please contact support.");
+    if (wallet.balanceCredits < amount) {
+      throw new ApiError(
+        400,
+        `Insufficient credits. You need ${amount} credits for this consultation. Your balance: ${wallet.balanceCredits}. Please top up your wallet.`
+      );
+    }
+  }
 
   const booking = await Booking.create({
     clientId,
@@ -98,6 +111,18 @@ export async function createBooking({ clientId, lawyerUserId, startAt, durationM
     lawyerEarning,
     notes
   });
+
+  // Deduct credits and mark as paid
+  if (amount > 0) {
+    await walletService.spendCredits(clientId, {
+      amount,
+      note: `Consultation booking with lawyer`,
+      refId: booking._id.toString()
+    });
+  }
+  booking.isPaid = true;
+  booking.paidAt = now();
+  await booking.save();
 
   await Session.create({ 
     bookingId: booking._id, 

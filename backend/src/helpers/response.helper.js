@@ -1,10 +1,11 @@
-export function sendSuccess(res, { statusCode = 200, message = "OK", data = null, meta = undefined }) {
+export function sendSuccess(res, { statusCode = 200, message = "OK", data = null, meta = undefined, summary = undefined }) {
   return res.status(statusCode).json({
     success: true,
     statusCode,
     message,
     data,
-    ...(meta ? { meta } : {})
+    ...(meta ? { meta } : {}),
+    ...(summary !== undefined ? { summary } : {})
   });
 }
 
