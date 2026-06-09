@@ -3,6 +3,7 @@ import { createApp } from "./app.js";
 import { connectMongo } from "./db/mongo.js";
 import { env } from "./config/env.js";
 import { initSocket } from "./socket/index.js";
+import { seedAdmin } from "./seeders/seedAdmin.js";
 import { seedUsers } from "./seeders/seedUsers.js";
 
 process.on("unhandledRejection", (reason) => {
@@ -21,6 +22,8 @@ process.on("uncaughtException", (err) => {
 
 async function bootstrap() {
   await connectMongo();
+
+  await seedAdmin();
 
   // Uncomment the line below to seed test users
   // await seedUsers();

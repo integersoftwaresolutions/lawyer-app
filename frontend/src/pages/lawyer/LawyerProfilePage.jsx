@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../hooks/useToast";
 import { constantsApi } from "../../services/constants.api";
@@ -44,12 +44,21 @@ export default function LawyerProfilePage() {
     bio: "",
   });
 
+  const profileLoadInitiated = useRef(false);
+
   useEffect(() => {
-    // Only load profile if user exists but profile data is missing
-    if (user?.role && !user?.fullName && !profileLoading) {
+    // Only load profile if it hasn't been merged into auth state yet (e.g. bootstrap fetch failed).
+    // Do not use fullName — new profiles can have an empty name after a successful fetch.
+    if (
+      user?.role &&
+      !user?.profile &&
+      !profileLoading &&
+      !profileLoadInitiated.current
+    ) {
+      profileLoadInitiated.current = true;
       loadProfile();
     }
-  }, [user?.role, user?.fullName, profileLoading, loadProfile]);
+  }, [user?.role, user?.profile, profileLoading, loadProfile]);
 
   useEffect(() => {
     // Load constants only once
@@ -139,7 +148,7 @@ export default function LawyerProfilePage() {
     }
   };
 
-  if (profileLoading && !user?.fullName) {
+  if (profileLoading && !user?.profile) {
     return <div className="p-6 text-text-secondary">Loading...</div>;
   }
 
