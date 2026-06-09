@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { lawyerApi } from "../../services/lawyer.api";
-import { Card, Button, StatCard, StateHandler } from "../../components/ui";
+import { Card, Button, StatCard, StateHandler, Badge } from "../../components/ui";
 import { useStateHandler } from "../../hooks/useStateHandler";
+import { useToast } from "../../hooks/useToast";
 import { 
   FiCalendar, 
   FiDollarSign, 
@@ -11,22 +13,54 @@ import {
 
 export default function LawyerOverviewPage() {
   const navigate = useNavigate();
+
+  const toast = useToast();
+  const [boostLoading, setBoostLoading] = useState(false);
   
   const { loading, error, data, retry } = useStateHandler(
     async () => {
-      const [statsRes, profileRes] = await Promise.all([
+      const [statsRes, profileRes, boostRes] = await Promise.all([
         lawyerApi.getMyStats(),
-        lawyerApi.getMyProfile()
+        lawyerApi.getMyProfile(),
+        lawyerApi.getMyProfileBoostInfo(),
       ]);
       return {
         stats: statsRes.data,
         profile: profileRes.data,
+        boost: boostRes.data
       };
     }
   );
 
   const stats = data?.stats;
   const profile = data?.profile;
+  const boost = data?.boost;
+
+  const handlePurchaseBoost = async (durationDays) => {
+    if (boostLoading) return;
+    const fee =
+      durationDays === 7 ? boost?.pricing?.fee7Days : boost?.pricing?.fee30Days;
+    if (!fee || fee <= 0) {
+      toast.error("This boost package is not available right now");
+      return;
+    }
+
+    if (profile?.verificationStatus !== "APPROVED") {
+      toast.error("You must be verified to buy profile boosts");
+      return;
+    }
+
+    try {
+      setBoostLoading(true);
+      await lawyerApi.purchaseProfileBoost(durationDays);
+      toast.success("Profile boost purchased successfully");
+      retry();
+    } catch (e) {
+      toast.error(e.response?.data?.message || "Failed to purchase boost");
+    } finally {
+      setBoostLoading(false);
+    }
+  };
 
   return (
     <StateHandler loading={loading} error={error} retry={retry}>
@@ -107,6 +141,57 @@ export default function LawyerOverviewPage() {
                   {profile?.specialization?.length || 0}
                 </span>
               </div>
+            </div>
+          </Card>
+
+          <Card title="Profile Boost" className="col-span-2">
+            <div className="text-text-secondary">
+              <div className="flex justify-between items-center mb-3">
+                <span>Featured</span>
+                {boost?.boost?.isFeatured ? (
+                  <Badge variant="warning" size="sm">
+                    Featured until{" "}
+                    {boost?.boost?.featuredUntil
+                      ? new Date(boost.boost.featuredUntil).toLocaleDateString("en-US")
+                      : "N/A"}
+                  </Badge>
+                ) : (
+                  <Badge variant="default" size="sm">
+                    Not Featured
+                  </Badge>
+                )}
+              </div>
+
+              <div className="flex gap-3 flex-wrap">
+                <Button
+                  variant="primary"
+                  disabled={
+                    boostLoading ||
+                    profile?.verificationStatus !== "APPROVED" ||
+                    !(boost?.pricing?.fee7Days > 0)
+                  }
+                  onClick={() => handlePurchaseBoost(7)}
+                >
+                  Boost 7 days (${boost?.pricing?.fee7Days || 0})
+                </Button>
+                <Button
+                  variant="secondary"
+                  disabled={
+                    boostLoading ||
+                    profile?.verificationStatus !== "APPROVED" ||
+                    !(boost?.pricing?.fee30Days > 0)
+                  }
+                  onClick={() => handlePurchaseBoost(30)}
+                >
+                  Boost 30 days (${boost?.pricing?.fee30Days || 0})
+                </Button>
+              </div>
+
+              {profile?.verificationStatus !== "APPROVED" && (
+                <p className="text-xs text-text-muted mt-3 m-0">
+                  Boost purchase is available after verification approval.
+                </p>
+              )}
             </div>
           </Card>
         </div>

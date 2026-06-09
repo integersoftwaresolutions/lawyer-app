@@ -52,6 +52,7 @@ export default function LawyerEarningsPage() {
     const variants = {
       EARNING: "success",
       PAYOUT: "info",
+      SPEND: "danger",
     };
     return <Badge variant={variants[type] || "default"}>{type}</Badge>;
   };
@@ -65,7 +66,12 @@ export default function LawyerEarningsPage() {
     {
       key: "type",
       label: "Type",
-      render: (value) => getTypeBadge(value),
+      render: (value, row) => {
+        if (value === "SPEND" && typeof row?.note === "string" && row.note.toLowerCase().includes("verification")) {
+          return <Badge variant="danger">VERIFICATION FEE</Badge>;
+        }
+        return getTypeBadge(value);
+      },
     },
     {
       key: "amount",
@@ -74,7 +80,7 @@ export default function LawyerEarningsPage() {
         <span className={`text-sm font-semibold ${
           value >= 0 ? "text-success" : "text-danger"
         }`}>
-          {value >= 0 ? "+" : ""}${Math.abs(value)}
+          {value >= 0 ? "+" : "-"}${Math.abs(value)}
         </span>
       ),
     },

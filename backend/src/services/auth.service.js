@@ -1,6 +1,7 @@
 import { ApiError } from "../helpers/apiError.js";
 import User from "../models/User.js";
 import LawyerProfile from "../models/LawyerProfile.js";
+import ClientProfile from "../models/ClientProfile.js";
 import Wallet from "../models/Wallet.js";
 import AdminSetting from "../models/AdminSetting.js";
 import { signAccessToken, signRefreshToken, verifyRefreshToken, hashToken, compareToken } from "./token.service.js";

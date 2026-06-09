@@ -1,10 +1,12 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendSuccess } from "../helpers/response.helper.js";
 import * as lawyerService from "../services/lawyer.service.js";
+import * as disputeService from "../services/dispute.service.js";
 import * as availabilityService from "../services/availability.service.js";
 import * as reviewService from "../services/review.service.js";
 import * as bookingService from "../services/booking.service.js";
 import * as verificationService from "../services/verification.service.js";
+import * as profileBoostService from "../services/profileBoost.service.js";
 
 export const search = asyncHandler(async (req, res) => {
   const out = await lawyerService.searchLawyers(req.query);
@@ -14,6 +16,11 @@ export const search = asyncHandler(async (req, res) => {
 export const profile = asyncHandler(async (req, res) => {
   const out = await lawyerService.getLawyerProfile(req.params.lawyerUserId);
   return sendSuccess(res, { message: "Lawyer profile", data: out });
+});
+
+export const getContactDetails = asyncHandler(async (req, res) => {
+  const out = await lawyerService.getLawyerContactDetails(req.params.lawyerUserId, req.user.id);
+  return sendSuccess(res, { message: "Contact details", data: out });
 });
 
 export const getMyProfile = asyncHandler(async (req, res) => {
@@ -79,6 +86,21 @@ export const getMyReviews = asyncHandler(async (req, res) => {
   return sendSuccess(res, { message: "Reviews", data: out.items, meta: out.meta });
 });
 
+export const raiseDispute = asyncHandler(async (req, res) => {
+  const out = await disputeService.raiseDispute({
+    bookingId: req.params.bookingId,
+    raisedById: req.user.id,
+    reason: req.body.reason,
+    description: req.body.description
+  });
+  return sendSuccess(res, { statusCode: 201, message: "Dispute raised", data: out });
+});
+
+export const getMyDisputes = asyncHandler(async (req, res) => {
+  const out = await disputeService.getMyDisputes(req.user.id, req.query);
+  return sendSuccess(res, { message: "Disputes", data: out.items, meta: out.meta });
+});
+
 export const getLawyerReviews = asyncHandler(async (req, res) => {
   const out = await reviewService.getReviewsByLawyer(req.params.lawyerUserId, req.query);
   return sendSuccess(res, { message: "Reviews", data: out.items, meta: out.meta });
@@ -104,7 +126,26 @@ export const uploadVerificationDocument = asyncHandler(async (req, res) => {
   return sendSuccess(res, { statusCode: 201, message: "Document uploaded successfully", data: doc });
 });
 
+export const payVerificationFee = asyncHandler(async (_req, res) => {
+  const out = await verificationService.payVerificationFee({ lawyerUserId: _req.user.id });
+  return sendSuccess(res, { statusCode: 200, message: "Verification fee paid", data: out });
+});
+
 export const getVerificationStatus = asyncHandler(async (req, res) => {
   const out = await verificationService.getVerificationStatus(req.user.id);
   return sendSuccess(res, { message: "Verification status", data: out });
+});
+
+export const getMyProfileBoostInfo = asyncHandler(async (req, res) => {
+  const out = await profileBoostService.getMyProfileBoostInfo(req.user.id);
+  return sendSuccess(res, { message: "Profile boost info", data: out });
+});
+
+export const purchaseProfileBoost = asyncHandler(async (req, res) => {
+  const { durationDays } = req.body;
+  const out = await profileBoostService.purchaseProfileBoost({
+    lawyerUserId: req.user.id,
+    durationDays
+  });
+  return sendSuccess(res, { message: "Profile boost purchased", data: out });
 });

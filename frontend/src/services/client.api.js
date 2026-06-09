@@ -16,4 +16,8 @@ export const clientApi = {
   createReview: (payload) => api.post("/clients/me/reviews", payload).then((r) => r.data),
   
   getMyReviews: (params) => api.get("/clients/me/reviews", { params }).then((r) => r.data),
+
+  raiseDispute: (bookingId, payload) =>
+    api.post(`/clients/me/bookings/${bookingId}/dispute`, payload).then((r) => r.data),
+  getMyDisputes: (params) => api.get("/clients/me/disputes", { params }).then((r) => r.data),
 };

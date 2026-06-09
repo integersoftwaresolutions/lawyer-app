@@ -8,14 +8,7 @@ export default function Checkbox({
   ...props 
 }) {
   const handleChange = (e) => {
-    if (onChange) {
-      // Support both function(checked) and function(event) patterns
-      if (onChange.length === 1) {
-        onChange(e.target.checked);
-      } else {
-        onChange(e);
-      }
-    }
+    if (onChange) onChange(e);
   };
 
   return (

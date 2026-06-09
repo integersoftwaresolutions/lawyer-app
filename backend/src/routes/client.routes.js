@@ -4,6 +4,7 @@ import { requireRoles } from "../middlewares/rbac.middleware.js";
 import { validate } from "../middlewares/validate.middleware.js";
 import * as clientCtrl from "../controllers/client.controller.js";
 import { rescheduleBookingSchema } from "../validators/booking.validators.js";
+import { raiseDisputeSchema } from "../validators/dispute.validators.js";
 
 const r = Router();
 
@@ -17,5 +18,7 @@ r.delete("/me/bookings/:bookingId", clientCtrl.deleteMyBooking);
 r.get("/me/stats", clientCtrl.getMyStats);
 r.post("/me/reviews", clientCtrl.createReview);
 r.get("/me/reviews", clientCtrl.getMyReviews);
+r.post("/me/bookings/:bookingId/dispute", validate(raiseDisputeSchema), clientCtrl.raiseDispute);
+r.get("/me/disputes", clientCtrl.getMyDisputes);
 
 export default r;

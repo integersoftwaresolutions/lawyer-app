@@ -158,11 +158,16 @@ export const fetchUserProfile = createAsyncThunk(
       const api = getProfileApi(user.role);
       const res = await api.getMyProfile();
       const profile = res.data || {};
-      
-      // Return merged user with profile
+
+      // Preserve profileImage from user - it's stored on User (auth), not in LawyerProfile/ClientProfile
+      const userProfileImage = user.profileImage;
+      const userProfileImageMediaId = user.profileImageMediaId;
+
       return {
         ...user,
         ...profile,
+        profileImage: userProfileImage || profile.profileImage || "",
+        profileImageMediaId: userProfileImageMediaId ?? profile.profileImageMediaId ?? null,
         profile
       };
     } catch (error) {
@@ -192,11 +197,18 @@ export const updateUserProfile = createAsyncThunk(
       
       const res = await api.updateMyProfile(payload);
       const updatedProfile = res.data || {};
-      
-      // Return merged user with updated profile
+
+      // Preserve profileImage from User - it's stored via auth/profile-picture, not in LawyerProfile/ClientProfile.
+      // The profile response may have empty profileImage which would overwrite and remove the picture.
+      const userProfileImage = user.profileImage;
+      const userProfileImageMediaId = user.profileImageMediaId;
+
+      // Return merged user with updated profile, keeping User's profile picture
       return {
         ...user,
         ...updatedProfile,
+        profileImage: userProfileImage || updatedProfile.profileImage || "",
+        profileImageMediaId: userProfileImageMediaId ?? updatedProfile.profileImageMediaId ?? null,
         profile: updatedProfile
       };
     } catch (error) {

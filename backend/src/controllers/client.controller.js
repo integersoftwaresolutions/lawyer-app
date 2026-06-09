@@ -3,6 +3,7 @@ import { sendSuccess } from "../helpers/response.helper.js";
 import * as clientService from "../services/client.service.js";
 import * as reviewService from "../services/review.service.js";
 import * as bookingService from "../services/booking.service.js";
+import * as disputeService from "../services/dispute.service.js";
 
 export const getMyProfile = asyncHandler(async (req, res) => {
   const out = await clientService.getClientProfile(req.user.id);
@@ -55,4 +56,19 @@ export const createReview = asyncHandler(async (req, res) => {
 export const getMyReviews = asyncHandler(async (req, res) => {
   const out = await reviewService.getReviewsByClient(req.user.id, req.query);
   return sendSuccess(res, { message: "Reviews", data: out.items, meta: out.meta });
+});
+
+export const raiseDispute = asyncHandler(async (req, res) => {
+  const out = await disputeService.raiseDispute({
+    bookingId: req.params.bookingId,
+    raisedById: req.user.id,
+    reason: req.body.reason,
+    description: req.body.description
+  });
+  return sendSuccess(res, { statusCode: 201, message: "Dispute raised", data: out });
+});
+
+export const getMyDisputes = asyncHandler(async (req, res) => {
+  const out = await disputeService.getMyDisputes(req.user.id, req.query);
+  return sendSuccess(res, { message: "Disputes", data: out.items, meta: out.meta });
 });

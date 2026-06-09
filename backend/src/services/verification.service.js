@@ -2,8 +2,10 @@ import { ApiError } from "../helpers/apiError.js";
 import LawyerProfile from "../models/LawyerProfile.js";
 import VerificationDocument from "../models/VerificationDocument.js";
 import User from "../models/User.js";
+import AdminSetting from "../models/AdminSetting.js";
 import { VERIFICATION_STATUS, DOCUMENT_TYPES } from "../config/constants.js";
 import { mediaService } from "./media.service.js";
+import * as walletService from "./wallet.service.js";
 
 /**
  * Professional Verification Service
@@ -36,6 +38,16 @@ export async function getVerificationStatus(lawyerUserId) {
     documentsByType[doc.documentType].push(doc);
   });
 
+  const settings = await AdminSetting.findOne();
+  const verificationFee = settings?.verificationFee || 0;
+  const now = Date.now();
+  const isFeePaidFresh =
+    verificationFee <= 0
+      ? true
+      : !!profile.verificationFeePaidAt && now - new Date(profile.verificationFeePaidAt).getTime() <= 365 * 24 * 60 * 60 * 1000;
+
+  const feeRequired = verificationFee > 0 && !isFeePaidFresh;
+
   return {
     profile: {
       verificationStatus: profile.verificationStatus,
@@ -45,7 +57,13 @@ export async function getVerificationStatus(lawyerUserId) {
       email: profile.userId?.email,
       barCouncilNumber: profile.barCouncilNumber,
       barCouncil: profile.barCouncil,
-      cnic: profile.cnic
+      cnic: profile.cnic,
+      verificationFee: {
+        amount: verificationFee,
+        paidAt: profile.verificationFeePaidAt,
+        isPaid: !feeRequired,
+        isRequired: feeRequired
+      }
     },
     documents: documentsByType,
     allDocuments: documents,
@@ -55,6 +73,51 @@ export async function getVerificationStatus(lawyerUserId) {
       { type: DOCUMENT_TYPES.PROFESSIONAL_CERTIFICATE, label: "Professional Certificate", required: false }
     ]
   };
+}
+
+function isVerificationFeeFresh({ paidAt, verificationFee }) {
+  if (verificationFee <= 0) return true;
+  if (!paidAt) return false;
+  const now = Date.now();
+  return now - new Date(paidAt).getTime() <= 365 * 24 * 60 * 60 * 1000;
+}
+
+export async function payVerificationFee({ lawyerUserId }) {
+  const profile = await LawyerProfile.findOne({ userId: lawyerUserId });
+  if (!profile) throw new ApiError(404, "Lawyer profile not found");
+
+  const settings = await AdminSetting.findOne();
+  const verificationFee = settings?.verificationFee || 0;
+
+  if (verificationFee <= 0) {
+    // Free flow: mark as paid so the UI/logic stays consistent.
+    profile.verificationFeePaidAt = profile.verificationFeePaidAt || new Date();
+    await profile.save();
+    return profile.toObject();
+  }
+
+  if (isVerificationFeeFresh({ paidAt: profile.verificationFeePaidAt, verificationFee })) {
+    throw new ApiError(400, "Verification fee is already paid for this cycle");
+  }
+
+  const wallet = await walletService.spendCredits(lawyerUserId, {
+    amount: verificationFee,
+    note: `Verification fee`
+  });
+
+  profile.verificationFeePaidAt = new Date();
+  // If the lawyer is re-requesting verification (rejected/expired), move back to pending.
+  if (
+    profile.verificationStatus === VERIFICATION_STATUS.REJECTED ||
+    profile.verificationStatus === VERIFICATION_STATUS.APPROVED
+  ) {
+    profile.verificationStatus = VERIFICATION_STATUS.PENDING;
+    profile.verificationNotes = "";
+    profile.verifiedAt = null;
+  }
+  await profile.save();
+
+  return { wallet, verificationFeePaidAt: profile.verificationFeePaidAt };
 }
 
 /**
@@ -102,6 +165,19 @@ export async function uploadVerificationDocument({ file, lawyerUserId, documentT
     documentType,
     status: "PENDING"
   });
+
+  // Charge verification fee (annual / cycle-based) when required
+  const settings = await AdminSetting.findOne();
+  const verificationFee = settings?.verificationFee || 0;
+  const feeRequired = verificationFee > 0 && !isVerificationFeeFresh({ paidAt: profile.verificationFeePaidAt, verificationFee });
+  if (feeRequired) {
+    await payVerificationFee({ lawyerUserId });
+    // Start a fresh verification cycle when the lawyer is re-paying the fee.
+    profile.verificationStatus = VERIFICATION_STATUS.PENDING;
+    profile.verificationNotes = "";
+    profile.verifiedAt = null;
+    await profile.save();
+  }
 
   // Delete old media files
   for (const oldDoc of oldDocuments) {
@@ -193,8 +269,56 @@ export async function verifyLawyer({ lawyerUserId, status, notes, adminId }) {
   profile.verificationNotes = notes || "";
 
   if (status === VERIFICATION_STATUS.APPROVED) {
+    const requiredDocTypes = [DOCUMENT_TYPES.BAR_LICENSE, DOCUMENT_TYPES.GOVERNMENT_ID];
+    // Admin may approve the lawyer even if docs are still PENDING,
+    // but required documents must exist (uploaded).
+    const existingRequiredDocs = await VerificationDocument.find({
+      lawyerUserId,
+      documentType: { $in: requiredDocTypes },
+    }).lean();
+
+    const existingTypes = new Set(existingRequiredDocs.map((d) => d.documentType));
+    const hasAllRequired = requiredDocTypes.every((t) => existingTypes.has(t));
+    if (!hasAllRequired) throw new ApiError(400, "Cannot approve: required documents are not uploaded");
+
+    // If a verification fee is configured, require it to be fresh.
+    const settings = await AdminSetting.findOne();
+    const verificationFee = settings?.verificationFee || 0;
+    if (verificationFee > 0) {
+      const paidAt = profile.verificationFeePaidAt;
+      const isFresh = paidAt && Date.now() - new Date(paidAt).getTime() <= 365 * 24 * 60 * 60 * 1000;
+      if (!isFresh) {
+        throw new ApiError(403, "Cannot approve: verification fee is missing or expired");
+      }
+    }
+
+    // When approving the lawyer, automatically approve required documents too.
+    const now = new Date();
+    await VerificationDocument.updateMany(
+      {
+        lawyerUserId,
+        documentType: { $in: requiredDocTypes }
+      },
+      {
+        status: VERIFICATION_STATUS.APPROVED,
+        adminNotes: notes || "",
+        reviewedAt: now,
+        reviewedBy: adminId
+      }
+    );
+
     profile.verifiedAt = new Date();
   } else if (status === VERIFICATION_STATUS.REJECTED) {
+    // When rejecting the lawyer, mark their documents as rejected in bulk.
+    await VerificationDocument.updateMany(
+      { lawyerUserId },
+      {
+        status: VERIFICATION_STATUS.REJECTED,
+        adminNotes: notes || "",
+        reviewedAt: new Date(),
+        reviewedBy: adminId
+      }
+    );
     profile.verifiedAt = null;
   }
 
@@ -235,14 +359,34 @@ async function checkAndUpdateVerificationStatus(lawyerUserId) {
 export async function getPendingVerifications({ page = 1, limit = 10 }) {
   const skip = (page - 1) * limit;
 
+  const settings = await AdminSetting.findOne();
+  const verificationFee = settings?.verificationFee || 0;
+
+  // Only show lawyers that have uploaded at least one document.
+  const now = Date.now();
+  const docLawyerUserIds = await VerificationDocument.distinct("lawyerUserId", {
+    status: VERIFICATION_STATUS.PENDING
+  });
+
+  const feeFreshFrom = new Date(now - 365 * 24 * 60 * 60 * 1000);
+
+  const baseQuery = {
+    verificationStatus: VERIFICATION_STATUS.PENDING,
+    userId: { $in: docLawyerUserIds }
+  };
+
+  if (verificationFee > 0) {
+    baseQuery.verificationFeePaidAt = { $gte: feeFreshFrom };
+  }
+
   const [lawyers, total] = await Promise.all([
-    LawyerProfile.find({ verificationStatus: VERIFICATION_STATUS.PENDING })
+    LawyerProfile.find(baseQuery)
       .populate("userId", "email createdAt")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean(),
-    LawyerProfile.countDocuments({ verificationStatus: VERIFICATION_STATUS.PENDING })
+    LawyerProfile.countDocuments(baseQuery)
   ]);
 
   // Get documents for each lawyer

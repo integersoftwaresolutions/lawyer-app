@@ -12,3 +12,9 @@ export const searchLawyersSchema = Joi.object({
     limit: Joi.number().min(1).max(50).default(10)
   }).unknown(true)
 });
+
+export const profileBoostSchema = Joi.object({
+  body: Joi.object({
+    durationDays: Joi.number().valid(7, 30).required()
+  }).required()
+});

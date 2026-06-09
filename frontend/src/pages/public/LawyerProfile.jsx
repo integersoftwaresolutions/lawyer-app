@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { lawyerApi } from "../../services/lawyer.api";
 import { bookingApi } from "../../services/booking.api";
@@ -18,7 +18,10 @@ import {
   FiCalendar,
   FiUser,
   FiCheckCircle,
-  FiAlertCircle
+  FiAlertCircle,
+  FiPhone,
+  FiMail,
+  FiLock
 } from "react-icons/fi";
 
 export default function LawyerProfile() {
@@ -37,6 +40,7 @@ export default function LawyerProfile() {
     notes: ""
   });
   const [submitting, setSubmitting] = useState(false);
+  const [contactDetails, setContactDetails] = useState(null); // null=loading, false=no access, object=has access
 
   const slotOptions = useMemo(() => {
     return (availableSlots || []).map((s) => ({
@@ -158,6 +162,25 @@ export default function LawyerProfile() {
 
   const isClient = user?.role === "CLIENT";
 
+  useEffect(() => {
+    if (!id || !isClient || !lawyer) {
+      setContactDetails(isClient && lawyer ? false : null);
+      return;
+    }
+    let cancelled = false;
+    setContactDetails(null);
+    lawyerApi
+      .getContactDetails(id)
+      .then((res) => {
+        if (!cancelled && res?.data) setContactDetails(res.data);
+        else if (!cancelled) setContactDetails(false);
+      })
+      .catch(() => {
+        if (!cancelled) setContactDetails(false);
+      });
+    return () => { cancelled = true; };
+  }, [id, isClient, lawyer]);
+
   return (
     <StateHandler loading={loading} error={error} retry={retry}>
       <>
@@ -217,6 +240,17 @@ export default function LawyerProfile() {
                           <Badge variant="success" className="flex items-center gap-1">
                             <FiShield className="w-3 h-3" />
                             Verified
+                          </Badge>
+                        )}
+                        {lawyer?.isFeatured && lawyer?.featuredUntil && (
+                          <Badge variant="warning" className="flex items-center gap-1">
+                            Featured
+                            {user?.role === "LAWYER" && user?.id === id && (
+                              <span className="text-xs">
+                                {" "}
+                                · {new Date(lawyer.featuredUntil).toLocaleDateString("en-US")}
+                              </span>
+                            )}
                           </Badge>
                         )}
                       </div>
@@ -350,6 +384,83 @@ export default function LawyerProfile() {
                   </div>
                 </Card>
               </div>
+
+              {/* Full-width Contact Section (clients only) */}
+              {isClient && (
+                <Card className={`mb-6 overflow-hidden ${!(contactDetails && (contactDetails.phone || contactDetails.email || contactDetails.whatsapp)) ? "border-2 border-dashed border-primary/30 bg-gradient-to-br from-primary/5 to-transparent" : "border-l-4 border-l-primary"}`}>
+                  <div className="p-6 md:p-8">
+                    <div className="flex flex-col md:flex-row md:items-center gap-6 md:gap-8">
+                      <div className={`flex-shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center ${
+                        contactDetails && (contactDetails.phone || contactDetails.email || contactDetails.whatsapp)
+                          ? "bg-success/15 text-success"
+                          : "bg-primary/15 text-primary"
+                      }`}>
+                        {contactDetails && (contactDetails.phone || contactDetails.email || contactDetails.whatsapp) ? (
+                          <FiPhone className="w-8 h-8" />
+                        ) : (
+                          <FiLock className="w-8 h-8" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h2 className="text-lg font-bold text-text-primary mb-1 flex items-center gap-2">
+                          Contact {lawyer?.fullName}
+                          {contactDetails && (contactDetails.phone || contactDetails.email || contactDetails.whatsapp) && (
+                            <Badge variant="success" size="sm">Unlocked</Badge>
+                          )}
+                        </h2>
+                        {contactDetails === null ? (
+                          <div className="flex items-center gap-3 text-text-muted py-2">
+                            <span className="inline-block w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                            <span>Checking access...</span>
+                          </div>
+                        ) : contactDetails && (contactDetails.phone || contactDetails.email || contactDetails.whatsapp) ? (
+                          <div className="flex flex-wrap gap-x-8 gap-y-4 mt-4">
+                            {contactDetails.phone && (
+                              <a href={`tel:${contactDetails.phone}`} className="inline-flex items-center gap-3 px-4 py-3 rounded-xl bg-surface hover:bg-surface-hover border border-border transition-colors group">
+                                <FiPhone className="w-5 h-5 text-primary group-hover:text-primary" />
+                                <span className="font-medium text-text-primary">{contactDetails.phone}</span>
+                              </a>
+                            )}
+                            {contactDetails.whatsapp && (
+                              <a href={`https://wa.me/${contactDetails.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-3 px-4 py-3 rounded-xl bg-surface hover:bg-surface-hover border border-border transition-colors group">
+                                <FiMessageCircle className="w-5 h-5 text-primary group-hover:text-primary" />
+                                <span className="font-medium text-text-primary">{contactDetails.whatsapp}</span>
+                              </a>
+                            )}
+                            {contactDetails.email && (
+                              <a href={`mailto:${contactDetails.email}`} className="inline-flex items-center gap-3 px-4 py-3 rounded-xl bg-surface hover:bg-surface-hover border border-border transition-colors group break-all">
+                                <FiMail className="w-5 h-5 text-primary group-hover:text-primary flex-shrink-0" />
+                                <span className="font-medium text-text-primary">{contactDetails.email}</span>
+                              </a>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="mt-3 space-y-2">
+                            <p className="text-text-secondary leading-relaxed m-0 max-w-xl">
+                              Contact details are revealed after you complete a consultation with this lawyer. Book a session to get direct access to phone, WhatsApp, and email.
+                            </p>
+                            <Button
+                              size="sm"
+                              className="mt-3"
+                              onClick={() => {
+                                const today = new Date();
+                                const yyyy = today.getFullYear();
+                                const mm = String(today.getMonth() + 1).padStart(2, "0");
+                                const dd = String(today.getDate()).padStart(2, "0");
+                                setAvailabilityDate(`${yyyy}-${mm}-${dd}`);
+                                setBookingModal(true);
+                              }}
+                            >
+                              <FiCalendar className="w-4 h-4 mr-2" />
+                              Book consultation to unlock
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              )}
 
               {/* Specializations */}
               {lawyer?.specialization && lawyer.specialization.length > 0 && (

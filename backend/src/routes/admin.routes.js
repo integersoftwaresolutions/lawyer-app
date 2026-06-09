@@ -1,7 +1,9 @@
 import { Router } from "express";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
 import { requireRoles } from "../middlewares/rbac.middleware.js";
+import { validate } from "../middlewares/validate.middleware.js";
 import * as adminCtrl from "../controllers/admin.controller.js";
+import { resolveDisputeSchema, updateDisputeStatusSchema } from "../validators/dispute.validators.js";
 
 const r = Router();
 
@@ -20,5 +22,10 @@ r.post("/documents/:documentId/review", adminCtrl.reviewDocument);
 
 r.get("/settings", adminCtrl.getSettings);
 r.put("/settings", adminCtrl.updateSettings);
+
+r.get("/disputes", adminCtrl.getDisputes);
+r.get("/disputes/:disputeId", adminCtrl.getDisputeById);
+r.patch("/disputes/:disputeId/status", validate(updateDisputeStatusSchema), adminCtrl.updateDisputeStatus);
+r.post("/disputes/:disputeId/resolve", validate(resolveDisputeSchema), adminCtrl.resolveDispute);
 
 export default r;

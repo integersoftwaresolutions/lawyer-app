@@ -1,6 +1,7 @@
 import { ApiError } from "../helpers/apiError.js";
 import LawyerProfile from "../models/LawyerProfile.js";
 import { VERIFICATION_STATUS } from "../config/constants.js";
+import AdminSetting from "../models/AdminSetting.js";
 
 /**
  * Middleware to ensure lawyer is verified
@@ -27,6 +28,20 @@ export async function requireVerifiedLawyer(req, res, next) {
 
     if (profile.verificationStatus !== VERIFICATION_STATUS.APPROVED) {
       throw new ApiError(403, "Your account must be verified to access this feature. Please complete the verification process.");
+    }
+
+    // If verificationFee is configured as an annual/cycle fee, block access when the last payment expired.
+    const settings = await AdminSetting.findOne();
+    const verificationFee = settings?.verificationFee || 0;
+    if (verificationFee > 0) {
+      const paidAt = profile.verificationFeePaidAt;
+      const now = Date.now();
+      const isFresh =
+        paidAt && now - new Date(paidAt).getTime() <= 365 * 24 * 60 * 60 * 1000;
+
+      if (!isFresh) {
+        throw new ApiError(403, "Your verification fee expired. Please pay again to continue receiving bookings.");
+      }
     }
 
     // Add profile to request for use in controllers

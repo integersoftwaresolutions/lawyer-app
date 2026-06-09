@@ -28,6 +28,7 @@ import AdminLawyersPage from "../pages/admin/AdminLawyersPage.jsx";
 import AdminUsersPage from "../pages/admin/AdminUsersPage.jsx";
 import AdminBookingsPage from "../pages/admin/AdminBookingsPage.jsx";
 import AdminVerificationPage from "../pages/admin/AdminVerificationPage.jsx";
+import AdminDisputesPage from "../pages/admin/AdminDisputesPage.jsx";
 import AdminSettingsPage from "../pages/admin/AdminSettingsPage.jsx";
 
 import SessionChat from "../pages/client/SessionChat.jsx";
@@ -95,6 +96,7 @@ export default function RoutesRoot() {
         <Route path="users" element={<AdminUsersPage />} />
         <Route path="bookings" element={<AdminBookingsPage />} />
         <Route path="verification" element={<AdminVerificationPage />} />
+        <Route path="disputes" element={<AdminDisputesPage />} />
         <Route path="settings" element={<AdminSettingsPage />} />
         <Route path="dashboard" element={<Navigate to="/admin/overview" replace />} />
       </Route>

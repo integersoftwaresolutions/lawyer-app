@@ -13,7 +13,34 @@ export default function ClientBookingsPage() {
   const [deleteModal, setDeleteModal] = useState({ open: false, booking: null });
   const [editModal, setEditModal] = useState({ open: false, booking: null });
   const [editData, setEditData] = useState({ date: "", time: "", durationMinutes: 30 });
+  const [disputeModal, setDisputeModal] = useState({ open: false, booking: null });
+  const [disputeViewModal, setDisputeViewModal] = useState({ open: false, booking: null });
+  const [disputeData, setDisputeData] = useState({ reason: "OTHER", description: "" });
   const [refreshKey, setRefreshKey] = useState(0);
+
+  const DISPUTE_RESOLUTION_LABELS = {
+    REFUND_CLIENT_FULL: "Full Refund to Client",
+    REFUND_CLIENT_PARTIAL: "Partial Refund to Client",
+    NO_ACTION: "No Action",
+    WARNING_LAWYER: "Warning to Lawyer",
+    DISMISSED: "Dismissed"
+  };
+
+  const DISPUTE_REASON_LABELS = {
+    NO_SHOW: "No show",
+    POOR_SERVICE: "Poor service",
+    BILLING_ISSUE: "Billing issue",
+    TECHNICAL_ISSUE: "Technical issue",
+    OTHER: "Other"
+  };
+
+  const DISPUTE_REASONS = [
+    { value: "NO_SHOW", label: "Lawyer didn't show up" },
+    { value: "POOR_SERVICE", label: "Poor service" },
+    { value: "BILLING_ISSUE", label: "Billing issue" },
+    { value: "TECHNICAL_ISSUE", label: "Technical problem" },
+    { value: "OTHER", label: "Other" }
+  ];
 
   const fetchBookings = async () => {
     const params = filter ? { status: filter } : {};
@@ -110,6 +137,25 @@ export default function ClientBookingsPage() {
     return booking.status !== "COMPLETED";
   };
 
+  const handleDisputeSubmit = async () => {
+    if (!disputeModal.booking) return;
+    try {
+      setSubmitting(true);
+      await clientApi.raiseDispute(disputeModal.booking._id, {
+        reason: disputeData.reason,
+        description: disputeData.description
+      });
+      setDisputeModal({ open: false, booking: null });
+      setDisputeData({ reason: "OTHER", description: "" });
+      setRefreshKey((k) => k + 1);
+      alert("Dispute raised. Our team will review it shortly.");
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to raise dispute");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleReviewSubmit = async () => {
     if (!reviewModal.booking) return;
     
@@ -166,17 +212,38 @@ export default function ClientBookingsPage() {
       render: (value) => getStatusBadge(value),
     },
     {
+      key: "dispute",
+      label: "Dispute",
+      render: (_, row) =>
+        row.status === "COMPLETED" ? (
+          row.dispute ? (
+            <button
+              type="button"
+              onClick={() => setDisputeViewModal({ open: true, booking: row })}
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface/50 px-3 py-1.5 text-left transition-colors hover:bg-surface hover:border-primary/30 cursor-pointer"
+            >
+              <Badge variant={row.dispute.status === "RESOLVED" ? "success" : "info"} size="sm">
+                {row.dispute.status.replace(/_/g, " ")}
+              </Badge>
+              <span className="text-xs text-text-secondary">View details</span>
+            </button>
+          ) : (
+            <Button size="sm" variant="secondary" onClick={() => setDisputeModal({ open: true, booking: row })}>
+              Raise Dispute
+            </Button>
+          )
+        ) : (
+          <span className="text-text-muted text-sm">—</span>
+        ),
+    },
+    {
       key: "actions",
       label: "Actions",
       render: (_, row) => (
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex flex-wrap items-center gap-2 min-w-[180px]">
           {isEditableOrViewable(row) && (
             <>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => setViewModal({ open: true, booking: row })}
-              >
+              <Button size="sm" variant="secondary" onClick={() => setViewModal({ open: true, booking: row })}>
                 View
               </Button>
               {row.status === "BOOKED" && (
@@ -186,28 +253,17 @@ export default function ClientBookingsPage() {
               )}
             </>
           )}
-
           {row.status === "ACTIVE" && (
-            <Button size="sm" onClick={() => navigate(`/chat/${row._id}`)}>
+            <Button size="sm" variant="primary" onClick={() => navigate(`/chat/${row._id}`)}>
               Join Chat
             </Button>
           )}
-
           {row.status === "COMPLETED" && !row.hasReview && (
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => setReviewModal({ open: true, booking: row })}
-            >
+            <Button size="sm" variant="secondary" onClick={() => setReviewModal({ open: true, booking: row })}>
               Review
             </Button>
           )}
-
-          <Button
-            size="sm"
-            variant="danger"
-            onClick={() => setDeleteModal({ open: true, booking: row })}
-          >
+          <Button size="sm" variant="danger" onClick={() => setDeleteModal({ open: true, booking: row })}>
             Delete
           </Button>
         </div>
@@ -296,7 +352,7 @@ export default function ClientBookingsPage() {
             type="date"
             value={editData.date}
             onChange={(e) => setEditData((p) => ({ ...p, date: e.target.value }))}
-            containerStyle={{ marginBottom: 0 }}
+            containerClassName="mb-0"
           />
           <Input
             label="Time"
@@ -304,7 +360,7 @@ export default function ClientBookingsPage() {
             step="900"
             value={editData.time}
             onChange={(e) => setEditData((p) => ({ ...p, time: e.target.value }))}
-            containerStyle={{ marginBottom: 0 }}
+            containerClassName="mb-0"
           />
         </div>
 
@@ -321,7 +377,7 @@ export default function ClientBookingsPage() {
             { value: 120, label: "120 minutes" },
           ]}
           placeholder="Select duration"
-          containerStyle={{ marginTop: "16px" }}
+          containerClassName="mt-4"
         />
         <p className="mt-2 mb-0 text-text-muted text-xs">
           Tip: Editing is allowed only for upcoming bookings. The new time must fit the lawyer availability.
@@ -387,6 +443,72 @@ export default function ClientBookingsPage() {
           value={reviewData.comment}
           onChange={(e) => setReviewData({ ...reviewData, comment: e.target.value })}
         />
+      </Modal>
+
+      <Modal
+        isOpen={disputeModal.open}
+        onClose={() => setDisputeModal({ open: false, booking: null })}
+        title="Raise a Dispute"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setDisputeModal({ open: false, booking: null })}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={handleDisputeSubmit} loading={submitting}>
+              Submit Dispute
+            </Button>
+          </>
+        }
+      >
+        <p className="text-text-secondary text-sm mb-4 mt-0">
+          If you had an issue with this consultation, you can raise a dispute. Our admin team will review it.
+        </p>
+        <Select
+          label="Reason"
+          value={disputeData.reason}
+          onChange={(e) => setDisputeData((d) => ({ ...d, reason: e.target.value }))}
+          options={DISPUTE_REASONS}
+          containerClassName="mb-4"
+        />
+        <Textarea
+          label="Description (optional)"
+          placeholder="Describe what happened..."
+          value={disputeData.description}
+          onChange={(e) => setDisputeData((d) => ({ ...d, description: e.target.value }))}
+          rows={3}
+        />
+      </Modal>
+
+      <Modal
+        isOpen={disputeViewModal.open}
+        onClose={() => setDisputeViewModal({ open: false, booking: null })}
+        title="Dispute Details"
+        footer={
+          <Button variant="secondary" onClick={() => setDisputeViewModal({ open: false, booking: null })}>
+            Close
+          </Button>
+        }
+      >
+        {disputeViewModal.booking?.dispute && (
+          <div className="text-text-primary space-y-3">
+            <p className="m-0"><strong>Status:</strong> {disputeViewModal.booking.dispute.status.replace(/_/g, " ")}</p>
+            <p className="m-0"><strong>Reason:</strong> {DISPUTE_REASON_LABELS[disputeViewModal.booking.dispute.reason] || disputeViewModal.booking.dispute.reason}</p>
+            {disputeViewModal.booking.dispute.description && (
+              <p className="m-0"><strong>Description:</strong> {disputeViewModal.booking.dispute.description}</p>
+            )}
+            {disputeViewModal.booking.dispute.status === "RESOLVED" && disputeViewModal.booking.dispute.resolution && (
+              <>
+                <p className="m-0"><strong>Resolution:</strong> {DISPUTE_RESOLUTION_LABELS[disputeViewModal.booking.dispute.resolution] || disputeViewModal.booking.dispute.resolution.replace(/_/g, " ")}</p>
+                {disputeViewModal.booking.dispute.refundAmount > 0 && (
+                  <p className="m-0 text-success"><strong>Refund Amount:</strong> ${disputeViewModal.booking.dispute.refundAmount} credited to your wallet</p>
+                )}
+                {disputeViewModal.booking.dispute.resolutionNote && (
+                  <p className="m-0 text-text-secondary"><strong>Admin Note:</strong> {disputeViewModal.booking.dispute.resolutionNote}</p>
+                )}
+              </>
+            )}
+          </div>
+        )}
       </Modal>
     </div>
   );

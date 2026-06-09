@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { adminApi } from "../../services/admin.api";
+import { getProfilePictureUrl } from "../../utils/profilePicture";
 import { Card, Button, Badge, Modal, Textarea, Select, StateHandler } from "../../components/ui";
 import { useToast } from "../../hooks/useToast";
 import { useStateHandler } from "../../hooks/useStateHandler";
@@ -325,7 +326,10 @@ export default function AdminVerificationPage() {
                   <Button
                     variant="secondary"
                     size="sm"
-                    onClick={() => window.open(doc.documentUrl, '_blank')}
+                    onClick={() => {
+                      const url = getProfilePictureUrl(doc.documentUrl || doc.mediaId?.url);
+                      if (url) window.open(url, "_blank");
+                    }}
                     className="flex items-center gap-1"
                   >
                     <FiEye className="w-4 h-4" />

@@ -61,7 +61,13 @@ export async function updateSettings(patch) {
   const s = await AdminSetting.findOne();
   const doc = s || (await AdminSetting.create({}));
   
-  const allowedFields = ["commissionPercent", "verificationFee", "monthlyCreditGrant"];
+  const allowedFields = [
+    "commissionPercent",
+    "verificationFee",
+    "monthlyCreditGrant",
+    "profileBoostFee7Days",
+    "profileBoostFee30Days"
+  ];
   for (const field of allowedFields) {
     if (patch[field] !== undefined) {
       doc[field] = patch[field];

@@ -34,7 +34,9 @@ const LawyerProfileSchema = new mongoose.Schema(
     // Verification
     verificationStatus: { type: String, enum: ["PENDING", "APPROVED", "REJECTED"], default: "PENDING", index: true },
     verificationNotes: { type: String, default: "" },
-    verifiedAt: { type: Date, default: null }
+    verifiedAt: { type: Date, default: null },
+    // Monetary verification fee paid time (used for re-request/annual fee logic)
+    verificationFeePaidAt: { type: Date, default: null }
   },
   { timestamps: true }
 );
