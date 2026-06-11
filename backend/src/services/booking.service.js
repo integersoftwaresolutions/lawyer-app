@@ -33,13 +33,15 @@ async function getAdminSettings() {
   return settings;
 }
 
-export async function createBooking({ clientId, lawyerUserId, startAt, durationMinutes, consultationType = CONSULTATION_TYPE.CHAT, notes = "" }) {
+const SLOT_DURATION_MINUTES = 30;
+
+export async function createBooking({ clientId, lawyerUserId, startAt, durationMinutes, consultationType = CONSULTATION_TYPE.CHAT_VIDEO, notes = "" }) {
   const start = toDate(startAt);
   if (!start) throw new ApiError(400, "Invalid startAt");
   if (start < now()) throw new ApiError(400, "startAt must be in the future");
 
-  const duration = Number(durationMinutes);
-  if (!Number.isFinite(duration) || duration <= 0) throw new ApiError(400, "Invalid durationMinutes");
+  // All consultations are fixed 30-minute slots
+  const duration = SLOT_DURATION_MINUTES;
 
   const end = new Date(start.getTime() + duration * 60 * 1000);
 
@@ -84,7 +86,7 @@ export async function createBooking({ clientId, lawyerUserId, startAt, durationM
   const settings = await getAdminSettings();
 
   const hourlyRate = lawyerProfile.hourlyRate || 0;
-  const amount = Math.round((hourlyRate * durationMinutes) / 60);
+  const amount = Math.round((hourlyRate * duration) / 60);
   const platformFee = Math.round(amount * (settings.commissionPercent / 100));
   const lawyerEarning = amount - platformFee;
 
@@ -237,8 +239,8 @@ export async function rescheduleBooking({ bookingId, clientId, startAt, duration
   if (!start) throw new ApiError(400, "Invalid startAt");
   if (start < now()) throw new ApiError(400, "startAt must be in the future");
 
-  const duration = Number(durationMinutes);
-  if (!Number.isFinite(duration) || duration <= 0) throw new ApiError(400, "Invalid durationMinutes");
+  // Fixed 30-minute slots
+  const duration = SLOT_DURATION_MINUTES;
 
   const end = new Date(start.getTime() + duration * 60 * 1000);
   const dateIso = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")}`;
@@ -246,7 +248,7 @@ export async function rescheduleBooking({ bookingId, clientId, startAt, duration
   const startM = parseTimeToMinutes(startTime);
   const endM = startM === null ? null : startM + duration;
 
-  const slots = await availabilityService.getAvailableSlots(booking.lawyerUserId, dateIso);
+  const slots = await availabilityService.getAvailableSlots(booking.lawyerUserId, dateIso, booking._id);
   const fitsAvailability = (slots || []).some((s) => {
     const sM = parseTimeToMinutes(s.start);
     const eM = parseTimeToMinutes(s.end);
@@ -328,8 +330,8 @@ export async function rescheduleBookingAsLawyer({ bookingId, lawyerUserId, start
   if (!start) throw new ApiError(400, "Invalid startAt");
   if (start < now()) throw new ApiError(400, "startAt must be in the future");
 
-  const duration = Number(durationMinutes);
-  if (!Number.isFinite(duration) || duration <= 0) throw new ApiError(400, "Invalid durationMinutes");
+  // Fixed 30-minute slots
+  const duration = SLOT_DURATION_MINUTES;
 
   const end = new Date(start.getTime() + duration * 60 * 1000);
   const dateIso = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")}`;
@@ -337,7 +339,7 @@ export async function rescheduleBookingAsLawyer({ bookingId, lawyerUserId, start
   const startM = parseTimeToMinutes(startTime);
   const endM = startM === null ? null : startM + duration;
 
-  const slots = await availabilityService.getAvailableSlots(booking.lawyerUserId, dateIso);
+  const slots = await availabilityService.getAvailableSlots(booking.lawyerUserId, dateIso, booking._id);
   const fitsAvailability = (slots || []).some((s) => {
     const sM = parseTimeToMinutes(s.start);
     const eM = parseTimeToMinutes(s.end);
