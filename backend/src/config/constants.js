@@ -92,6 +92,31 @@ export const AI_USAGE_TYPES = {
   REPORT_GENERATION: "REPORT_GENERATION"
 };
 
+export const PLANNER_EVENT_TYPES = {
+  COURT_HEARING: "COURT_HEARING",
+  CLIENT_MEETING: "CLIENT_MEETING",
+  INTERNAL: "INTERNAL",
+  DEADLINE: "DEADLINE",
+  OTHER: "OTHER",
+  PLATFORM_BOOKING: "PLATFORM_BOOKING"
+};
+
+export const PLANNER_EVENT_SOURCES = {
+  MANUAL: "MANUAL",
+  BOOKING: "BOOKING"
+};
+
+export const PLANNER_EVENT_VISIBILITY = {
+  PRIVATE: "PRIVATE",
+  SHARED: "SHARED"
+};
+
+/** Calendar owner — enables lawyer & client calendars on same model. */
+export const CALENDAR_OWNER_ROLES = {
+  LAWYER: "LAWYER",
+  CLIENT: "CLIENT"
+};
+
 export const CITIES = [
   "Karachi",
   "Lahore",

@@ -7,6 +7,7 @@ import LedgerEntry from "../models/LedgerEntry.js";
 import Wallet from "../models/Wallet.js";
 import * as availabilityService from "./availability.service.js";
 import * as walletService from "./wallet.service.js";
+import { syncBookingToPlanner, cancelFromBooking as cancelPlannerFromBooking } from "./planner/bookingSync.service.js";
 import { BOOKING_STATUS, CONSULTATION_TYPE, LEDGER_TYPES } from "../config/constants.js";
 import { toDate, now } from "../utils/time.js";
 
@@ -131,6 +132,8 @@ export async function createBooking({ clientId, lawyerUserId, startAt, durationM
     allowVideo: consultationType === CONSULTATION_TYPE.VIDEO || consultationType === CONSULTATION_TYPE.CHAT_VIDEO
   });
 
+  await syncBookingToPlanner(booking.toObject());
+
   return booking.toObject();
 }
 
@@ -155,6 +158,8 @@ export async function activateSession({ bookingId, userId }) {
   session.status = BOOKING_STATUS.ACTIVE;
   session.startedAt = now();
   await session.save();
+
+  await syncBookingToPlanner(booking.toObject());
 
   return session.toObject();
 }
@@ -201,6 +206,8 @@ export async function completeSession({ bookingId, userId }) {
     { userId: booking.lawyerUserId },
     { $inc: { totalConsultations: 1 } }
   );
+
+  await syncBookingToPlanner(booking.toObject());
 
   return session.toObject();
 }
@@ -286,6 +293,8 @@ export async function rescheduleBooking({ bookingId, clientId, startAt, duration
   booking.lawyerEarning = lawyerEarning;
   await booking.save();
 
+  await syncBookingToPlanner(booking.toObject());
+
   return booking.toObject();
 }
 
@@ -298,6 +307,7 @@ export async function deleteBookingForClient({ bookingId, clientId }) {
   booking.deletedByClient = true;
   booking.deletedByLawyer = true;
   await booking.save();
+  await cancelPlannerFromBooking(booking._id);
   return { ok: true };
 }
 
@@ -374,6 +384,8 @@ export async function rescheduleBookingAsLawyer({ bookingId, lawyerUserId, start
   booking.lawyerEarning = lawyerEarning;
   await booking.save();
 
+  await syncBookingToPlanner(booking.toObject());
+
   return booking.toObject();
 }
 
@@ -386,5 +398,6 @@ export async function deleteBookingForLawyer({ bookingId, lawyerUserId }) {
   booking.deletedByLawyer = true;
   booking.deletedByClient = true;
   await booking.save();
+  await cancelPlannerFromBooking(booking._id);
   return { ok: true };
 }

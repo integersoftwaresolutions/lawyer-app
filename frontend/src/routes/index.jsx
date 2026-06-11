@@ -22,6 +22,7 @@ import LawyerEarningsPage from "../pages/lawyer/LawyerEarningsPage.jsx";
 import LawyerVerificationPage from "../pages/lawyer/LawyerVerificationPage.jsx";
 import LawyerReviewsPage from "../pages/lawyer/LawyerReviewsPage.jsx";
 import LawyerAiAssistantPage from "../pages/lawyer/LawyerAiAssistantPage.jsx";
+import LawyerPlannerPage from "../pages/lawyer/LawyerPlannerPage.jsx";
 
 import AdminDashboardLayout from "../pages/admin/AdminDashboardLayout.jsx";
 import AdminOverviewPage from "../pages/admin/AdminOverviewPage.jsx";
@@ -74,6 +75,7 @@ export default function RoutesRoot() {
         <Route index element={<Navigate to="overview" replace />} />
         <Route path="overview" element={<LawyerOverviewPage />} />
         <Route path="ai" element={<LawyerAiAssistantPage />} />
+        <Route path="planner" element={<LawyerPlannerPage />} />
         <Route path="profile" element={<LawyerProfilePage />} />
         <Route path="availability" element={<LawyerAvailabilityPage />} />
         <Route path="bookings" element={<LawyerBookingsPage />} />
