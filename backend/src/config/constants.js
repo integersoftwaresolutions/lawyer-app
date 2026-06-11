@@ -81,6 +81,17 @@ export const SPECIALIZATIONS = [
   "Other"
 ];
 
+export const AI_MODES = {
+  RESEARCH: "research",
+  CROSS_EXAM: "cross_exam"
+};
+
+export const AI_USAGE_TYPES = {
+  CHAT_COMPLETION: "CHAT_COMPLETION",
+  EMBEDDING: "EMBEDDING",
+  REPORT_GENERATION: "REPORT_GENERATION"
+};
+
 export const CITIES = [
   "Karachi",
   "Lahore",

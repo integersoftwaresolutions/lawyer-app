@@ -41,5 +41,13 @@ export const env = {
 
   // OTP configuration
   otpExpiryMinutes: Number(process.env.OTP_EXPIRY_MINUTES || 10),
-  otpLength: Number(process.env.OTP_LENGTH || 6)
+  otpLength: Number(process.env.OTP_LENGTH || 6),
+
+  // AI / Phase 2
+  openaiApiKey: optional("OPENAI_API_KEY"),
+  openaiModel: optional("OPENAI_MODEL", "gpt-4o-mini"),
+  openaiEmbeddingModel: optional("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"),
+  openaiRequestTimeoutMs: Number(process.env.OPENAI_REQUEST_TIMEOUT_MS || 60000),
+  aiDailyRequestLimit: Number(process.env.AI_DAILY_REQUEST_LIMIT || 50),
+  encryptionKey: optional("ENCRYPTION_KEY")
 };

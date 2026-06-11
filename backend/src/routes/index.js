@@ -5,6 +5,7 @@ import clientRoutes from "./client.routes.js";
 import bookingRoutes from "./booking.routes.js";
 import walletRoutes from "./wallet.routes.js";
 import adminRoutes from "./admin.routes.js";
+import aiRoutes from "./ai.routes.js";
 import { SPECIALIZATIONS, CITIES } from "../config/constants.js";
 
 const router = Router();
@@ -15,6 +16,7 @@ router.use("/clients", clientRoutes);
 router.use("/bookings", bookingRoutes);
 router.use("/wallet", walletRoutes);
 router.use("/admin", adminRoutes);
+router.use("/ai", aiRoutes);
 
 router.get("/constants", (req, res) => {
   res.json({

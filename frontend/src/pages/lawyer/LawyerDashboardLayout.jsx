@@ -7,11 +7,13 @@ import {
   FiFileText,
   FiDollarSign,
   FiCheckCircle,
-  FiStar
+  FiStar,
+  FiCpu
 } from "react-icons/fi";
 
 const menuItems = [
   { id: "overview", label: "Overview", icon: FiHome },
+  { id: "ai", label: "AI Assistant", icon: FiCpu },
   { id: "availability", label: "Availability", icon: FiClock },
   { id: "bookings", label: "Bookings", icon: FiFileText },
   { id: "earnings", label: "Earnings", icon: FiDollarSign },
