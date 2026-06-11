@@ -32,15 +32,21 @@ export default function LawyerProfile() {
   const [availabilityDate, setAvailabilityDate] = useState("");
   const [availableSlots, setAvailableSlots] = useState([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
+  const SLOT_DURATION_MINUTES = 30;
   const [bookingData, setBookingData] = useState({
     slot: "",
-    startTime: "",
-    durationMinutes: 30,
-    consultationType: "CHAT",
     notes: ""
   });
   const [submitting, setSubmitting] = useState(false);
   const [contactDetails, setContactDetails] = useState(null); // null=loading, false=no access, object=has access
+
+  const todayIso = useMemo(() => {
+    const t = new Date();
+    const y = t.getFullYear();
+    const m = String(t.getMonth() + 1).padStart(2, "0");
+    const d = String(t.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }, []);
 
   const slotOptions = useMemo(() => {
     return (availableSlots || []).map((s) => ({
@@ -49,67 +55,12 @@ export default function LawyerProfile() {
     }));
   }, [availableSlots]);
 
-  const parseTimeToMinutes = (hhmm) => {
-    if (!hhmm || !hhmm.includes(":")) return null;
-    const [h, m] = hhmm.split(":");
-    const hh = Number(h);
-    const mm = Number(m);
-    if (Number.isNaN(hh) || Number.isNaN(mm)) return null;
-    return hh * 60 + mm;
-  };
-
-  const minutesToTime = (mins) => {
-    const m = ((mins % 1440) + 1440) % 1440;
-    const hh = String(Math.floor(m / 60)).padStart(2, "0");
-    const mm = String(m % 60).padStart(2, "0");
-    return `${hh}:${mm}`;
-  };
-
-  const timeOptions = useMemo(() => {
-    if (!availabilityDate || !bookingData.slot) return [];
-    const [slotStart, slotEnd] = bookingData.slot.split("-");
-    const startM = parseTimeToMinutes(slotStart);
-    const endM = parseTimeToMinutes(slotEnd);
-    if (startM === null || endM === null) return [];
-
-    const duration = Number(bookingData.durationMinutes) || 30;
-    const latestStart = endM - duration;
-    if (latestStart < startM) return [];
-
-    const nowDt = new Date();
-    const yyyy = nowDt.getFullYear();
-    const mm = String(nowDt.getMonth() + 1).padStart(2, "0");
-    const dd = String(nowDt.getDate()).padStart(2, "0");
-    const todayIso = `${yyyy}-${mm}-${dd}`;
-    const isToday = availabilityDate === todayIso;
-
-    let minStartM = startM;
-    if (isToday) {
-      const currentM = nowDt.getHours() * 60 + nowDt.getMinutes();
-      const step = 15;
-      const rounded = Math.ceil((currentM + 1) / step) * step;
-      minStartM = Math.max(startM, rounded);
-    }
-
-    const step = 15;
-    const out = [];
-    for (let t = startM; t <= latestStart; t += step) {
-      if (t < minStartM) continue;
-      out.push({ value: minutesToTime(t), label: minutesToTime(t) });
-    }
-    return out;
-  }, [availabilityDate, bookingData.slot, bookingData.durationMinutes]);
-
-  const selectedSessionRange = useMemo(() => {
-    if (!bookingData.startTime) return null;
-    const startM = parseTimeToMinutes(bookingData.startTime);
-    if (startM === null) return null;
-    const endM = startM + (Number(bookingData.durationMinutes) || 30);
-    return `${bookingData.startTime} - ${minutesToTime(endM)}`;
-  }, [bookingData.startTime, bookingData.durationMinutes]);
-
   const loadSlots = async () => {
     if (!availabilityDate) return;
+    if (availabilityDate < todayIso) {
+      alert("Please select today's date or a future date");
+      return;
+    }
     try {
       setSlotsLoading(true);
       const res = await lawyerApi.getAvailableSlots(id, availabilityDate);
@@ -123,20 +74,25 @@ export default function LawyerProfile() {
   };
 
   const handleBooking = async () => {
-    if (!availabilityDate || !bookingData.slot || !bookingData.startTime) {
-      alert("Please select a date, a slot, and a session start time");
+    if (!availabilityDate || !bookingData.slot) {
+      alert("Please select a date and an available slot");
+      return;
+    }
+    if (availabilityDate < todayIso) {
+      alert("You cannot book a slot in the past");
       return;
     }
 
-    const startAtIso = new Date(`${availabilityDate}T${bookingData.startTime}:00`).toISOString();
+    const [slotStart] = bookingData.slot.split("-");
+    const startAtIso = new Date(`${availabilityDate}T${slotStart}:00`).toISOString();
 
     try {
       setSubmitting(true);
       await bookingApi.create({
         lawyerUserId: id,
         startAt: startAtIso,
-        durationMinutes: bookingData.durationMinutes,
-        consultationType: bookingData.consultationType,
+        durationMinutes: SLOT_DURATION_MINUTES,
+        consultationType: "CHAT_VIDEO",
         notes: bookingData.notes
       });
       setBookingModal(false);
@@ -313,7 +269,7 @@ export default function LawyerProfile() {
                             const mm = String(today.getMonth() + 1).padStart(2, "0");
                             const dd = String(today.getDate()).padStart(2, "0");
                             const isoDate = `${yyyy}-${mm}-${dd}`;
-                            setAvailabilityDate((prev) => prev || isoDate);
+                            setAvailabilityDate((prev) => (prev && prev >= isoDate ? prev : isoDate));
                             setBookingModal(true);
                           }}
                           className="flex items-center justify-center gap-2"
@@ -495,7 +451,7 @@ export default function LawyerProfile() {
                           const mm = String(today.getMonth() + 1).padStart(2, "0");
                           const dd = String(today.getDate()).padStart(2, "0");
                           const isoDate = `${yyyy}-${mm}-${dd}`;
-                          setAvailabilityDate((prev) => prev || isoDate);
+                          setAvailabilityDate((prev) => (prev && prev >= isoDate ? prev : isoDate));
                           setBookingModal(true);
                         }}
                         className="flex items-center justify-center gap-2"
@@ -523,6 +479,7 @@ export default function LawyerProfile() {
                         <Input
                           label="Select Date"
                           type="date"
+                          min={todayIso}
                           value={availabilityDate}
                           onChange={(e) => setAvailabilityDate(e.target.value)}
                         />
@@ -625,123 +582,67 @@ export default function LawyerProfile() {
           </>
         }
       >
-        <Input
-          label="Date"
-          type="date"
-          value={availabilityDate}
-          onChange={(e) => {
-            setAvailabilityDate(e.target.value);
-            setAvailableSlots([]);
-            setBookingData((p) => ({ ...p, slot: "", startTime: "" }));
-          }}
-        />
-        <div style={{ display: "flex", gap: "12px", alignItems: "flex-end", flexWrap: "wrap" }}>
-          <Button
-            variant="secondary"
-            size="sm"
-            loading={slotsLoading}
-            onClick={loadSlots}
-            disabled={!availabilityDate}
-          >
-            Load Slots
-          </Button>
-          <div className="text-text-secondary text-xs">
-            Select a slot to auto-fill booking time.
-          </div>
-        </div>
-        <Select
-          label="Available Slots"
-          value={bookingData.slot}
-          onChange={(e) => {
-            const slot = e.target.value;
-            const next = { ...bookingData, slot, startTime: "" };
+        <div className="space-y-3">
+          <Input
+            label="Date"
+            type="date"
+            min={todayIso}
+            value={availabilityDate}
+            containerClassName="mb-0"
+            onChange={(e) => {
+              setAvailabilityDate(e.target.value);
+              setAvailableSlots([]);
+              setBookingData((p) => ({ ...p, slot: "" }));
+            }}
+          />
 
-            if (availabilityDate && slot) {
-              const opts = (() => {
-                const [slotStart, slotEnd] = slot.split("-");
-                const startM = parseTimeToMinutes(slotStart);
-                const endM = parseTimeToMinutes(slotEnd);
-                const duration = Number(next.durationMinutes) || 30;
-                const latestStart = endM - duration;
-                if (startM === null || endM === null || latestStart < startM) return [];
-
-                const nowDt = new Date();
-                const yyyy = nowDt.getFullYear();
-                const mm = String(nowDt.getMonth() + 1).padStart(2, "0");
-                const dd = String(nowDt.getDate()).padStart(2, "0");
-                const todayIso = `${yyyy}-${mm}-${dd}`;
-                const isToday = availabilityDate === todayIso;
-
-                let minStartM = startM;
-                if (isToday) {
-                  const currentM = nowDt.getHours() * 60 + nowDt.getMinutes();
-                  const step = 15;
-                  const rounded = Math.ceil((currentM + 1) / step) * step;
-                  minStartM = Math.max(startM, rounded);
-                }
-
-                const step = 15;
-                const out = [];
-                for (let t = startM; t <= latestStart; t += step) {
-                  if (t < minStartM) continue;
-                  out.push(minutesToTime(t));
-                }
-                return out;
-              })();
-
-              if (opts.length) {
-                next.startTime = opts[0];
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                loading={slotsLoading}
+                onClick={loadSlots}
+                disabled={!availabilityDate}
+              >
+                Load Slots
+              </Button>
+              <span className="text-text-muted text-xs">
+                Pick a 30-minute slot the lawyer has opened.
+              </span>
+            </div>
+            <Select
+              label="Available slots"
+              value={bookingData.slot}
+              onChange={(e) => setBookingData((p) => ({ ...p, slot: e.target.value }))}
+              placeholder={
+                availabilityDate
+                  ? availableSlots.length
+                    ? "Select a slot"
+                    : "No slots — click Load Slots"
+                  : "Select date first"
               }
-            }
-
-            setBookingData(next);
-          }}
-          placeholder={availabilityDate ? "Select a slot" : "Select date first"}
-          options={slotOptions.map((o) => ({ value: o.value, label: o.label }))}
-        />
-
-        <Select
-          label="Session Start Time"
-          value={bookingData.startTime}
-          onChange={(e) => setBookingData({ ...bookingData, startTime: e.target.value })}
-          placeholder={bookingData.slot ? "Select start time" : "Select slot first"}
-          options={timeOptions}
-        />
-
-        {selectedSessionRange && (
-          <div className="-mt-1.5 mb-4 text-text-secondary text-xs">
-            Selected session: {selectedSessionRange}
+              options={slotOptions}
+              containerClassName="mb-0"
+            />
           </div>
-        )}
-        <Select
-          label="Duration"
-          value={bookingData.durationMinutes}
-          onChange={(e) => {
-            const durationMinutes = parseInt(e.target.value);
-            const next = { ...bookingData, durationMinutes };
-            setBookingData(next);
-          }}
-          options={[
-            { value: 15, label: "15 minutes" },
-            { value: 30, label: "30 minutes" },
-            { value: 45, label: "45 minutes" },
-            { value: 60, label: "60 minutes" },
-          ]}
-        />
-        <Select
-          label="Consultation Type"
-          value={bookingData.consultationType}
-          onChange={(e) => setBookingData({ ...bookingData, consultationType: e.target.value })}
-          options={[
-            { value: "CHAT", label: "Chat Only" },
-            { value: "VIDEO", label: "Video Call" },
-            { value: "CHAT_VIDEO", label: "Chat + Video" },
-          ]}
-        />
-        <div className="mt-4 p-3 bg-surface rounded-md">
-          <p className="text-text-secondary m-0 text-sm">
-            <strong>Estimated Cost:</strong> ${Math.round((lawyer?.hourlyRate || 0) * bookingData.durationMinutes / 60)}
-          </p>
+
+          <div className="rounded-lg border border-border bg-surface/60 p-3 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-text-muted">Duration</span>
+              <span className="text-text-primary font-medium">30 min</span>
+            </div>
+            <div className="flex items-center justify-between mt-1">
+              <span className="text-text-muted">Consultation</span>
+              <span className="text-text-primary font-medium">Chat + Video</span>
+            </div>
+            <div className="flex items-center justify-between mt-1 pt-2 border-t border-border">
+              <span className="text-text-muted">Estimated cost</span>
+              <span className="text-text-primary font-semibold">
+                ${Math.round((lawyer?.hourlyRate || 0) * SLOT_DURATION_MINUTES / 60)}
+              </span>
+            </div>
+          </div>
         </div>
       </Modal>
       </>
