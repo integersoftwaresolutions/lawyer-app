@@ -10,7 +10,7 @@ const BookingSchema = new mongoose.Schema(
     consultationType: { 
       type: String, 
       enum: Object.values(CONSULTATION_TYPE), 
-      default: CONSULTATION_TYPE.CHAT 
+      default: CONSULTATION_TYPE.CHAT_VIDEO 
     },
     status: { type: String, enum: Object.values(BOOKING_STATUS), default: BOOKING_STATUS.BOOKED, index: true },
     amount: { type: Number, default: 0 },

@@ -26,6 +26,16 @@ import {
 } from "../../components/ui";
 import { usePaginatedQuery } from "../../hooks/usePaginatedQuery";
 
+const SLOT_DURATION_MINUTES = 30;
+
+const getTodayIso = () => {
+  const t = new Date();
+  const y = t.getFullYear();
+  const m = String(t.getMonth() + 1).padStart(2, "0");
+  const d = String(t.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
+
 export default function LawyerBookingsPage() {
   const navigate = useNavigate();
   const [filter, setFilter] = useState("");
@@ -33,7 +43,9 @@ export default function LawyerBookingsPage() {
   const [viewModal, setViewModal] = useState({ open: false, booking: null });
   const [deleteModal, setDeleteModal] = useState({ open: false, booking: null });
   const [editModal, setEditModal] = useState({ open: false, booking: null });
-  const [editData, setEditData] = useState({ date: "", time: "", durationMinutes: 30 });
+  const [editData, setEditData] = useState({ date: "", slot: "" });
+  const [editSlots, setEditSlots] = useState([]);
+  const [editSlotsLoading, setEditSlotsLoading] = useState(false);
   const [disputeModal, setDisputeModal] = useState({ open: false, booking: null });
   const [disputeViewModal, setDisputeViewModal] = useState({ open: false, booking: null });
   const [disputeData, setDisputeData] = useState({ reason: "OTHER", description: "" });
@@ -112,28 +124,59 @@ export default function LawyerBookingsPage() {
   };
 
   const handleOpenEdit = (booking) => {
+    const currentTime = toTimeInputValue(booking.startAt);
+    const [h, m] = currentTime.split(":").map(Number);
+    const endM = h * 60 + m + SLOT_DURATION_MINUTES;
+    const hh = String(Math.floor((endM % 1440) / 60)).padStart(2, "0");
+    const mm = String(endM % 60).padStart(2, "0");
+    const currentSlotValue = `${currentTime}-${hh}:${mm}`;
+
     setEditData({
       date: toDateInputValue(booking.startAt),
-      time: toTimeInputValue(booking.startAt),
-      durationMinutes: booking.durationMinutes || 30
+      slot: currentSlotValue
     });
+    setEditSlots([]);
     setEditModal({ open: true, booking });
+  };
+
+  const loadEditSlots = async () => {
+    if (!editModal.booking || !editData.date) return;
+    if (editData.date < getTodayIso()) {
+      alert("Please select today's date or a future date");
+      return;
+    }
+    try {
+      setEditSlotsLoading(true);
+      const lawyerId = editModal.booking.lawyerUserId?._id || editModal.booking.lawyerUserId;
+      const res = await lawyerApi.getAvailableSlots(lawyerId, editData.date);
+      setEditSlots(res.data || []);
+    } catch (error) {
+      console.error("Failed to load slots:", error);
+      alert(error.response?.data?.message || "Failed to load available slots");
+    } finally {
+      setEditSlotsLoading(false);
+    }
   };
 
   const handleEditSubmit = async () => {
     if (!editModal.booking) return;
-    if (!editData.date || !editData.time) {
-      alert("Please select a date and time");
+    if (!editData.date || !editData.slot) {
+      alert("Please select a date and an available slot");
+      return;
+    }
+    if (editData.date < getTodayIso()) {
+      alert("You cannot reschedule to a date in the past");
       return;
     }
 
-    const startAtIso = new Date(`${editData.date}T${editData.time}:00`).toISOString();
+    const [slotStart] = editData.slot.split("-");
+    const startAtIso = new Date(`${editData.date}T${slotStart}:00`).toISOString();
 
     try {
       setSubmitting(true);
       await lawyerApi.rescheduleMyBooking(editModal.booking._id, {
         startAt: startAtIso,
-        durationMinutes: Number(editData.durationMinutes)
+        durationMinutes: SLOT_DURATION_MINUTES
       });
       setEditModal({ open: false, booking: null });
       setRefreshKey((k) => k + 1);
@@ -414,41 +457,48 @@ export default function LawyerBookingsPage() {
           </>
         }
       >
-        <div className="grid grid-cols-2 gap-3">
-          <Input
-            label="Date"
-            type="date"
-            value={editData.date}
-            onChange={(e) => setEditData((p) => ({ ...p, date: e.target.value }))}
-            containerClassName="mb-0"
-          />
-          <Input
-            label="Time"
-            type="time"
-            step="900"
-            value={editData.time}
-            onChange={(e) => setEditData((p) => ({ ...p, time: e.target.value }))}
-            containerClassName="mb-0"
-          />
+        <Input
+          label="Date"
+          type="date"
+          min={getTodayIso()}
+          value={editData.date}
+          onChange={(e) => {
+            setEditData((p) => ({ ...p, date: e.target.value, slot: "" }));
+            setEditSlots([]);
+          }}
+        />
+        <div style={{ display: "flex", gap: "12px", alignItems: "flex-end", flexWrap: "wrap" }}>
+          <Button
+            variant="secondary"
+            size="sm"
+            loading={editSlotsLoading}
+            onClick={loadEditSlots}
+            disabled={!editData.date}
+          >
+            Load Slots
+          </Button>
+          <div className="text-text-secondary text-xs">
+            Pick one of your available 30-minute slots.
+          </div>
         </div>
-
         <Select
-          label="Duration"
-          value={editData.durationMinutes}
-          onChange={(e) => setEditData((p) => ({ ...p, durationMinutes: parseInt(e.target.value) }))}
-          options={[
-            { value: 15, label: "15 minutes" },
-            { value: 30, label: "30 minutes" },
-            { value: 45, label: "45 minutes" },
-            { value: 60, label: "60 minutes" },
-            { value: 90, label: "90 minutes" },
-            { value: 120, label: "120 minutes" },
-          ]}
-          placeholder="Select duration"
-          containerClassName="mt-4"
+          label="Available Slots (30 minutes each)"
+          value={editData.slot}
+          onChange={(e) => setEditData((p) => ({ ...p, slot: e.target.value }))}
+          placeholder={
+            editData.date
+              ? editSlots.length
+                ? "Select a slot"
+                : "No slots — click Load Slots"
+              : "Select date first"
+          }
+          options={(editSlots || []).map((s) => ({
+            value: `${s.start}-${s.end}`,
+            label: `${s.start} - ${s.end}`
+          }))}
         />
         <p className="mt-2 mb-0 text-text-muted text-xs">
-          Tip: Editing is allowed only for upcoming bookings. The new time must fit your availability.
+          Tip: Editing is allowed only for upcoming bookings. All sessions are 30 minutes.
         </p>
       </Modal>
 
