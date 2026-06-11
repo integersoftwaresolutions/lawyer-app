@@ -1,7 +1,28 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  FiEye,
+  FiEdit2,
+  FiMessageCircle,
+  FiStar,
+  FiTrash2,
+  FiAlertTriangle
+} from "react-icons/fi";
 import { clientApi } from "../../services/client.api";
-import { Card, Button, Badge, Modal, Textarea, Input, Select, Table } from "../../components/ui";
+import {
+  Card,
+  Button,
+  Badge,
+  Modal,
+  Textarea,
+  Input,
+  Select,
+  Table,
+  FilterTabs,
+  ActionMenu,
+  IconButton
+} from "../../components/ui";
+import { usePaginatedQuery } from "../../hooks/usePaginatedQuery";
 
 export default function ClientBookingsPage() {
   const navigate = useNavigate();
@@ -42,11 +63,19 @@ export default function ClientBookingsPage() {
     { value: "OTHER", label: "Other" }
   ];
 
-  const fetchBookings = async () => {
-    const params = filter ? { status: filter } : {};
-    const res = await clientApi.getMyBookings(params);
-    return res.data || [];
-  };
+  const fetchBookings = useCallback(
+    (params) =>
+      clientApi.getMyBookings({
+        ...params,
+        ...(filter ? { status: filter } : {})
+      }),
+    [filter]
+  );
+
+  const { items, meta, setPage, loading, error, retry } = usePaginatedQuery(fetchBookings, {
+    dependencies: [filter, refreshKey],
+    defaultLimit: 10
+  });
 
   const handleDelete = async () => {
     if (!deleteModal.booking) return;
@@ -228,8 +257,14 @@ export default function ClientBookingsPage() {
               <span className="text-xs text-text-secondary">View details</span>
             </button>
           ) : (
-            <Button size="sm" variant="secondary" onClick={() => setDisputeModal({ open: true, booking: row })}>
-              Raise Dispute
+            <Button
+              size="xs"
+              variant="warning"
+              outline
+              icon={FiAlertTriangle}
+              onClick={() => setDisputeModal({ open: true, booking: row })}
+            >
+              Dispute
             </Button>
           )
         ) : (
@@ -239,64 +274,85 @@ export default function ClientBookingsPage() {
     {
       key: "actions",
       label: "Actions",
+      align: "right",
+      className: "whitespace-nowrap",
       render: (_, row) => (
-        <div className="flex flex-wrap items-center gap-2 min-w-[180px]">
+        <ActionMenu>
           {isEditableOrViewable(row) && (
-            <>
-              <Button size="sm" variant="secondary" onClick={() => setViewModal({ open: true, booking: row })}>
-                View
-              </Button>
-              {row.status === "BOOKED" && (
-                <Button size="sm" variant="secondary" onClick={() => handleOpenEdit(row)}>
-                  Edit
-                </Button>
-              )}
-            </>
+            <IconButton
+              icon={FiEye}
+              label="View booking"
+              variant="secondary"
+              outline
+              onClick={() => setViewModal({ open: true, booking: row })}
+            />
+          )}
+          {isEditableOrViewable(row) && row.status === "BOOKED" && (
+            <IconButton
+              icon={FiEdit2}
+              label="Edit booking"
+              variant="secondary"
+              outline
+              onClick={() => handleOpenEdit(row)}
+            />
           )}
           {row.status === "ACTIVE" && (
-            <Button size="sm" variant="primary" onClick={() => navigate(`/chat/${row._id}`)}>
-              Join Chat
+            <Button
+              size="xs"
+              variant="primary"
+              icon={FiMessageCircle}
+              onClick={() => navigate(`/chat/${row._id}`)}
+            >
+              Chat
             </Button>
           )}
           {row.status === "COMPLETED" && !row.hasReview && (
-            <Button size="sm" variant="secondary" onClick={() => setReviewModal({ open: true, booking: row })}>
+            <Button
+              size="xs"
+              variant="secondary"
+              outline
+              icon={FiStar}
+              onClick={() => setReviewModal({ open: true, booking: row })}
+            >
               Review
             </Button>
           )}
-          <Button size="sm" variant="danger" onClick={() => setDeleteModal({ open: true, booking: row })}>
-            Delete
-          </Button>
-        </div>
-      ),
+          <IconButton
+            icon={FiTrash2}
+            label="Delete booking"
+            variant="danger"
+            outline
+            onClick={() => setDeleteModal({ open: true, booking: row })}
+          />
+        </ActionMenu>
+      )
     },
   ];
 
   return (
     <div>
-      <Card>
-        <div className="flex justify-between items-center mb-5">
-          <h2 className="text-xl font-bold text-text-primary m-0">
-            My Bookings
-          </h2>
-          <div className="flex gap-2">
-            {filterOptions.map((opt) => (
-              <Button
-                key={opt.value}
-                variant={filter === opt.value ? "primary" : "secondary"}
-                size="sm"
-                onClick={() => setFilter(opt.value)}
-              >
-                {opt.label}
-              </Button>
-            ))}
-          </div>
+      <Card padding="p-0" className="overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-5 border-b border-card-border">
+          <h2 className="text-lg font-bold text-text-primary m-0">My Bookings</h2>
+          <FilterTabs options={filterOptions} value={filter} onChange={setFilter} />
         </div>
 
         <Table
           columns={columns}
-          data={fetchBookings}
-          dependencies={[filter, refreshKey]}
+          data={items}
+          loading={loading}
+          error={error}
+          retry={retry}
+          density="compact"
+          className="border-0 rounded-none shadow-none"
           emptyMessage="No bookings found"
+          pagination={{
+            currentPage: meta.page,
+            totalPages: meta.pages,
+            totalItems: meta.total,
+            itemsPerPage: meta.limit,
+            onPageChange: setPage
+          }}
         />
       </Card>
 

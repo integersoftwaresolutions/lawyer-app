@@ -3,6 +3,7 @@ import ClientProfile from "../models/ClientProfile.js";
 import Booking from "../models/Booking.js";
 import Dispute from "../models/Dispute.js";
 import { BOOKING_STATUS } from "../config/constants.js";
+import { getPagination, buildPaginationMeta } from "../utils/pagination.js";
 
 export async function getClientProfile(userId) {
   let profile = await ClientProfile.findOne({ userId });
@@ -32,8 +33,9 @@ export async function updateClientProfile(userId, data) {
   return profile.toObject();
 }
 
-export async function getClientBookings(clientId, { status, page = 1, limit = 10 }) {
-  const skip = (page - 1) * limit;
+export async function getClientBookings(clientId, query = {}) {
+  const { status } = query;
+  const { page, limit, skip } = getPagination(query);
   const filter = { clientId, deletedByClient: { $ne: true }, deletedByLawyer: { $ne: true } };
   
   if (status) {
@@ -79,7 +81,7 @@ export async function getClientBookings(clientId, { status, page = 1, limit = 10
 
   return {
     items: itemsWithDispute,
-    meta: { page, limit, total, pages: Math.ceil(total / limit) }
+    meta: buildPaginationMeta(total, { page, limit })
   };
 }
 

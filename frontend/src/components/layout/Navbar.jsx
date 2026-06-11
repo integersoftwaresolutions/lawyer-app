@@ -7,10 +7,15 @@ import Avatar from "../ui/Avatar";
 import ThemeToggle from "../ThemeToggle";
 import { FiMenu, FiX } from "react-icons/fi";
 
-export default function Navbar() {
+export default function Navbar({
+  variant = "default",
+  onSidebarToggle,
+  showSidebarToggle = false
+}) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isSlim = variant === "slim";
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -69,24 +74,44 @@ export default function Navbar() {
     { to: "/pricing#testimonials", label: "Testimonials" },
   ];
 
+  const navHeightClass = isSlim ? "h-11 min-h-[44px]" : "h-14 min-h-[56px]";
+  const mobileMenuTop = isSlim ? "top-11" : "top-14";
+
   return (
     <>
-      <nav className="flex justify-between items-center gap-4 py-4 px-4 md:px-6 border-b border-border bg-card sticky top-0 z-[100]">
-        {/* Logo */}
-        <Link 
-          to="/" 
-          className="text-lg md:text-xl font-bold text-text-primary no-underline flex-none"
-        >
-          Lawyer Marketplace
-        </Link>
+      <nav
+        className={`flex justify-between items-center gap-2 sm:gap-3 ${navHeightClass} px-3 sm:px-4 md:px-5 border-b border-border bg-card sticky top-0 z-[100]`}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          {showSidebarToggle && (
+            <button
+              type="button"
+              onClick={onSidebarToggle}
+              className="lg:hidden p-1.5 rounded-lg hover:bg-surface transition-colors text-text-primary shrink-0"
+              aria-label="Open navigation menu"
+            >
+              <FiMenu size={20} />
+            </button>
+          )}
+          <Link
+            to="/"
+            className={`font-bold text-text-primary no-underline truncate ${
+              isSlim ? "text-sm sm:text-base" : "text-lg md:text-xl"
+            }`}
+          >
+            Lawyer Marketplace
+          </Link>
+        </div>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-6 flex-1 justify-end">
+        <div className={`hidden md:flex items-center flex-1 justify-end ${isSlim ? "gap-3 lg:gap-4" : "gap-6"}`}>
           {navLinks.map((link) => (
             <Link
               key={link.to}
               to={link.to}
-              className="text-text-secondary no-underline text-sm font-medium transition-colors hover:text-text-primary whitespace-nowrap"
+              className={`text-text-secondary no-underline font-medium transition-colors hover:text-text-primary whitespace-nowrap ${
+                isSlim ? "text-xs lg:text-sm" : "text-sm"
+              }`}
             >
               {link.label}
             </Link>
@@ -156,7 +181,7 @@ export default function Navbar() {
         </div>
 
         {/* Mobile Right Side - Theme Toggle, Avatar/Buttons, Menu Button */}
-        <div className="flex items-center gap-3 md:hidden">
+        <div className="flex items-center gap-2 sm:gap-3 md:hidden">
           <ThemeToggle />
           
           {user ? (
@@ -212,14 +237,16 @@ export default function Navbar() {
             </Link>
           )}
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-lg hover:bg-surface transition-colors text-text-primary"
-            aria-label="Toggle menu"
-          >
-            {mobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
-          </button>
+          {/* Marketing mobile menu — hidden when dashboard sidebar toggle is shown */}
+          {!showSidebarToggle && (
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-1.5 rounded-lg hover:bg-surface transition-colors text-text-primary"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <FiX size={20} /> : <FiMenu size={20} />}
+            </button>
+          )}
         </div>
       </nav>
 
@@ -234,13 +261,13 @@ export default function Navbar() {
       {/* Mobile Menu */}
       <div
         className={`
-          fixed top-[73px] left-0 right-0
+          fixed ${mobileMenuTop} left-0 right-0
           bg-card border-b border-border
           z-[99]
           transition-transform duration-300 ease-in-out
           md:hidden
           ${mobileMenuOpen ? "translate-y-0" : "-translate-y-full"}
-          max-h-[calc(100vh-73px)] overflow-y-auto
+          max-h-[calc(100vh-44px)] overflow-y-auto
         `}
       >
         <div className="px-4 py-4 space-y-1">

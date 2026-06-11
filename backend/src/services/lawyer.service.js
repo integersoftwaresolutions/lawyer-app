@@ -7,7 +7,7 @@ import Dispute from "../models/Dispute.js";
 import Wallet from "../models/Wallet.js";
 import LedgerEntry from "../models/LedgerEntry.js";
 import AdminSetting from "../models/AdminSetting.js";
-import { getPagination } from "../utils/pagination.js";
+import { getPagination, buildPaginationMeta } from "../utils/pagination.js";
 import { BOOKING_STATUS, LEDGER_TYPES } from "../config/constants.js";
 
 export async function searchLawyers(query) {
@@ -307,8 +307,9 @@ export async function updateLawyerProfile(userId, data) {
   return profile.toObject();
 }
 
-export async function getLawyerBookings(lawyerUserId, { status, page = 1, limit = 10 }) {
-  const skip = (page - 1) * limit;
+export async function getLawyerBookings(lawyerUserId, query = {}) {
+  const { status } = query;
+  const { page, limit, skip } = getPagination(query);
   const filter = { lawyerUserId, deletedByLawyer: { $ne: true }, deletedByClient: { $ne: true } };
 
   if (status) {
@@ -351,7 +352,7 @@ export async function getLawyerBookings(lawyerUserId, { status, page = 1, limit 
 
   return {
     items: itemsWithDispute,
-    meta: { page, limit, total, pages: Math.ceil(total / limit) }
+    meta: buildPaginationMeta(total, { page, limit })
   };
 }
 
