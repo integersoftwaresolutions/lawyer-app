@@ -9,6 +9,7 @@ export { default as Card } from "./Card";
 export { default as Select } from "./Select";
 export { default as Badge } from "./Badge";
 export { default as Modal } from "./Modal";
+export { default as ConfirmModal } from "./ConfirmModal";
 export { default as Textarea } from "./Textarea";
 export { default as StatCard } from "./StatCard";
 export { default as Checkbox } from "./Checkbox";

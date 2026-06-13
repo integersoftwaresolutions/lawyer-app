@@ -31,7 +31,11 @@ async function getOwnedEvent(eventId, owner) {
 }
 
 export async function createEvent(owner, payload) {
-  const { start, end } = assertValidRange(payload.startAt, payload.endAt);
+  const { start, end } = assertValidRange(
+    payload.startAt,
+    payload.endAt,
+    payload.timezone || PLANNER_DEFAULT_TIMEZONE
+  );
 
   if (payload.source && payload.source !== PLANNER_EVENT_SOURCES.MANUAL) {
     throw new ApiError(400, "Manual API cannot create platform booking events");
@@ -110,7 +114,8 @@ export async function updateEvent(eventId, owner, payload) {
   if (patch.startAt !== undefined || patch.endAt !== undefined) {
     const start = patch.startAt !== undefined ? patch.startAt : event.startAt;
     const end = patch.endAt !== undefined ? patch.endAt : event.endAt;
-    const range = assertValidRange(start, end);
+    const tz = patch.timezone || event.timezone || PLANNER_DEFAULT_TIMEZONE;
+    const range = assertValidRange(start, end, tz);
     patch.startAt = range.start;
     patch.endAt = range.end;
   }

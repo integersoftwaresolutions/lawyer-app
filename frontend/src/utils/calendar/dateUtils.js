@@ -210,6 +210,32 @@ export function getViewRange(view, anchorDate, timeZone = DEFAULT_TIMEZONE) {
   return { from: start.toISOString(), to: end.toISOString() };
 }
 
+/** `type="date"` value (YYYY-MM-DD) from ISO in timezone. */
+export function toDateInputValue(iso, timeZone = DEFAULT_TIMEZONE) {
+  return toDateKey(iso, timeZone);
+}
+
+/** `type="time"` value (HH:mm) from ISO in timezone. */
+export function toTimeInputValue(iso, timeZone = DEFAULT_TIMEZONE) {
+  const p = partsInTz(iso, timeZone);
+  return `${String(p.hour).padStart(2, "0")}:${String(p.minute).padStart(2, "0")}`;
+}
+
+/** Combine date + time inputs into ISO (same calendar day). */
+export function combineDateAndTime(dateValue, timeValue, timeZone = DEFAULT_TIMEZONE) {
+  if (!dateValue || !timeValue) return null;
+  return fromDatetimeLocalValue(`${dateValue}T${timeValue}`, timeZone);
+}
+
+/** Split stored ISO range into form fields for a single-day event. */
+export function splitEventSchedule(startIso, endIso, timeZone = DEFAULT_TIMEZONE) {
+  return {
+    eventDate: toDateInputValue(startIso, timeZone),
+    startTime: toTimeInputValue(startIso, timeZone),
+    endTime: toTimeInputValue(endIso, timeZone)
+  };
+}
+
 /** datetime-local input value from ISO (PKT). */
 export function toDatetimeLocalValue(iso, timeZone = DEFAULT_TIMEZONE) {
   const p = partsInTz(iso, timeZone);
@@ -235,6 +261,32 @@ export function fromDatetimeLocalValue(value, timeZone = DEFAULT_TIMEZONE) {
 export function minutesFromMidnight(iso, timeZone = DEFAULT_TIMEZONE) {
   const p = partsInTz(iso, timeZone);
   return p.hour * 60 + p.minute;
+}
+
+/** Hour label for the day/week time gutter (hour is 0–23). */
+export function formatHourLabel(hour) {
+  if (hour === 0) return "12 AM";
+  if (hour < 12) return `${hour} AM`;
+  if (hour === 12) return "12 PM";
+  return `${hour - 12} PM`;
+}
+
+/** Build a Date at the start of an hour on a calendar date key. */
+export function dateAtHour(dateKey, hour, timeZone = DEFAULT_TIMEZONE) {
+  const h = String(hour).padStart(2, "0");
+  if (timeZone === "Asia/Karachi") {
+    return new Date(`${dateKey}T${h}:00:00+05:00`);
+  }
+  const [y, m, d] = dateKey.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d, hour, 0, 0));
+}
+
+export function getGridHourCount(hourStart, hourEnd) {
+  return hourEnd - hourStart + 1;
+}
+
+export function getGridTotalMinutes(hourStart, hourEnd) {
+  return getGridHourCount(hourStart, hourEnd) * 60;
 }
 
 export function eventOverlapsDay(event, dateKey, timeZone = DEFAULT_TIMEZONE) {

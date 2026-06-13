@@ -1,14 +1,15 @@
+import { useEffect, useState } from "react";
 import { CALENDAR_VIEWS, DEFAULT_TIMEZONE } from "../../constants/calendar.constants";
 import { useCalendar } from "../../hooks/useCalendar";
-import { parseDateKey } from "../../utils/calendar/dateUtils";
 import CalendarToolbar from "./CalendarToolbar";
 import CalendarLegend from "./CalendarLegend";
 import MonthView from "./MonthView";
 import WeekView from "./WeekView";
 import DayView from "./DayView";
+import DayEventsPanel from "./DayEventsPanel";
 import EventDetailPanel from "./EventDetailPanel";
 import EventFormModal from "./EventFormModal";
-import { Spinner } from "../ui";
+import { ConfirmModal, Spinner } from "../ui";
 
 /**
  * Reusable calendar shell — pass any calendar API adapter (lawyer or future client).
@@ -25,11 +26,11 @@ export default function CalendarShell({
   className = ""
 }) {
   const cal = useCalendar({ api, timezone });
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
-  const handleSelectDay = (dateKey) => {
-    cal.setAnchorDate(parseDateKey(dateKey));
-    cal.setView(CALENDAR_VIEWS.DAY);
-  };
+  useEffect(() => {
+    cal.clearSelection();
+  }, [cal.view]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCreateOnDay = (dateKey) => {
     const start = new Date(`${dateKey}T09:00:00+05:00`);
@@ -50,12 +51,27 @@ export default function CalendarShell({
     cal.closeForm();
   };
 
-  const handleDelete = async (event) => {
-    if (!window.confirm(`Delete "${event.title}"?`)) return;
-    await cal.deleteEvent(event.id);
+  const handleDeleteRequest = (event) => {
+    setDeleteTarget(event);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    await cal.deleteEvent(deleteTarget.id);
+    setDeleteTarget(null);
+  };
+
+  const handleDaySelect = (dateKey) => {
+    cal.selectDay(dateKey);
+  };
+
+  const handleEventSelect = (event) => {
+    cal.selectDayEvent(event);
   };
 
   const editingEvent = cal.formOpen && cal.selectedEvent && !cal.formDefaults ? cal.selectedEvent : null;
+  const showSidePanel = !cal.formOpen && (cal.selectedEvent || cal.selectedDayKey);
+  const dayEvents = cal.selectedDayKey ? cal.eventsByDate[cal.selectedDayKey] || [] : [];
 
   return (
     <div className={`flex flex-col h-full min-h-0 gap-3 ${className}`}>
@@ -103,10 +119,8 @@ export default function CalendarShell({
               anchorDate={cal.anchorDate}
               eventsByDate={cal.eventsByDate}
               timezone={timezone}
-              onSelectEvent={(ev) => {
-                cal.selectEvent(ev);
-              }}
-              onSelectDay={handleSelectDay}
+              onSelectEvent={handleEventSelect}
+              onSelectDay={handleDaySelect}
               onCreateOnDay={allowCreate ? handleCreateOnDay : undefined}
             />
           )}
@@ -116,7 +130,8 @@ export default function CalendarShell({
               anchorDate={cal.anchorDate}
               events={cal.events}
               timezone={timezone}
-              onSelectEvent={(ev) => cal.selectEvent(ev)}
+              onSelectEvent={handleEventSelect}
+              onSelectDay={handleDaySelect}
               onSlotClick={allowCreate ? handleSlotClick : undefined}
             />
           )}
@@ -126,22 +141,38 @@ export default function CalendarShell({
               anchorDate={cal.anchorDate}
               events={cal.events}
               timezone={timezone}
-              onSelectEvent={(ev) => cal.selectEvent(ev)}
+              onSelectEvent={handleEventSelect}
+              onSelectDay={handleDaySelect}
               onSlotClick={allowCreate ? handleSlotClick : undefined}
             />
           )}
         </div>
 
-        {cal.selectedEvent && !cal.formOpen && (
-          <EventDetailPanel
-            event={cal.selectedEvent}
-            timezone={timezone}
-            onClose={cal.clearSelection}
-            onEdit={(ev) => cal.openEdit(ev)}
-            onDelete={handleDelete}
-            deleting={cal.saving}
-          />
-        )}
+        {showSidePanel &&
+          (cal.selectedEvent ? (
+            <EventDetailPanel
+              event={cal.selectedEvent}
+              timezone={timezone}
+              onBack={cal.backToDayList}
+              onClose={cal.clearSelection}
+              onEdit={(ev) => cal.openEdit(ev)}
+              onDelete={handleDeleteRequest}
+              deleting={cal.saving}
+            />
+          ) : (
+            <DayEventsPanel
+              dateKey={cal.selectedDayKey}
+              events={dayEvents}
+              timezone={timezone}
+              onSelectEvent={cal.selectEvent}
+              onClose={cal.clearSelection}
+              onCreateEvent={
+                allowCreate && cal.selectedDayKey
+                  ? () => handleCreateOnDay(cal.selectedDayKey)
+                  : undefined
+              }
+            />
+          ))}
       </div>
 
       <EventFormModal
@@ -154,6 +185,20 @@ export default function CalendarShell({
         onCheckConflicts={cal.checkConflicts}
         conflicts={cal.conflicts}
         saving={cal.saving}
+      />
+
+      <ConfirmModal
+        isOpen={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete event"
+        message={
+          deleteTarget
+            ? `Delete "${deleteTarget.title}"? This cannot be undone.`
+            : ""
+        }
+        confirmLabel="Delete"
+        loading={cal.saving}
       />
     </div>
   );

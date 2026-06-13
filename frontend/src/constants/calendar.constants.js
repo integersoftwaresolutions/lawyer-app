@@ -95,9 +95,10 @@ export const REMINDER_OPTIONS = [
   { value: 10080, label: "1 week before" }
 ];
 
-export const HOUR_START = 6;
-export const HOUR_END = 22;
-export const HOUR_HEIGHT = 56;
+/** Full 24-hour day grid (12 AM – 11 PM). */
+export const HOUR_START = 0;
+export const HOUR_END = 23;
+export const HOUR_HEIGHT = 48;
 
 export function getEventColorStyles(event) {
   const token = event?.color || EVENT_COLOR_TOKENS[event?.eventType] || "gray";

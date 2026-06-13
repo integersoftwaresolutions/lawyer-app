@@ -10,6 +10,7 @@ export function useCalendar({ api, timezone = DEFAULT_TIMEZONE, initialView = CA
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedDayKey, setSelectedDayKey] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
   const [formDefaults, setFormDefaults] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -142,11 +143,30 @@ export function useCalendar({ api, timezone = DEFAULT_TIMEZONE, initialView = CA
     setConflicts([]);
   }, []);
 
+  const selectDay = useCallback((dateKey) => {
+    setSelectedDayKey(dateKey);
+    setSelectedEvent(null);
+  }, []);
+
   const selectEvent = useCallback((event) => {
     setSelectedEvent(event);
   }, []);
 
-  const clearSelection = useCallback(() => setSelectedEvent(null), []);
+  /** Open event detail with that day’s list behind the back button. */
+  const selectDayEvent = useCallback(
+    (event) => {
+      setSelectedDayKey(toDateKey(event.startAt, timezone));
+      setSelectedEvent(event);
+    },
+    [timezone]
+  );
+
+  const backToDayList = useCallback(() => setSelectedEvent(null), []);
+
+  const clearSelection = useCallback(() => {
+    setSelectedEvent(null);
+    setSelectedDayKey(null);
+  }, []);
 
   const eventsByDate = useMemo(() => {
     const map = {};
@@ -189,6 +209,7 @@ export function useCalendar({ api, timezone = DEFAULT_TIMEZONE, initialView = CA
     error,
     saving,
     selectedEvent,
+    selectedDayKey,
     formOpen,
     formDefaults,
     conflicts,
@@ -204,7 +225,10 @@ export function useCalendar({ api, timezone = DEFAULT_TIMEZONE, initialView = CA
     openCreate,
     openEdit,
     closeForm,
+    selectDay,
     selectEvent,
+    selectDayEvent,
+    backToDayList,
     clearSelection,
     setError,
     clearConflicts: () => setConflicts([])
