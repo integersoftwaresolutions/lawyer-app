@@ -33,17 +33,17 @@ export default function ClientOverviewPage() {
 
   return (
     <StateHandler loading={loading} error={error} retry={retry}>
-      <div>
-        <Card className="mb-6">
-          <h2 className="text-2xl font-bold mb-2 text-text-primary">
+      <div className="space-y-4 sm:space-y-6">
+        <Card padding="p-4 sm:p-5 md:p-6">
+          <h2 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2 text-text-primary">
             Welcome back!
           </h2>
-          <p className="text-text-secondary">
+          <p className="text-sm sm:text-base text-text-secondary">
             Manage your legal consultations and connect with expert lawyers
           </p>
         </Card>
 
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
           <StatCard
             icon={FiCalendar}
             value={stats?.upcomingBookings || 0}
@@ -66,9 +66,9 @@ export default function ClientOverviewPage() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           <Card title="Quick Actions">
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2 sm:gap-3">
               <Button variant="secondary" fullWidth onClick={() => navigate("/client/bookings")}>
                 View My Bookings
               </Button>
@@ -79,15 +79,15 @@ export default function ClientOverviewPage() {
           </Card>
 
           <Card title="Account Info">
-            <div className="text-text-secondary">
-              <p className="mb-2">
-                <strong>Email:</strong> {user?.email}
+            <div className="text-text-secondary space-y-3 text-sm sm:text-base">
+              <p className="m-0 break-words">
+                <strong className="text-text-primary">Email:</strong> {user?.email}
               </p>
-              <p className="mb-2">
-                <strong>Role:</strong> {user?.role}
+              <p className="m-0">
+                <strong className="text-text-primary">Role:</strong> {user?.role}
               </p>
-              <p className="mb-2">
-                <strong>Monthly Credits:</strong> {wallet?.monthlyCredits || 0}
+              <p className="m-0">
+                <strong className="text-text-primary">Monthly Credits:</strong> {wallet?.monthlyCredits || 0}
               </p>
             </div>
           </Card>

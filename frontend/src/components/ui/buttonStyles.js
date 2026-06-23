@@ -19,17 +19,21 @@ function solidVariants(outline) {
   if (outline) {
     return {
       primary:
-        "border border-primary text-primary bg-primary/10 hover:bg-primary/20 shadow-sm",
+        "border border-primary text-primary bg-primary-light hover:bg-primary-light-hover shadow-sm",
       secondary:
-        "border border-card-border text-text-primary bg-transparent hover:bg-surface-hover shadow-sm",
+        "border border-secondary text-secondary bg-secondary-light hover:bg-secondary-light-hover shadow-sm",
+      accent:
+        "border border-accent text-accent bg-accent-light hover:bg-accent-light-hover shadow-sm",
       danger:
-        "border border-danger text-danger bg-danger/10 hover:bg-danger/20 shadow-sm",
+        "border border-danger text-danger bg-danger-light hover:bg-danger-light-hover shadow-sm",
       success:
-        "border border-success text-success bg-success/10 hover:bg-success/20 shadow-sm",
-      ghost:
-        "border border-transparent text-text-secondary bg-transparent hover:bg-surface-hover hover:text-text-primary",
+        "border border-success text-success bg-success-light hover:bg-success-light-hover shadow-sm",
       warning:
-        "border border-warning text-warning bg-warning/10 hover:bg-warning/20 shadow-sm"
+        "border border-warning text-warning bg-warning-light hover:bg-warning-light-hover shadow-sm",
+      info:
+        "border border-info text-info bg-info-light hover:bg-info-light-hover shadow-sm",
+      ghost:
+        "border border-transparent text-text-secondary bg-transparent hover:bg-surface-hover hover:text-text-primary"
     };
   }
   return {

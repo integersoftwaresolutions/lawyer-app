@@ -18,5 +18,6 @@ export { default as ProfilePicture } from "./ProfilePicture";
 export { default as Table } from "./Table";
 export { default as Pagination } from "./Pagination";
 export { default as Sidebar } from "./Sidebar";
+export { default as StickySaveBar } from "./StickySaveBar";
 export { Toast, ToastContainer } from "./Toast";
 export { default as StateHandler } from "../StateHandler";

@@ -14,12 +14,14 @@ export default function Badge({
   };
 
   const variantClasses = {
-    default: "bg-surface text-text-secondary",
-    primary: "bg-primary text-primary-text",
-    success: "bg-success text-success-text",
-    warning: "bg-warning text-warning-text",
-    danger: "bg-danger text-danger-text",
-    info: "bg-info text-info-text",
+    default: "border border-border text-text-secondary bg-surface",
+    primary: "border border-primary text-primary bg-primary-light",
+    secondary: "border border-secondary text-secondary bg-secondary-light",
+    accent: "border border-accent text-accent bg-accent-light",
+    success: "border border-success text-success bg-success-light",
+    warning: "border border-warning text-warning bg-warning-light",
+    danger: "border border-danger text-danger bg-danger-light",
+    info: "border border-info text-info bg-info-light",
   };
 
   return (

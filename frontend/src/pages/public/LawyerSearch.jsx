@@ -29,7 +29,7 @@ import {
 } from "react-icons/fi";
 
 export default function LawyerSearch() {
-  // Sidebar state - controlled by the Sidebar component itself
+  // Mobile sidebar open state (controlled via Navbar hamburger)
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [filters, setFilters] = useState({
     q: "",
@@ -145,20 +145,8 @@ export default function LawyerSearch() {
     );
   };
 
-  return (
-    <>
-      <Navbar />
-      <div className="h-screen flex flex-col overflow-hidden bg-background">
-        <div className="flex flex-1 min-h-0 overflow-hidden max-h-screen">
-          {/* Sidebar - Handles its own toggle logic */}
-          <Sidebar
-            isOpen={sidebarOpen}
-            onToggle={setSidebarOpen}
-            width="w-72"
-            title="Filters"
-            showCloseButton={true}
-          >
-            <div className="space-y-6">
+  const filterFields = (
+    <div className="space-y-6">
               {/* Header Actions */}
               {activeFiltersCount > 0 && (
                 <div className="flex justify-end mb-4">
@@ -316,31 +304,42 @@ export default function LawyerSearch() {
                 />
               </div>
 
-              {/* Apply Filters Button */}
-              <div className="pt-4 border-t border-border">
-                <Button
-                  onClick={applyFilters}
-                  fullWidth
-                  className="mb-2"
-                >
-                  Apply Filters
-                </Button>
-                {activeFiltersCount > 0 && (
-                  <Button
-                    onClick={clearFilters}
-                    variant="secondary"
-                    fullWidth
-                    size="sm"
-                  >
-                    Clear All
-                  </Button>
-                )}
-              </div>
             </div>
-          </Sidebar>
+  );
 
-          {/* Main Content */}
-          <div className="flex-1 min-w-0 min-h-0 overflow-y-auto">
+  const filterFooter = (
+    <>
+      <Button onClick={applyFilters} fullWidth className="mb-2">
+        Apply Filters
+      </Button>
+      {activeFiltersCount > 0 && (
+        <Button onClick={clearFilters} variant="secondary" fullWidth size="sm">
+          Clear All
+        </Button>
+      )}
+    </>
+  );
+
+  return (
+    <div className="h-screen flex flex-col overflow-hidden bg-background">
+      <div className="shrink-0">
+        <Navbar
+          onSidebarToggle={() => setSidebarOpen((open) => !open)}
+          showSidebarToggle
+        />
+      </div>
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        <Sidebar
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          title="Filters"
+          width="w-72"
+          footer={filterFooter}
+        >
+          {filterFields}
+        </Sidebar>
+
+        <div className="flex-1 min-w-0 min-h-0 overflow-y-auto">
             <div className="p-4 md:p-6 lg:p-8">
               {/* Header */}
               <div className="mb-6">
@@ -353,7 +352,7 @@ export default function LawyerSearch() {
                       {meta?.total ? `${meta.total} lawyer${meta.total !== 1 ? 's' : ''} found` : "Search and connect with qualified lawyers"}
                     </p>
                   </div>
-                  {/* Mobile Filter Button - Now handled by Sidebar component, but show badge if filters active */}
+                  {/* Active filter count badge on mobile */}
                   {activeFiltersCount > 0 && (
                     <div className="md:hidden flex items-center gap-2">
                       <span className="px-2 py-1 rounded-full bg-primary text-primary-text text-xs font-medium">
@@ -492,9 +491,8 @@ export default function LawyerSearch() {
                 )}
               </StateHandler>
             </div>
-          </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import Sidebar from "./Sidebar";
+import { Sidebar } from "../ui";
+import DashboardNav from "./DashboardNav";
+import SidebarUserFooter from "./SidebarUserFooter";
 import Navbar from "./Navbar";
 
-/** Routes where the nav sidebar auto-collapses (expands on hover). */
-function isAutoCollapsePath(pathname) {
+function isChatPagePath(pathname) {
   return /\/(ai)\/?$/.test(pathname);
 }
 
@@ -14,82 +15,47 @@ export default function DashboardLayout({
   basePath = ""
 }) {
   const location = useLocation();
-  const autoCollapse = useMemo(
-    () => isAutoCollapsePath(location.pathname),
-    [location.pathname]
-  );
-
-  const [pinned, setPinned] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
-  const [hovered, setHovered] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  const isExpanded = pinned || hovered || !collapsed;
+  const isChatPage = isChatPagePath(location.pathname);
 
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname]);
 
-  useEffect(() => {
-    if (autoCollapse) {
-      setPinned(false);
-      setCollapsed(true);
-      setHovered(false);
-    } else if (!pinned) {
-      setCollapsed(false);
-    }
-  }, [autoCollapse, location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleTogglePin = useCallback(() => {
-    if (isExpanded && (pinned || !collapsed)) {
-      setPinned(false);
-      setCollapsed(true);
-      setHovered(false);
-    } else {
-      setPinned(true);
-      setCollapsed(false);
-    }
-  }, [isExpanded, pinned, collapsed]);
-
-  const handleSidebarEnter = useCallback(() => {
-    if (collapsed && !pinned) setHovered(true);
-  }, [collapsed, pinned]);
-
-  const handleSidebarLeave = useCallback(() => {
-    setHovered(false);
-  }, []);
-
-  const isChatPage = autoCollapse;
-
   return (
     <div className="h-screen bg-background text-text-primary flex flex-col overflow-hidden">
       <Navbar
-        variant="slim"
         onSidebarToggle={() => setMobileOpen((v) => !v)}
         showSidebarToggle
       />
 
       <div className="flex flex-1 min-h-0 overflow-hidden">
         <Sidebar
-          items={menuItems}
-          basePath={basePath}
-          expanded={isExpanded}
-          pinned={pinned}
-          onTogglePin={handleTogglePin}
-          onMouseEnter={handleSidebarEnter}
-          onMouseLeave={handleSidebarLeave}
-          mobileOpen={mobileOpen}
-          onMobileClose={() => setMobileOpen(false)}
-        />
+          isOpen={mobileOpen}
+          onClose={() => setMobileOpen(false)}
+          width="w-[240px]"
+          contentClassName="p-2 md:p-3"
+          footer={<SidebarUserFooter onNavigate={() => setMobileOpen(false)} />}
+        >
+          <DashboardNav
+            items={menuItems}
+            basePath={basePath}
+            onNavigate={() => setMobileOpen(false)}
+          />
+        </Sidebar>
 
         <main
           className={`flex-1 min-w-0 min-h-0 ${
-            isChatPage
-              ? "overflow-hidden p-2 sm:p-3 md:p-4"
-              : "overflow-y-auto p-3 md:p-5"
+            isChatPage ? "overflow-hidden" : "overflow-y-auto"
           }`}
         >
-          {children}
+          <div
+            className={`max-w-7xl mx-auto w-full p-3 sm:p-4 md:p-5 lg:p-6 ${
+              isChatPage ? "h-full min-h-0 flex flex-col" : ""
+            }`}
+          >
+            {children}
+          </div>
         </main>
       </div>
     </div>

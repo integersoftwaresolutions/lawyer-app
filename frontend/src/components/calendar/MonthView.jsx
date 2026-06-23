@@ -94,16 +94,16 @@ export default function MonthView({
                     )}
                   </div>
 
-                  <div className="flex-1 min-w-0 min-h-0 flex flex-col gap-1">
+                  <div className="flex-1 min-w-0 min-h-0 flex flex-col gap-1 justify-start">
                     {visible.length > 0 && (
-                      <div className="flex-1 min-h-0 flex flex-col gap-1">
+                      <div className="flex flex-col gap-1">
                         {visible.map((ev) => (
                           <EventChip
                             key={ev.id}
                             event={ev}
                             titleOnly
                             onClick={onSelectEvent}
-                            className="flex-1 min-h-[1.125rem] flex items-center"
+                            className="shrink-0 h-[1.125rem] flex items-center"
                           />
                         ))}
                       </div>

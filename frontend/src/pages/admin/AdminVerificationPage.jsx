@@ -325,14 +325,14 @@ export default function AdminVerificationPage() {
                   </div>
                   <Button
                     variant="secondary"
+                    outline
                     size="sm"
+                    icon={FiEye}
                     onClick={() => {
                       const url = getProfilePictureUrl(doc.documentUrl || doc.mediaId?.url);
                       if (url) window.open(url, "_blank");
                     }}
-                    className="flex items-center gap-1"
                   >
-                    <FiEye className="w-4 h-4" />
                     View
                   </Button>
                 </div>
