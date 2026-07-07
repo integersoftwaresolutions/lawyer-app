@@ -89,7 +89,7 @@ export default function LawyerOverviewPage() {
           <p className="text-sm sm:text-base text-text-secondary">
             Manage your profile, bookings, and earnings
           </p>
-        </div>
+        </Card>
 
         <HeroAiSearch />
 
