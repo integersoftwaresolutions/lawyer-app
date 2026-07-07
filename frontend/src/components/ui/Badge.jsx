@@ -8,6 +8,7 @@ export default function Badge({
   const baseClasses = "inline-flex items-center justify-center rounded-full font-medium whitespace-nowrap";
   
   const sizeClasses = {
+    table: "inline-flex items-center h-7 px-2.5 text-[11px] leading-none",
     sm: "py-1 px-2 text-xs",
     md: "py-1.5 px-3 text-xs",
     lg: "py-2 px-4 text-sm",

@@ -277,7 +277,7 @@ export default function LawyerVerificationPage() {
         <div className="flex flex-wrap gap-2 shrink-0 sm:justify-end">
           {hasDocument && (
             <Button
-              variant="secondary"
+              variant="ghost"
               outline
               size="sm"
               icon={FiEye}
@@ -287,8 +287,8 @@ export default function LawyerVerificationPage() {
             </Button>
           )}
           <Button
-            variant={hasDocument ? "secondary" : "primary"}
-            outline={hasDocument}
+            variant="primary"
+            outline
             size="sm"
             icon={FiUpload}
             loading={uploadingType === docConfig.type}

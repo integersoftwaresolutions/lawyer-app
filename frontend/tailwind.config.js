@@ -105,6 +105,30 @@ export default {
       fontFamily: {
         sora: ['"Sora"', "sans-serif"],
       },
+      keyframes: {
+        "modal-scale-in": {
+          "0%": { opacity: "0", transform: "scale(0.2)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        "modal-scale-out": {
+          "0%": { opacity: "1", transform: "scale(1)" },
+          "100%": { opacity: "0", transform: "scale(0.2)" },
+        },
+        "modal-fade-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        "modal-fade-out": {
+          "0%": { opacity: "1" },
+          "100%": { opacity: "0" },
+        },
+      },
+      animation: {
+        "modal-scale-in": "modal-scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        "modal-scale-out": "modal-scale-out 0.2s cubic-bezier(0.4, 0, 1, 1) forwards",
+        "modal-fade-in": "modal-fade-in 0.3s ease-out forwards",
+        "modal-fade-out": "modal-fade-out 0.2s ease-in forwards",
+      },
     },
   },
   plugins: [],

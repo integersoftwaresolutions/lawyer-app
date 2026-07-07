@@ -172,6 +172,14 @@ export default function ClientBookingsPage() {
     }
   };
 
+  const BOOKING_STATUS_LABELS = {
+    BOOKED: "Booked",
+    ACTIVE: "Active",
+    COMPLETED: "Completed",
+    CANCELLED: "Cancelled",
+    EXPIRED: "Expired",
+  };
+
   const getStatusBadge = (status) => {
     const variants = {
       BOOKED: "info",
@@ -180,7 +188,11 @@ export default function ClientBookingsPage() {
       CANCELLED: "danger",
       EXPIRED: "default",
     };
-    return <Badge variant={variants[status] || "default"}>{status}</Badge>;
+    return (
+      <Badge variant={variants[status] || "default"} size="table">
+        {BOOKING_STATUS_LABELS[status] || status}
+      </Badge>
+    );
   };
 
   const formatDate = (date) => {
@@ -297,7 +309,7 @@ export default function ClientBookingsPage() {
               onClick={() => setDisputeViewModal({ open: true, booking: row })}
               className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface/50 px-3 py-1.5 text-left transition-colors hover:bg-surface hover:border-primary/30 cursor-pointer"
             >
-              <Badge variant={row.dispute.status === "RESOLVED" ? "success" : "info"} size="sm">
+              <Badge variant={row.dispute.status === "RESOLVED" ? "success" : "info"} size="table">
                 {row.dispute.status.replace(/_/g, " ")}
               </Badge>
               <span className="text-xs text-text-secondary">View details</span>
@@ -330,6 +342,7 @@ export default function ClientBookingsPage() {
               label="View booking"
               variant="secondary"
               outline
+              size="icon-sm"
               onClick={() => setViewModal({ open: true, booking: row })}
             />
           )}
@@ -339,6 +352,7 @@ export default function ClientBookingsPage() {
               label="Edit booking"
               variant="secondary"
               outline
+              size="icon-sm"
               onClick={() => handleOpenEdit(row)}
             />
           )}
@@ -346,6 +360,7 @@ export default function ClientBookingsPage() {
             <Button
               size="xs"
               variant="primary"
+              outline
               icon={FiMessageCircle}
               onClick={() => navigate(`/chat/${row._id}`)}
             >
@@ -355,7 +370,7 @@ export default function ClientBookingsPage() {
           {row.status === "COMPLETED" && !row.hasReview && (
             <Button
               size="xs"
-              variant="secondary"
+              variant="accent"
               outline
               icon={FiStar}
               onClick={() => setReviewModal({ open: true, booking: row })}
@@ -368,6 +383,7 @@ export default function ClientBookingsPage() {
             label="Delete booking"
             variant="danger"
             outline
+            size="icon-sm"
             onClick={() => setDeleteModal({ open: true, booking: row })}
           />
         </ActionMenu>
