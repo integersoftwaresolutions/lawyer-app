@@ -7,7 +7,8 @@ import {
   FiCalendar, 
   FiCheckCircle, 
   FiSettings,
-  FiAlertCircle
+  FiAlertCircle,
+  FiBookOpen
 } from "react-icons/fi";
 
 const menuItems = [
@@ -17,6 +18,7 @@ const menuItems = [
   { id: "bookings", label: "Bookings", icon: FiCalendar },
   { id: "disputes", label: "Disputes", icon: FiAlertCircle },
   { id: "verification", label: "Verification", icon: FiCheckCircle },
+  { id: "case-law", label: "Case Law", icon: FiBookOpen },
   { id: "settings", label: "Settings", icon: FiSettings },
 ];
 

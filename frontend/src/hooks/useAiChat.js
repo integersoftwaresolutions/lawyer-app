@@ -5,6 +5,7 @@ import { getErrorMessage } from "../utils/errorHandler";
 export function useAiChat({ mode = "research", autoSelectLatest = true } = {}) {
   const [sessions, setSessions] = useState([]);
   const [activeSessionId, setActiveSessionId] = useState(null);
+  const [activeSession, setActiveSession] = useState(null);
   const [messages, setMessages] = useState([]);
   const [sessionsLoading, setSessionsLoading] = useState(true);
   const [messagesLoading, setMessagesLoading] = useState(false);
@@ -42,6 +43,7 @@ export function useAiChat({ mode = "research", autoSelectLatest = true } = {}) {
       const res = await aiApi.getSession(sessionId);
       setMessages(res.data?.messages || []);
       setActiveSessionId(sessionId);
+      setActiveSession(res.data?.session || null);
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -49,20 +51,43 @@ export function useAiChat({ mode = "research", autoSelectLatest = true } = {}) {
     }
   }, []);
 
-  const createSession = useCallback(async () => {
-    setError(null);
-    try {
-      const res = await aiApi.createSession({ mode });
-      const session = res.data;
-      setSessions((prev) => [session, ...prev]);
-      setActiveSessionId(session.id);
-      setMessages([]);
-      return session;
-    } catch (err) {
-      setError(getErrorMessage(err));
-      throw err;
-    }
-  }, [mode]);
+  const createSession = useCallback(
+    async (overrides = {}) => {
+      setError(null);
+      try {
+        const res = await aiApi.createSession({ mode, ...overrides });
+        const session = res.data;
+        setSessions((prev) => [session, ...prev]);
+        setActiveSessionId(session.id);
+        setActiveSession(session);
+        setMessages([]);
+        return session;
+      } catch (err) {
+        setError(getErrorMessage(err));
+        throw err;
+      }
+    },
+    [mode]
+  );
+
+  const updateSession = useCallback(
+    async (sessionId, body) => {
+      setError(null);
+      try {
+        const res = await aiApi.updateSession(sessionId, body);
+        const updated = res.data;
+        setSessions((prev) => prev.map((s) => (s.id === sessionId ? { ...s, ...updated } : s)));
+        if (sessionId === activeSessionId) {
+          setActiveSession((prev) => ({ ...(prev || {}), ...updated }));
+        }
+        return updated;
+      } catch (err) {
+        setError(getErrorMessage(err));
+        throw err;
+      }
+    },
+    [activeSessionId]
+  );
 
   const selectSession = useCallback(
     (sessionId) => {
@@ -73,7 +98,7 @@ export function useAiChat({ mode = "research", autoSelectLatest = true } = {}) {
   );
 
   const sendMessage = useCallback(
-    async (content) => {
+    async (content, options = {}) => {
       const trimmed = String(content || "").trim();
       if (!trimmed) return;
 
@@ -86,7 +111,11 @@ export function useAiChat({ mode = "research", autoSelectLatest = true } = {}) {
       setSending(true);
       setError(null);
       try {
-        const res = await aiApi.sendMessage(sessionId, { content: trimmed });
+        const body = options && Object.keys(options).length > 0
+          ? { content: trimmed, options }
+          : { content: trimmed };
+
+        const res = await aiApi.sendMessage(sessionId, body);
         const { userMessage, assistantMessage } = res.data;
         setMessages((prev) => [...prev, userMessage, assistantMessage]);
         setSessions((prev) =>
@@ -107,6 +136,7 @@ export function useAiChat({ mode = "research", autoSelectLatest = true } = {}) {
           )
         );
         await loadUsage();
+        return assistantMessage;
       } catch (err) {
         setError(getErrorMessage(err));
         throw err;
@@ -127,6 +157,7 @@ export function useAiChat({ mode = "research", autoSelectLatest = true } = {}) {
 
         if (activeSessionId === sessionId) {
           setActiveSessionId(null);
+          setActiveSession(null);
           setMessages([]);
           if (remaining.length > 0) {
             await loadSession(remaining[0].id);
@@ -156,6 +187,7 @@ export function useAiChat({ mode = "research", autoSelectLatest = true } = {}) {
     mode,
     sessions,
     activeSessionId,
+    activeSession,
     messages,
     sessionsLoading,
     messagesLoading,
@@ -165,6 +197,7 @@ export function useAiChat({ mode = "research", autoSelectLatest = true } = {}) {
     loadSessions,
     loadSession,
     createSession,
+    updateSession,
     selectSession,
     sendMessage,
     deleteSession,

@@ -1,8 +1,24 @@
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Badge } from "../../components/ui";
 import ChatPanel from "../../components/ai/ChatPanel";
 import { FiCpu } from "react-icons/fi";
 
 export default function LawyerAiAssistantPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [routedState, setRoutedState] = useState(() => location.state || null);
+
+  useEffect(() => {
+    if (location.state) {
+      navigate(location.pathname, { replace: true, state: null });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const initialSessionId = routedState?.sessionId || null;
+  const initialMessage = routedState?.initialMessage || null;
+
   return (
     <div className="flex flex-col h-full min-h-0">
       <div className="shrink-0 flex items-center justify-between gap-2 sm:gap-3 mb-2 sm:mb-3">
@@ -24,7 +40,12 @@ export default function LawyerAiAssistantPage() {
         </Badge>
       </div>
 
-      <ChatPanel mode="research" className="flex-1 min-h-0" />
+      <ChatPanel
+        mode="research"
+        className="flex-1 min-h-0"
+        initialSessionId={initialSessionId}
+        initialMessage={initialMessage}
+      />
     </div>
   );
 }

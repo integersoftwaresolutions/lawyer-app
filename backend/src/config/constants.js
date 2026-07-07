@@ -92,6 +92,39 @@ export const AI_USAGE_TYPES = {
   REPORT_GENERATION: "REPORT_GENERATION"
 };
 
+export const RAG_SOURCE_TYPES = {
+  CASE_LAW: "CASE_LAW",
+  LEGAL_DOCUMENT: "LEGAL_DOCUMENT"
+};
+
+export const RAG_INGESTION_STATUS = {
+  PENDING: "PENDING",
+  PROCESSING: "PROCESSING",
+  INDEXED: "INDEXED",
+  FAILED: "FAILED"
+};
+
+export const CROSS_EXAM_TONES = {
+  AGGRESSIVE: "aggressive",
+  MEASURED: "measured"
+};
+
+export const CROSS_EXAM_TYPES = {
+  CRIMINAL: "criminal",
+  CIVIL: "civil"
+};
+
+export const PAKISTANI_COURTS = [
+  "Supreme Court of Pakistan",
+  "Federal Shariat Court",
+  "Lahore High Court",
+  "Sindh High Court",
+  "Islamabad High Court",
+  "Peshawar High Court",
+  "Balochistan High Court",
+  "Other"
+];
+
 export const PLANNER_EVENT_TYPES = {
   COURT_HEARING: "COURT_HEARING",
   CLIENT_MEETING: "CLIENT_MEETING",

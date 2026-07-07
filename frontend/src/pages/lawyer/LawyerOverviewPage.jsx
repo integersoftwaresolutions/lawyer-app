@@ -4,11 +4,12 @@ import { lawyerApi } from "../../services/lawyer.api";
 import { Card, Button, StatCard, StateHandler, Badge } from "../../components/ui";
 import { useStateHandler } from "../../hooks/useStateHandler";
 import { useToast } from "../../hooks/useToast";
-import { 
-  FiCalendar, 
-  FiDollarSign, 
-  FiStar, 
-  FiUsers 
+import HeroAiSearch from "../../components/ai/HeroAiSearch";
+import {
+  FiCalendar,
+  FiDollarSign,
+  FiStar,
+  FiUsers
 } from "react-icons/fi";
 
 function StatusRow({ label, children }) {
@@ -89,6 +90,8 @@ export default function LawyerOverviewPage() {
             Manage your profile, bookings, and earnings
           </p>
         </Card>
+
+        <HeroAiSearch />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
           <StatCard

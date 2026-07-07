@@ -22,6 +22,8 @@ import LawyerEarningsPage from "../pages/lawyer/LawyerEarningsPage.jsx";
 import LawyerVerificationPage from "../pages/lawyer/LawyerVerificationPage.jsx";
 import LawyerReviewsPage from "../pages/lawyer/LawyerReviewsPage.jsx";
 import LawyerAiAssistantPage from "../pages/lawyer/LawyerAiAssistantPage.jsx";
+import LawyerCrossExamPage from "../pages/lawyer/LawyerCrossExamPage.jsx";
+import LawyerDocumentsPage from "../pages/lawyer/LawyerDocumentsPage.jsx";
 import LawyerPlannerPage from "../pages/lawyer/LawyerPlannerPage.jsx";
 
 import AdminDashboardLayout from "../pages/admin/AdminDashboardLayout.jsx";
@@ -32,6 +34,7 @@ import AdminBookingsPage from "../pages/admin/AdminBookingsPage.jsx";
 import AdminVerificationPage from "../pages/admin/AdminVerificationPage.jsx";
 import AdminDisputesPage from "../pages/admin/AdminDisputesPage.jsx";
 import AdminSettingsPage from "../pages/admin/AdminSettingsPage.jsx";
+import AdminCaseLawPage from "../pages/admin/AdminCaseLawPage.jsx";
 
 import SessionChat from "../pages/client/SessionChat.jsx";
 import NotFoundPage from "../pages/NotFoundPage.jsx";
@@ -75,6 +78,8 @@ export default function RoutesRoot() {
         <Route index element={<Navigate to="overview" replace />} />
         <Route path="overview" element={<LawyerOverviewPage />} />
         <Route path="ai" element={<LawyerAiAssistantPage />} />
+        <Route path="cross-exam" element={<LawyerCrossExamPage />} />
+        <Route path="documents" element={<LawyerDocumentsPage />} />
         <Route path="planner" element={<LawyerPlannerPage />} />
         <Route path="profile" element={<LawyerProfilePage />} />
         <Route path="availability" element={<LawyerAvailabilityPage />} />
@@ -101,6 +106,7 @@ export default function RoutesRoot() {
         <Route path="bookings" element={<AdminBookingsPage />} />
         <Route path="verification" element={<AdminVerificationPage />} />
         <Route path="disputes" element={<AdminDisputesPage />} />
+        <Route path="case-law" element={<AdminCaseLawPage />} />
         <Route path="settings" element={<AdminSettingsPage />} />
         <Route path="dashboard" element={<Navigate to="/admin/overview" replace />} />
       </Route>

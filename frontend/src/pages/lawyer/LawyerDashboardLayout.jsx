@@ -9,12 +9,16 @@ import {
   FiDollarSign,
   FiCheckCircle,
   FiStar,
-  FiCpu
+  FiCpu,
+  FiTarget,
+  FiFolder
 } from "react-icons/fi";
 
 const menuItems = [
   { id: "overview", label: "Overview", icon: FiHome },
   { id: "ai", label: "AI Assistant", icon: FiCpu },
+  { id: "cross-exam", label: "Cross-Exam Practice", icon: FiTarget },
+  { id: "documents", label: "My Documents", icon: FiFolder },
   { id: "planner", label: "Smart Planner", icon: FiCalendar },
   { id: "availability", label: "Availability", icon: FiClock },
   { id: "bookings", label: "Bookings", icon: FiFileText },
