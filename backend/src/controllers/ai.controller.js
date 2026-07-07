@@ -3,8 +3,10 @@ import { sendSuccess } from "../helpers/response.helper.js";
 import * as aiService from "../services/ai/ai.service.js";
 import * as sessionService from "../services/ai/session.service.js";
 import * as messageService from "../services/ai/message.service.js";
+import * as reportService from "../services/ai/report.service.js";
 import { isOpenAiConfigured } from "../services/ai/openai.client.js";
 import { aiConfig } from "../config/ai.config.js";
+import { isPineconeConfigured } from "../config/rag.config.js";
 import { isEncryptionConfigured } from "../services/ai/encryption.util.js";
 
 export const health = asyncHandler(async (req, res) => {
@@ -19,7 +21,8 @@ export const config = asyncHandler(async (req, res) => {
       openaiConfigured: isOpenAiConfigured(),
       chatModel: aiConfig.chatModel,
       embeddingModel: aiConfig.embeddingModel,
-      encryptionConfigured: isEncryptionConfigured()
+      encryptionConfigured: isEncryptionConfigured(),
+      ragEnabled: isPineconeConfigured()
     }
   });
 });
@@ -81,4 +84,37 @@ export const sendMessage = asyncHandler(async (req, res) => {
 export const deleteSession = asyncHandler(async (req, res) => {
   const data = await sessionService.deleteSession(req.params.sessionId, req.user.id);
   return sendSuccess(res, { message: "Session deleted", data });
+});
+
+export const updateSession = asyncHandler(async (req, res) => {
+  const data = await sessionService.updateSessionMetadata(
+    req.params.sessionId,
+    req.user.id,
+    req.body
+  );
+  return sendSuccess(res, { message: "Session updated", data });
+});
+
+export const generatePrepReport = asyncHandler(async (req, res) => {
+  const session = await sessionService.getOwnedSession(req.params.sessionId, req.user.id);
+  const data = await reportService.generateReportData({ session, lawyerId: req.user.id });
+  return sendSuccess(res, { message: "Prep report generated", data });
+});
+
+export const downloadPrepReport = asyncHandler(async (req, res) => {
+  const session = await sessionService.getOwnedSession(req.params.sessionId, req.user.id);
+  const data = await reportService.generateReportData({ session, lawyerId: req.user.id });
+  const buffer = await reportService.renderReportPdf(data);
+
+  const safeTitle = (session.title || "cross-exam")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60) || "cross-exam";
+  const filename = `prep-report-${safeTitle}.pdf`;
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+  res.setHeader("Content-Length", buffer.length);
+  return res.end(buffer);
 });

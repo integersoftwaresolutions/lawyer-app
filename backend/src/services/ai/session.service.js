@@ -71,6 +71,27 @@ export async function deleteSession(sessionId, lawyerId) {
   return { id: session._id };
 }
 
+export async function updateSessionMetadata(sessionId, lawyerId, updates = {}) {
+  const session = await getOwnedSession(sessionId, lawyerId);
+
+  if (typeof updates.title === "string" && updates.title.trim()) {
+    session.title = updates.title.trim().slice(0, 200);
+  }
+  if (typeof updates.caseRef === "string") {
+    session.caseRef = updates.caseRef.trim().slice(0, 200);
+  }
+  if (updates.metadata && typeof updates.metadata === "object") {
+    session.metadata = {
+      ...(session.metadata || {}),
+      ...updates.metadata
+    };
+    session.markModified("metadata");
+  }
+
+  await session.save();
+  return formatSession(session);
+}
+
 export async function updateSessionTitle(session, content) {
   if (!session.title || session.title === "New conversation") {
     session.title = deriveTitle(content);

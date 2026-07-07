@@ -4,8 +4,11 @@ import { requireRoles } from "../middlewares/rbac.middleware.js";
 import { validate } from "../middlewares/validate.middleware.js";
 import * as adminCtrl from "../controllers/admin.controller.js";
 import { resolveDisputeSchema, updateDisputeStatusSchema } from "../validators/dispute.validators.js";
+import { adminRagRouter } from "./rag.routes.js";
 
 const r = Router();
+
+r.use("/rag", adminRagRouter);
 
 r.use(authMiddleware, requireRoles("ADMIN"));
 

@@ -49,10 +49,13 @@ export async function embed(input, options = {}) {
   const model = options.model || aiConfig.embeddingModel;
   const inputs = Array.isArray(input) ? input : [input];
 
+  // Note: `store` is a chat-completions parameter and is rejected on the
+  // embeddings endpoint. `encoding_format: "float"` ensures we receive number
+  // arrays (some SDK builds default to "base64" otherwise).
   const response = await openai.embeddings.create({
     model,
     input: inputs,
-    store: false
+    encoding_format: "float"
   });
 
   const usage = normalizeUsage(response.usage);

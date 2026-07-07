@@ -7,6 +7,7 @@ import ChatMessage from "./ChatMessage";
 import ChatInput from "./ChatInput";
 import ChatTypingIndicator from "./ChatTypingIndicator";
 import ChatEmptyState from "./ChatEmptyState";
+import ResearchFilters from "./ResearchFilters";
 
 const SCROLL_THRESHOLD = 100;
 
@@ -15,7 +16,8 @@ export default function ChatPanel({
   initialSessionId = null,
   initialMessage = null,
   compactSessions = false,
-  className = ""
+  className = "",
+  showFilters = mode === "research"
 }) {
   const {
     sessions,
@@ -39,8 +41,22 @@ export default function ChatPanel({
   const isNearBottomRef = useRef(true);
   const initialMessageSent = useRef(false);
   const [conversationsOpen, setConversationsOpen] = useState(false);
+  const [filters, setFilters] = useState({});
 
   const activeSession = sessions.find((s) => s.id === activeSessionId);
+
+  function buildSendOptions() {
+    const out = {};
+    if (showFilters && filters && Object.keys(filters).length > 0) {
+      out.filters = filters;
+    }
+    return out;
+  }
+
+  async function handleSend(text) {
+    const options = buildSendOptions();
+    return sendMessage(text, options);
+  }
 
   const scrollToBottom = useCallback((behavior = "smooth") => {
     messagesEndRef.current?.scrollIntoView({ behavior });
@@ -66,7 +82,8 @@ export default function ChatPanel({
   useEffect(() => {
     if (!initialMessage || initialMessageSent.current || messagesLoading || sending) return;
     initialMessageSent.current = true;
-    sendMessage(initialMessage).catch(() => {});
+    sendMessage(initialMessage, buildSendOptions()).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialMessage, messagesLoading, sending, sendMessage]);
 
   async function handleNewChat() {
@@ -90,7 +107,7 @@ export default function ChatPanel({
 
   async function handleSuggestion(text) {
     try {
-      await sendMessage(text);
+      await handleSend(text);
     } catch {
       // error shown in banner
     }
@@ -247,9 +264,16 @@ export default function ChatPanel({
           </div>
         </div>
 
+        {/* Filters row above input */}
+        {showFilters && activeSessionId && (
+          <div className="shrink-0 px-3 sm:px-4 pt-2 pb-1 border-t border-card-border bg-card">
+            <ResearchFilters filters={filters} onChange={setFilters} />
+          </div>
+        )}
+
         {/* Input — pinned to bottom */}
         <ChatInput
-          onSend={sendMessage}
+          onSend={handleSend}
           disabled={sending || messagesLoading}
         />
       </div>

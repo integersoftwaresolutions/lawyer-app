@@ -4,11 +4,12 @@ import { lawyerApi } from "../../services/lawyer.api";
 import { Card, Button, StatCard, StateHandler, Badge } from "../../components/ui";
 import { useStateHandler } from "../../hooks/useStateHandler";
 import { useToast } from "../../hooks/useToast";
-import { 
-  FiCalendar, 
-  FiDollarSign, 
-  FiStar, 
-  FiUsers 
+import HeroAiSearch from "../../components/ai/HeroAiSearch";
+import {
+  FiCalendar,
+  FiDollarSign,
+  FiStar,
+  FiUsers
 } from "react-icons/fi";
 
 export default function LawyerOverviewPage() {
@@ -65,14 +66,16 @@ export default function LawyerOverviewPage() {
   return (
     <StateHandler loading={loading} error={error} retry={retry}>
       <div>
-        <Card className="mb-6">
-          <h2 className="text-2xl font-bold mb-2 text-text-primary">
+        <div className="mb-4">
+          <h2 className="text-2xl font-bold mb-1 text-text-primary">
             Welcome back, {profile?.fullName || "Lawyer"}!
           </h2>
-          <p className="text-text-secondary">
-            Manage your profile, bookings, and earnings
+          <p className="text-sm text-text-secondary">
+            Research law, draft documents, and prepare for hearings — all in one place.
           </p>
-        </Card>
+        </div>
+
+        <HeroAiSearch />
 
         <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-6">
           <StatCard

@@ -49,5 +49,15 @@ export const env = {
   openaiEmbeddingModel: optional("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"),
   openaiRequestTimeoutMs: Number(process.env.OPENAI_REQUEST_TIMEOUT_MS || 60000),
   aiDailyRequestLimit: Number(process.env.AI_DAILY_REQUEST_LIMIT || 50),
-  encryptionKey: optional("ENCRYPTION_KEY")
+  encryptionKey: optional("ENCRYPTION_KEY"),
+
+  // RAG / Pinecone
+  pineconeApiKey: optional("PINECONE_API_KEY"),
+  pineconeIndex: optional("PINECONE_INDEX", "lawyer-app-rag"),
+  pineconeCaseLawNamespace: optional("PINECONE_CASE_LAW_NAMESPACE", "case-law"),
+  ragEmbeddingDimensions: Number(process.env.RAG_EMBEDDING_DIMENSIONS || 1536),
+  ragChunkSizeTokens: Number(process.env.RAG_CHUNK_SIZE_TOKENS || 800),
+  ragChunkOverlapTokens: Number(process.env.RAG_CHUNK_OVERLAP_TOKENS || 100),
+  ragTopK: Number(process.env.RAG_TOP_K || 6),
+  ragMinScore: Number(process.env.RAG_MIN_SCORE || 0.35)
 };
