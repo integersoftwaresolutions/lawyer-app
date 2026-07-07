@@ -5,11 +5,10 @@ import {
   FiTrash2,
   FiCopy,
   FiCalendar,
-  FiSun,
-  FiSave
+  FiSun
 } from "react-icons/fi";
 import { lawyerApi } from "../../services/lawyer.api";
-import { Button, Card, IconButton, StateHandler } from "../../components/ui";
+import { Button, Card, IconButton, StateHandler, StickySaveBar } from "../../components/ui";
 import { useStateHandler } from "../../hooks/useStateHandler";
 import { useToast } from "../../hooks/useToast";
 
@@ -359,30 +358,13 @@ export default function LawyerAvailabilityPage() {
           </div>
         </Card>
 
-        {/* Sticky save bar */}
-        <div className="sticky bottom-0 z-10 mt-6 -mx-1 px-1 pt-4 bg-gradient-to-t from-background from-60% to-transparent">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3 rounded-xl border border-border bg-card/95 backdrop-blur-md shadow-lg">
-              <div className="min-w-0">
-                {isDirty ? (
-                  <p className="text-sm font-medium text-warning">You have unsaved changes</p>
-                ) : (
-                  <p className="text-sm text-text-muted">All changes saved</p>
-                )}
-                <p className="text-xs text-text-muted mt-0.5 hidden sm:block">
-                  Clients only see slots within your enabled hours
-                </p>
-              </div>
-              <Button
-                icon={FiSave}
-                onClick={handleSave}
-                loading={saving}
-                disabled={!isDirty && !saving}
-                className="w-full sm:w-auto"
-              >
-                Save availability
-              </Button>
-          </div>
-        </div>
+        <StickySaveBar
+          dirty={isDirty}
+          onSave={handleSave}
+          loading={saving}
+          saveLabel="Save availability"
+          hint="Clients only see slots within your enabled hours"
+        />
       </div>
     </StateHandler>
   );

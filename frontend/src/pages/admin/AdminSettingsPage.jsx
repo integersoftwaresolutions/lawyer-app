@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { adminApi } from "../../services/admin.api";
-import { Card, Button, Input, StateHandler } from "../../components/ui";
+import { Card, Input, StateHandler, StickySaveBar } from "../../components/ui";
 import { useStateHandler } from "../../hooks/useStateHandler";
 
 export default function AdminSettingsPage() {
   const [saving, setSaving] = useState(false);
+  const [savedSnapshot, setSavedSnapshot] = useState("");
 
   const { loading, error, data, retry, setData } = useStateHandler(
     async () => {
@@ -27,10 +28,19 @@ export default function AdminSettingsPage() {
     profileBoostFee30Days: 0
   };
 
+  useEffect(() => {
+    if (!loading && data && savedSnapshot === "") {
+      setSavedSnapshot(JSON.stringify(data));
+    }
+  }, [loading, data, savedSnapshot]);
+
+  const isDirty = savedSnapshot !== "" && JSON.stringify(settings) !== savedSnapshot;
+
   const handleSave = async () => {
     try {
       setSaving(true);
       await adminApi.updateSettings(settings);
+      setSavedSnapshot(JSON.stringify(settings));
       alert("Settings updated successfully!");
       retry();
     } catch (error) {
@@ -93,11 +103,14 @@ export default function AdminSettingsPage() {
             />
           </div>
         </div>
-        <div className="mt-6">
-          <Button onClick={handleSave} loading={saving}>
-            Save Settings
-          </Button>
-        </div>
+
+        <StickySaveBar
+          dirty={isDirty}
+          onSave={handleSave}
+          loading={saving}
+          saveLabel="Save settings"
+          hint="Changes apply platform-wide for all users"
+        />
       </Card>
 
       <Card title="Platform Information" className="mt-6">

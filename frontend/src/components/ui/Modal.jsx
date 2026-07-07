@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Button from "./Button";
 
 export default function Modal({ 
@@ -10,8 +10,20 @@ export default function Modal({
   size = "md",
   closeOnOverlay = true,
 }) {
+  const [mounted, setMounted] = useState(isOpen);
+  const [closing, setClosing] = useState(false);
+
   useEffect(() => {
     if (isOpen) {
+      setMounted(true);
+      setClosing(false);
+    } else if (mounted) {
+      setClosing(true);
+    }
+  }, [isOpen, mounted]);
+
+  useEffect(() => {
+    if (mounted) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "unset";
@@ -19,9 +31,16 @@ export default function Modal({
     return () => {
       document.body.style.overflow = "unset";
     };
-  }, [isOpen]);
+  }, [mounted]);
 
-  if (!isOpen) return null;
+  const handleContentAnimationEnd = () => {
+    if (closing) {
+      setMounted(false);
+      setClosing(false);
+    }
+  };
+
+  if (!mounted) return null;
 
   const sizeClasses = {
     sm: "max-w-[400px]",
@@ -38,10 +57,17 @@ export default function Modal({
 
   return (
     <div 
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-5" 
+      className={`fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-5 ${
+        closing ? "animate-modal-fade-out" : "animate-modal-fade-in"
+      }`}
       onClick={handleOverlayClick}
     >
-      <div className={`bg-card rounded-xl w-full ${sizeClasses[size]} max-h-[90vh] overflow-hidden flex flex-col`}>
+      <div
+        className={`bg-card rounded-xl w-full ${sizeClasses[size]} max-h-[90vh] overflow-hidden flex flex-col origin-center ${
+          closing ? "animate-modal-scale-out" : "animate-modal-scale-in"
+        }`}
+        onAnimationEnd={handleContentAnimationEnd}
+      >
         <div className="flex justify-between items-center py-5 px-6 border-b border-border">
           <h2 className="text-lg font-semibold text-text-primary m-0">{title}</h2>
           <button 

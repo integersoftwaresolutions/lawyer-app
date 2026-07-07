@@ -47,11 +47,26 @@ export function formatPlannerEvent(doc) {
   };
 }
 
-export function assertValidRange(startAt, endAt) {
+function calendarDateKeyInTz(date, timeZone) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(date);
+}
+
+export function assertValidRange(startAt, endAt, timezone = PLANNER_DEFAULT_TIMEZONE) {
   const start = toDate(startAt);
   const end = toDate(endAt);
   if (!start || !end) throw new ApiError(400, "Invalid startAt or endAt");
   if (end <= start) throw new ApiError(400, "endAt must be after startAt");
+
+  const tz = timezone || PLANNER_DEFAULT_TIMEZONE;
+  if (calendarDateKeyInTz(start, tz) !== calendarDateKeyInTz(end, tz)) {
+    throw new ApiError(400, "Event must start and end on the same day");
+  }
+
   return { start, end };
 }
 

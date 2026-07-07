@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../hooks/useToast";
 import { constantsApi } from "../../services/constants.api";
-import { Card, Button, Input, Select, Textarea, ProfilePicture } from "../../components/ui";
-import AuthLayout, { FormSection, FormRow } from "../auth/AuthLayout";
+import { Card, Input, Select, Textarea, ProfilePicture, StickySaveBar } from "../../components/ui";
+import { FormSection, FormRow } from "../auth/AuthLayout";
 
 const GENDERS = [
   { value: "Male", label: "Male" },
@@ -27,6 +27,7 @@ export default function ClientProfilePage() {
   });
 
   const profileLoadInitiated = useRef(false);
+  const [savedSnapshot, setSavedSnapshot] = useState("");
 
   useEffect(() => {
     // Only load profile if it hasn't been merged into auth state yet (e.g. bootstrap fetch failed).
@@ -50,18 +51,22 @@ export default function ClientProfilePage() {
 
   useEffect(() => {
     if (user) {
-      setFormData({
+      const next = {
         fullName: user.fullName || "",
         phone: user.phone || "",
         whatsapp: user.whatsapp || "",
         city: user.city || "",
         address: user.address || "",
         cnic: user.cnic || "",
-        dateOfBirth: user.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : "",
+        dateOfBirth: user.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split("T")[0] : "",
         gender: user.gender || "",
-      });
+      };
+      setFormData(next);
+      setSavedSnapshot(JSON.stringify(next));
     }
   }, [user]);
+
+  const isDirty = savedSnapshot !== "" && JSON.stringify(formData) !== savedSnapshot;
 
   const loadCities = async () => {
     try {
@@ -82,6 +87,7 @@ export default function ClientProfilePage() {
     
     try {
       await updateProfile(formData);
+      setSavedSnapshot(JSON.stringify(formData));
       toast.success("Profile updated successfully!");
     } catch (error) {
       toast.error(error.message || "Failed to save profile");
@@ -203,14 +209,13 @@ export default function ClientProfilePage() {
           </FormSection>
         </Card>
 
-        <div className="flex justify-end gap-3">
-          <Button type="button" variant="secondary" onClick={() => window.history.back()}>
-            Cancel
-          </Button>
-          <Button type="submit" loading={profileLoading}>
-            Save Profile
-          </Button>
-        </div>
+        <StickySaveBar
+          dirty={isDirty}
+          submitType="submit"
+          loading={profileLoading}
+          saveLabel="Save profile"
+          onCancel={() => window.history.back()}
+        />
       </form>
     </div>
   );

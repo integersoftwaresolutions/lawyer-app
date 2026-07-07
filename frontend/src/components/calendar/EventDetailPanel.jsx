@@ -1,5 +1,13 @@
 import { Link } from "react-router-dom";
-import { FiAlertTriangle, FiEdit2, FiExternalLink, FiMessageCircle, FiTrash2, FiX } from "react-icons/fi";
+import {
+  FiAlertTriangle,
+  FiArrowLeft,
+  FiEdit2,
+  FiExternalLink,
+  FiMessageCircle,
+  FiTrash2,
+  FiX
+} from "react-icons/fi";
 import { Badge, Button, IconButton } from "../ui";
 import {
   EVENT_TYPE_LABELS,
@@ -29,6 +37,7 @@ const BOOKING_STATUS_VARIANT = {
 export default function EventDetailPanel({
   event,
   timezone,
+  onBack,
   onClose,
   onEdit,
   onDelete,
@@ -45,24 +54,29 @@ export default function EventDetailPanel({
   return (
     <aside className="w-full lg:w-[320px] shrink-0 border border-border rounded-xl bg-card flex flex-col overflow-hidden shadow-sm">
       <div className="flex items-start justify-between gap-2 p-4 border-b border-border">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${styles.dot}`} />
-            <Badge variant="default" size="sm">
-              {EVENT_TYPE_LABELS[event.eventType]}
-            </Badge>
-            {platform && (
-              <Badge variant="success" size="sm">
-                Platform
+        <div className="flex items-start gap-2 min-w-0 flex-1">
+          {onBack && (
+            <IconButton icon={FiArrowLeft} label="Back to events" size="icon-sm" onClick={onBack} />
+          )}
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${styles.dot}`} />
+              <Badge variant="default" size="sm">
+                {EVENT_TYPE_LABELS[event.eventType]}
               </Badge>
-            )}
-            {platform && bookingStatus && (
-              <Badge variant={statusVariant} size="sm">
-                {statusLabel}
-              </Badge>
-            )}
+              {platform && (
+                <Badge variant="success" size="sm">
+                  Platform
+                </Badge>
+              )}
+              {platform && bookingStatus && (
+                <Badge variant={statusVariant} size="sm">
+                  {statusLabel}
+                </Badge>
+              )}
+            </div>
+            <h3 className="text-base font-semibold text-text-primary leading-snug">{event.title}</h3>
           </div>
-          <h3 className="text-base font-semibold text-text-primary leading-snug">{event.title}</h3>
         </div>
         <IconButton icon={FiX} label="Close" size="icon-sm" onClick={onClose} />
       </div>

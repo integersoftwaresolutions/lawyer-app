@@ -9,19 +9,33 @@ import {
   DEFAULT_TIMEZONE,
   isPlatformEvent
 } from "../../constants/calendar.constants";
-import { toDatetimeLocalValue, fromDatetimeLocalValue } from "../../utils/calendar/dateUtils";
+import {
+  combineDateAndTime,
+  splitEventSchedule,
+  toDateKey
+} from "../../utils/calendar/dateUtils";
 
 const EMPTY_FORM = {
   title: "",
   eventType: MANUAL_EVENT_TYPES[0],
-  startAt: "",
-  endAt: "",
+  eventDate: "",
+  startTime: "",
+  endTime: "",
   caseRef: "",
   location: "",
   notes: "",
   reminders: [],
   visibility: EVENT_VISIBILITY.PRIVATE
 };
+
+function defaultSchedule(timezone, startIso, endIso) {
+  if (startIso && endIso) {
+    return splitEventSchedule(startIso, endIso, timezone);
+  }
+  const now = new Date();
+  const end = new Date(now.getTime() + 60 * 60 * 1000);
+  return splitEventSchedule(now.toISOString(), end.toISOString(), timezone);
+}
 
 export default function EventFormModal({
   isOpen,
@@ -37,6 +51,7 @@ export default function EventFormModal({
   const isEdit = Boolean(event?.id);
   const platform = isPlatformEvent(event);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [formError, setFormError] = useState("");
   const [showConflictConfirm, setShowConflictConfirm] = useState(false);
 
   useEffect(() => {
@@ -46,32 +61,26 @@ export default function EventFormModal({
       setForm({
         title: event.title || "",
         eventType: event.eventType || MANUAL_EVENT_TYPES[0],
-        startAt: toDatetimeLocalValue(event.startAt, timezone),
-        endAt: toDatetimeLocalValue(event.endAt, timezone),
+        ...splitEventSchedule(event.startAt, event.endAt, timezone),
         caseRef: event.caseRef || "",
         location: event.location || "",
         notes: event.notes || "",
         reminders: event.reminders || [],
         visibility: event.visibility || EVENT_VISIBILITY.PRIVATE
       });
-    } else if (defaults) {
+    } else if (defaults?.startAt && defaults?.endAt) {
       setForm({
         ...EMPTY_FORM,
-        startAt: defaults.startAt
-          ? toDatetimeLocalValue(defaults.startAt, timezone)
-          : "",
-        endAt: defaults.endAt ? toDatetimeLocalValue(defaults.endAt, timezone) : ""
+        ...defaultSchedule(timezone, defaults.startAt, defaults.endAt)
       });
     } else {
-      const now = new Date();
-      const end = new Date(now.getTime() + 60 * 60 * 1000);
       setForm({
         ...EMPTY_FORM,
-        startAt: toDatetimeLocalValue(now.toISOString(), timezone),
-        endAt: toDatetimeLocalValue(end.toISOString(), timezone)
+        ...defaultSchedule(timezone)
       });
     }
     setShowConflictConfirm(false);
+    setFormError("");
   }, [isOpen, event, defaults, timezone]);
 
   const setField = (key, value) => setForm((f) => ({ ...f, [key]: value }));
@@ -92,11 +101,14 @@ export default function EventFormModal({
     };
 
     if (!platform) {
+      const startAt = combineDateAndTime(form.eventDate, form.startTime, timezone);
+      const endAt = combineDateAndTime(form.eventDate, form.endTime, timezone);
+
       Object.assign(payload, {
         title: form.title.trim(),
         eventType: form.eventType,
-        startAt: fromDatetimeLocalValue(form.startAt, timezone),
-        endAt: fromDatetimeLocalValue(form.endAt, timezone),
+        startAt,
+        endAt,
         caseRef: form.caseRef.trim(),
         location: form.location.trim(),
         visibility: form.visibility
@@ -108,15 +120,32 @@ export default function EventFormModal({
 
   const handleSave = async (skipConflictCheck = false) => {
     const payload = buildPayload();
+    setFormError("");
 
     if (!platform && !form.title.trim()) {
-      alert("Title is required.");
+      setFormError("Title is required.");
       return;
     }
 
-    if (!platform && payload.endAt && payload.startAt && payload.endAt <= payload.startAt) {
-      alert("End time must be after start time.");
-      return;
+    if (!platform) {
+      if (!form.eventDate || !form.startTime || !form.endTime) {
+        setFormError("Date, start time, and end time are required.");
+        return;
+      }
+      if (!payload.startAt || !payload.endAt) {
+        setFormError("Invalid date or time.");
+        return;
+      }
+      if (payload.endAt <= payload.startAt) {
+        setFormError("End time must be after start time on the same day.");
+        return;
+      }
+      const startDay = toDateKey(payload.startAt, timezone);
+      const endDay = toDateKey(payload.endAt, timezone);
+      if (startDay !== endDay) {
+        setFormError("Event must start and end on the same day.");
+        return;
+      }
     }
 
     if (!platform && !skipConflictCheck && onCheckConflicts) {
@@ -161,6 +190,12 @@ export default function EventFormModal({
         </>
       }
     >
+      {formError && (
+        <div className="mb-4 px-3 py-2 rounded-lg bg-danger/10 border border-danger/20 text-sm text-danger">
+          {formError}
+        </div>
+      )}
+
       {platform && (
         <div className="mb-4 flex gap-2 p-3 rounded-lg bg-surface border border-border text-xs text-text-secondary">
           <FiAlertTriangle className="w-4 h-4 text-warning shrink-0" />
@@ -221,18 +256,27 @@ export default function EventFormModal({
               placeholder=""
             />
           </div>
+          <Input
+            label="Date (PKT)"
+            type="date"
+            value={form.eventDate}
+            onChange={(e) => setField("eventDate", e.target.value)}
+            required
+          />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
             <Input
-              label="Start (PKT)"
-              type="datetime-local"
-              value={form.startAt}
-              onChange={(e) => setField("startAt", e.target.value)}
+              label="Start time (PKT)"
+              type="time"
+              value={form.startTime}
+              onChange={(e) => setField("startTime", e.target.value)}
+              required
             />
             <Input
-              label="End (PKT)"
-              type="datetime-local"
-              value={form.endAt}
-              onChange={(e) => setField("endAt", e.target.value)}
+              label="End time (PKT)"
+              type="time"
+              value={form.endTime}
+              onChange={(e) => setField("endTime", e.target.value)}
+              required
             />
           </div>
           <Input

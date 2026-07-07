@@ -7,6 +7,7 @@
   --color-text-secondary: #6B7280;
   --color-text-muted: #9CA3AF;
   --color-border: #CBD5E1;
+  
   --color-surface: #FFFFFF;
   --color-surface-hover: #F9FAFB;
   --color-surface-border: #CBD5E1;
@@ -26,26 +27,32 @@
   --color-input-text: #111827;
   --color-input-placeholder: #9CA3AF;
   
-  /* Primary */
-  --color-primary: #3B82F6;
-  --color-primary-hover: #2563EB;
-  --color-primary-border: #3B82F6;
-  --color-primary-shadow: rgba(59, 130, 246, 0.25);
+  /* Primary — seagreen */
+  --color-primary: #085456;
+  --color-primary-hover: #064143;
+  --color-primary-border: #085456;
+  --color-primary-shadow: rgba(8, 84, 86, 0.25);
   --color-primary-text: #FFFFFF;
+  --color-primary-light: #C8E8E9;
+  --color-primary-light-hover: #B5DDDE;
   
-  /* Secondary */
-  --color-secondary: transparent;
-  --color-secondary-hover: #F3F4F6;
-  --color-secondary-border: #E5E7EB;
-  --color-secondary-shadow: rgba(0, 0, 0, 0.05);
-  --color-secondary-text: #374151;
+  /* Secondary — brown */
+  --color-secondary: #463428;
+  --color-secondary-hover: #3A2B22;
+  --color-secondary-border: #463428;
+  --color-secondary-shadow: rgba(70, 52, 40, 0.25);
+  --color-secondary-text: #FFFFFF;
+  --color-secondary-light: #E5D9D1;
+  --color-secondary-light-hover: #D8C8BC;
   
-  /* Accent */
-  --color-accent: #6366F1;
-  --color-accent-hover: #4F46E5;
-  --color-accent-border: #6366F1;
-  --color-accent-shadow: rgba(99, 102, 241, 0.25);
-  --color-accent-text: #FFFFFF;
+  /* Accent — golden */
+  --color-accent: #ED9D06;
+  --color-accent-hover: #D18C05;
+  --color-accent-border: #ED9D06;
+  --color-accent-shadow: rgba(237, 157, 6, 0.25);
+  --color-accent-text: #1F2937;
+  --color-accent-light: #FDE8B8;
+  --color-accent-light-hover: #FCD890;
   
   /* Success */
   --color-success: #10B981;
@@ -53,6 +60,8 @@
   --color-success-border: #10B981;
   --color-success-shadow: rgba(16, 185, 129, 0.25);
   --color-success-text: #FFFFFF;
+  --color-success-light: #D1FAE5;
+  --color-success-light-hover: #B8F0D5;
   
   /* Warning */
   --color-warning: #F59E0B;
@@ -60,6 +69,8 @@
   --color-warning-border: #F59E0B;
   --color-warning-shadow: rgba(245, 158, 11, 0.25);
   --color-warning-text: #FFFFFF;
+  --color-warning-light: #FEF3C7;
+  --color-warning-light-hover: #FDE68A;
   
   /* Danger */
   --color-danger: #EF4444;
@@ -67,6 +78,8 @@
   --color-danger-border: #EF4444;
   --color-danger-shadow: rgba(239, 68, 68, 0.25);
   --color-danger-text: #FFFFFF;
+  --color-danger-light: #FEE8E8;
+  --color-danger-light-hover: #FECACA;
   
   /* Info */
   --color-info: #06B6D4;
@@ -74,13 +87,17 @@
   --color-info-border: #06B6D4;
   --color-info-shadow: rgba(6, 182, 212, 0.25);
   --color-info-text: #FFFFFF;
+  --color-info-light: #CFFAFE;
+  --color-info-light-hover: #A5F3FC;
   
   /* Link */
-  --color-link: #3B82F6;
-  --color-link-hover: #2563EB;
-  --color-link-border: #3B82F6;
-  --color-link-shadow: rgba(59, 130, 246, 0.2);
-  --color-link-text: #3B82F6;
+  --color-link: #085456;
+  --color-link-hover: #064143;
+  --color-link-border: #085456;
+  --color-link-shadow: rgba(8, 84, 86, 0.2);
+  --color-link-text: #085456;
+  --color-link-light: #C8E8E9;
+  --color-link-light-hover: #B5DDDE;
 }
 
 /* Dark Theme */
@@ -111,26 +128,32 @@
   --color-input-text: #E5E5E5;
   --color-input-placeholder: #737373;
   
-  /* Primary */
-  --color-primary: #3B82F6;
-  --color-primary-hover: #2563EB;
-  --color-primary-border: #3B82F6;
-  --color-primary-shadow: rgba(59, 130, 246, 0.3);
+  /* Primary — seagreen */
+  --color-primary: #0A6B6E;
+  --color-primary-hover: #085456;
+  --color-primary-border: #0A6B6E;
+  --color-primary-shadow: rgba(10, 107, 110, 0.3);
   --color-primary-text: #FFFFFF;
+  --color-primary-light: #173739;
+  --color-primary-light-hover: #204C4F;
   
-  /* Secondary */
-  --color-secondary: transparent;
-  --color-secondary-hover: #262626;
-  --color-secondary-border: #404040;
-  --color-secondary-shadow: rgba(0, 0, 0, 0.3);
-  --color-secondary-text: #D4D4D4;
+  /* Secondary — brown */
+  --color-secondary: #5c4637;
+  --color-secondary-hover: #463428;
+  --color-secondary-border: #5A4536;
+  --color-secondary-shadow: rgba(90, 69, 54, 0.3);
+  --color-secondary-text: #FFFFFF;
+  --color-secondary-light: #271e17;
+  --color-secondary-light-hover: #413328;
   
-  /* Accent */
-  --color-accent: #818CF8;
-  --color-accent-hover: #6366F1;
-  --color-accent-border: #818CF8;
-  --color-accent-shadow: rgba(129, 140, 248, 0.3);
-  --color-accent-text: #FFFFFF;
+  /* Accent — golden */
+  --color-accent: #F5AB1A;
+  --color-accent-hover: #ED9D06;
+  --color-accent-border: #F5AB1A;
+  --color-accent-shadow: rgba(245, 171, 26, 0.3);
+  --color-accent-text: #1F2937;
+  --color-accent-light: #3B2F12;
+  --color-accent-light-hover: #544116;
   
   /* Success */
   --color-success: #10B981;
@@ -138,6 +161,8 @@
   --color-success-border: #10B981;
   --color-success-shadow: rgba(16, 185, 129, 0.3);
   --color-success-text: #FFFFFF;
+  --color-success-light: #17372D;
+  --color-success-light-hover: #1E4D3D;
   
   /* Warning */
   --color-warning: #F59E0B;
@@ -145,6 +170,8 @@
   --color-warning-border: #F59E0B;
   --color-warning-shadow: rgba(245, 158, 11, 0.3);
   --color-warning-text: #FFFFFF;
+  --color-warning-light: #3B2E0C;
+  --color-warning-light-hover: #544112;
   
   /* Danger */
   --color-danger: #EF4444;
@@ -152,6 +179,8 @@
   --color-danger-border: #EF4444;
   --color-danger-shadow: rgba(239, 68, 68, 0.3);
   --color-danger-text: #FFFFFF;
+  --color-danger-light: #3A1818;
+  --color-danger-light-hover: #4C2525;
   
   /* Info */
   --color-info: #06B6D4;
@@ -159,12 +188,16 @@
   --color-info-border: #06B6D4;
   --color-info-shadow: rgba(6, 182, 212, 0.3);
   --color-info-text: #FFFFFF;
+  --color-info-light: #17333B;
+  --color-info-light-hover: #1E4B55;
   
   /* Link */
-  --color-link: #60A5FA;
-  --color-link-hover: #3B82F6;
-  --color-link-border: #60A5FA;
-  --color-link-shadow: rgba(96, 165, 250, 0.25);
-  --color-link-text: #60A5FA;
+  --color-link: #2DD4BF;
+  --color-link-hover: #0A6B6E;
+  --color-link-border: #2DD4BF;
+  --color-link-shadow: rgba(45, 212, 191, 0.25);
+  --color-link-text: #2DD4BF;
+  --color-link-light: #173739;
+  --color-link-light-hover: #204C4F;
 }
 

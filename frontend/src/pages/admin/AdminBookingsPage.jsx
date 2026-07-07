@@ -11,6 +11,14 @@ export default function AdminBookingsPage() {
     return res.data || [];
   };
 
+  const BOOKING_STATUS_LABELS = {
+    BOOKED: "Booked",
+    ACTIVE: "Active",
+    COMPLETED: "Completed",
+    CANCELLED: "Cancelled",
+    EXPIRED: "Expired",
+  };
+
   const getStatusBadge = (status) => {
     const variants = {
       BOOKED: "info",
@@ -19,7 +27,11 @@ export default function AdminBookingsPage() {
       CANCELLED: "danger",
       EXPIRED: "default",
     };
-    return <Badge variant={variants[status] || "default"}>{status}</Badge>;
+    return (
+      <Badge variant={variants[status] || "default"} size="table">
+        {BOOKING_STATUS_LABELS[status] || status}
+      </Badge>
+    );
   };
 
   const formatDate = (date) => {

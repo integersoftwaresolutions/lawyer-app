@@ -21,7 +21,7 @@ export default function ChatMessage({ message }) {
     return (
       <div className="flex justify-end group">
         <div className="flex items-end gap-2 max-w-[85%] sm:max-w-[75%]">
-          <div className="rounded-2xl rounded-br-md bg-primary text-primary-text px-4 py-2.5 shadow-sm">
+          <div className="rounded-2xl rounded-br-md bg-secondary text-secondary-text px-4 py-2.5 shadow-sm">
             <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.content}</p>
           </div>
           <div className="w-7 h-7 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0 mb-0.5">

@@ -7,6 +7,7 @@ import { BrowserRouter } from "react-router-dom";
 import { store } from "./store/index.js";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { ToastProvider } from "./context/ToastContext.jsx";
+import { LogoutConfirmProvider } from "./context/LogoutConfirmContext.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -14,7 +15,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <BrowserRouter>
         <ToastProvider>
           <AuthProvider>
-            <App />
+            <LogoutConfirmProvider>
+              <App />
+            </LogoutConfirmProvider>
           </AuthProvider>
         </ToastProvider>
       </BrowserRouter>

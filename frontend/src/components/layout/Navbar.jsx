@@ -1,28 +1,28 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import { useLogoutConfirm } from "../../context/LogoutConfirmContext";
 import Button from "../ui/Button";
 import Popover from "../ui/Popover";
 import Avatar from "../ui/Avatar";
 import ThemeToggle from "../ThemeToggle";
-import { FiMenu, FiX } from "react-icons/fi";
+import UserMenuPanel from "./UserMenuPanel";
+import { getDashboardPath, getProfilePath } from "../../utils/authRoutes";
+import { FiMenu, FiX, FiMoreVertical } from "react-icons/fi";
 
 export default function Navbar({
-  variant = "default",
   onSidebarToggle,
   showSidebarToggle = false
 }) {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { requestLogout } = useLogoutConfirm();
+  const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const isSlim = variant === "slim";
 
-  // Close mobile menu on route change
   useEffect(() => {
     setMobileMenuOpen(false);
-  }, [navigate]);
+  }, [location.pathname]);
 
-  // Prevent body scroll when mobile menu is open
   useEffect(() => {
     if (mobileMenuOpen) {
       document.body.style.overflow = "hidden";
@@ -34,84 +34,47 @@ export default function Navbar({
     };
   }, [mobileMenuOpen]);
 
-  const handleLogout = async () => {
-    await logout();
-    navigate("/login");
-    setMobileMenuOpen(false);
-  };
-
-  const getDashboardLink = () => {
-    if (!user) return "/login";
-    switch (user.role) {
-      case "ADMIN":
-        return "/admin/overview";
-      case "LAWYER":
-        return "/lawyer/overview";
-      case "CLIENT":
-        return "/client/overview";
-      default:
-        return "/";
-    }
-  };
-
-  const getProfileLink = () => {
-    if (!user) return "/login";
-    switch (user.role) {
-      case "ADMIN":
-        return "/admin/settings";
-      case "LAWYER":
-        return "/lawyer/profile";
-      case "CLIENT":
-        return "/client/profile";
-      default:
-        return "/";
-    }
-  };
-
   const navLinks = [
     { to: user ? "/lawyers" : "/login", label: "Find Lawyers" },
     { to: "/pricing#pricing", label: "Pricing" },
     { to: "/pricing#testimonials", label: "Testimonials" },
   ];
 
-  const navHeightClass = isSlim ? "h-11 min-h-[44px]" : "h-14 min-h-[56px]";
-  const mobileMenuTop = isSlim ? "top-11" : "top-14";
+  const closeMobileMenu = () => setMobileMenuOpen(false);
+
+  const handleMobileLogout = () => {
+    closeMobileMenu();
+    requestLogout();
+  };
 
   return (
     <>
-      <nav
-        className={`flex justify-between items-center gap-2 sm:gap-3 ${navHeightClass} px-3 sm:px-4 md:px-5 border-b border-border bg-card sticky top-0 z-[100]`}
-      >
+      <nav className="flex justify-between items-center gap-2 sm:gap-3 h-14 min-h-[56px] px-3 sm:px-4 md:px-5 border-b border-border bg-card sticky top-0 z-[100]">
         <div className="flex items-center gap-2 min-w-0">
           {showSidebarToggle && (
             <button
               type="button"
               onClick={onSidebarToggle}
-              className="lg:hidden p-1.5 rounded-lg hover:bg-surface transition-colors text-text-primary shrink-0"
-              aria-label="Open navigation menu"
+              className="md:hidden p-1.5 rounded-lg hover:bg-surface transition-colors text-text-primary shrink-0"
+              aria-label="Open sidebar"
             >
               <FiMenu size={20} />
             </button>
           )}
           <Link
             to="/"
-            className={`font-bold text-text-primary no-underline truncate ${
-              isSlim ? "text-sm sm:text-base" : "text-lg md:text-xl"
-            }`}
+            className="font-bold text-text-primary no-underline truncate text-lg md:text-xl"
           >
             Lawyer Marketplace
           </Link>
         </div>
 
-        {/* Desktop Navigation */}
-        <div className={`hidden md:flex items-center flex-1 justify-end ${isSlim ? "gap-3 lg:gap-4" : "gap-6"}`}>
+        <div className="hidden md:flex items-center flex-1 justify-end gap-6">
           {navLinks.map((link) => (
             <Link
               key={link.to}
               to={link.to}
-              className={`text-text-secondary no-underline font-medium transition-colors hover:text-text-primary whitespace-nowrap ${
-                isSlim ? "text-xs lg:text-sm" : "text-sm"
-              }`}
+              className="text-text-secondary no-underline font-medium transition-colors hover:text-text-primary whitespace-nowrap text-sm"
             >
               {link.label}
             </Link>
@@ -123,45 +86,14 @@ export default function Navbar({
             <Popover
               trigger={
                 <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
-                  <Avatar
-                    user={user}
-                    size="sm"
-                    showBorder={false}
-                  />
+                  <Avatar user={user} size="sm" showBorder={false} />
                 </div>
               }
               placement="bottom-end"
               className="p-2"
             >
               <div className="min-w-[200px]">
-                <div className="px-4 py-3 border-b border-border">
-                  <div className="font-semibold text-text-primary text-sm">
-                    {user.fullName || "User"}
-                  </div>
-                  <div className="text-xs text-text-secondary mt-1">
-                    {user.email}
-                  </div>
-                </div>
-                <div className="py-1">
-                  <Link
-                    to={getDashboardLink()}
-                    className="block px-4 py-2 text-sm text-text-primary hover:bg-surface transition-colors rounded"
-                  >
-                    Dashboard
-                  </Link>
-                  <Link
-                    to={getProfileLink()}
-                    className="block px-4 py-2 text-sm text-text-primary hover:bg-surface transition-colors rounded"
-                  >
-                    Profile
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-sm text-danger hover:bg-surface transition-colors rounded"
-                  >
-                    Logout
-                  </button>
-                </div>
+                <UserMenuPanel />
               </div>
             </Popover>
           ) : (
@@ -172,61 +104,27 @@ export default function Navbar({
                 </Button>
               </Link>
               <Link to="/register">
-                <Button size="sm">
-                  Get Started
-                </Button>
+                <Button size="sm">Get Started</Button>
               </Link>
             </div>
           )}
         </div>
 
-        {/* Mobile Right Side - Theme Toggle, Avatar/Buttons, Menu Button */}
         <div className="flex items-center gap-2 sm:gap-3 md:hidden">
           <ThemeToggle />
-          
+
           {user ? (
             <Popover
               trigger={
                 <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
-                  <Avatar
-                    user={user}
-                    size="sm"
-                    showBorder={false}
-                  />
+                  <Avatar user={user} size="sm" showBorder={false} />
                 </div>
               }
               placement="bottom-end"
               className="p-2"
             >
               <div className="min-w-[200px]">
-                <div className="px-4 py-3 border-b border-border">
-                  <div className="font-semibold text-text-primary text-sm">
-                    {user.fullName || "User"}
-                  </div>
-                  <div className="text-xs text-text-secondary mt-1">
-                    {user.email}
-                  </div>
-                </div>
-                <div className="py-1">
-                  <Link
-                    to={getDashboardLink()}
-                    className="block px-4 py-2 text-sm text-text-primary hover:bg-surface transition-colors rounded"
-                  >
-                    Dashboard
-                  </Link>
-                  <Link
-                    to={getProfileLink()}
-                    className="block px-4 py-2 text-sm text-text-primary hover:bg-surface transition-colors rounded"
-                  >
-                    Profile
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-sm text-danger hover:bg-surface transition-colors rounded"
-                  >
-                    Logout
-                  </button>
-                </div>
+                <UserMenuPanel />
               </div>
             </Popover>
           ) : (
@@ -237,59 +135,61 @@ export default function Navbar({
             </Link>
           )}
 
-          {/* Marketing mobile menu — hidden when dashboard sidebar toggle is shown */}
-          {!showSidebarToggle && (
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-1.5 rounded-lg hover:bg-surface transition-colors text-text-primary"
-              aria-label="Toggle menu"
-            >
-              {mobileMenuOpen ? <FiX size={20} /> : <FiMenu size={20} />}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            className="p-1.5 rounded-lg hover:bg-surface transition-colors text-text-primary shrink-0"
+            aria-label={mobileMenuOpen ? "Close site menu" : "Open site menu"}
+            aria-expanded={mobileMenuOpen}
+          >
+            {mobileMenuOpen ? (
+              <FiX size={20} />
+            ) : showSidebarToggle ? (
+              <FiMoreVertical size={20} />
+            ) : (
+              <FiMenu size={20} />
+            )}
+          </button>
         </div>
       </nav>
 
-      {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-[99] md:hidden"
-          onClick={() => setMobileMenuOpen(false)}
+          className="fixed top-14 left-0 right-0 bottom-0 bg-black/50 z-[90] md:hidden"
+          onClick={closeMobileMenu}
+          aria-hidden="true"
         />
       )}
 
-      {/* Mobile Menu */}
       <div
         className={`
-          fixed ${mobileMenuTop} left-0 right-0
-          bg-card border-b border-border
-          z-[99]
+          fixed top-14 left-0 right-0
+          bg-card border-b border-border shadow-lg
+          z-[95]
           transition-transform duration-300 ease-in-out
           md:hidden
-          ${mobileMenuOpen ? "translate-y-0" : "-translate-y-full"}
-          max-h-[calc(100vh-44px)] overflow-y-auto
+          ${mobileMenuOpen ? "translate-y-0" : "-translate-y-full pointer-events-none"}
+          max-h-[calc(100vh-56px)] overflow-y-auto
         `}
       >
         <div className="px-4 py-4 space-y-1">
-          {/* Navigation Links */}
           {navLinks.map((link) => (
             <Link
               key={link.to}
               to={link.to}
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-4 py-3 rounded-lg text-text-primary no-underline text-sm font-medium hover:bg-surface transition-colors"
+              onClick={closeMobileMenu}
+              className="block px-4 py-3 rounded-lg text-text-primary no-underline text-sm font-medium hover:bg-surface-hover transition-colors"
             >
               {link.label}
             </Link>
           ))}
 
-          {/* Guest User Actions */}
-          {!user && (
+          {!showSidebarToggle && !user && (
             <>
               <div className="border-t border-border my-2" />
               <Link
                 to="/register"
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={closeMobileMenu}
                 className="block px-4 py-3 rounded-lg bg-primary text-primary-text no-underline text-sm font-medium text-center hover:opacity-90 transition-opacity"
               >
                 Get Started
@@ -297,27 +197,27 @@ export default function Navbar({
             </>
           )}
 
-          {/* Authenticated User Actions */}
-          {user && (
+          {!showSidebarToggle && user && (
             <>
               <div className="border-t border-border my-2" />
               <Link
-                to={getDashboardLink()}
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-4 py-3 rounded-lg text-text-primary no-underline text-sm font-medium hover:bg-surface transition-colors"
+                to={getDashboardPath(user.role)}
+                onClick={closeMobileMenu}
+                className="block px-4 py-3 rounded-lg text-text-primary no-underline text-sm font-medium hover:bg-surface-hover transition-colors"
               >
                 Dashboard
               </Link>
               <Link
-                to={getProfileLink()}
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-4 py-3 rounded-lg text-text-primary no-underline text-sm font-medium hover:bg-surface transition-colors"
+                to={getProfilePath(user.role)}
+                onClick={closeMobileMenu}
+                className="block px-4 py-3 rounded-lg text-text-primary no-underline text-sm font-medium hover:bg-surface-hover transition-colors"
               >
                 Profile
               </Link>
               <button
-                onClick={handleLogout}
-                className="w-full text-left px-4 py-3 rounded-lg text-danger text-sm font-medium hover:bg-surface transition-colors"
+                type="button"
+                onClick={handleMobileLogout}
+                className="w-full text-left px-4 py-3 rounded-lg text-danger text-sm font-medium hover:bg-surface-hover transition-colors"
               >
                 Logout
               </button>

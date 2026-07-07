@@ -74,7 +74,7 @@ export default function SessionList({
                   <div
                     className={`group relative flex items-center rounded-lg transition-colors ${
                       isActive
-                        ? "bg-primary/15 text-text-primary"
+                        ? "bg-surface-hover text-text"
                         : "hover:bg-surface-hover text-text-secondary hover:text-text-primary"
                     }`}
                   >

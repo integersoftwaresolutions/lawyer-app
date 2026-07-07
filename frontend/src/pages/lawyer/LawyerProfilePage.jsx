@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../hooks/useToast";
 import { constantsApi } from "../../services/constants.api";
-import { Card, Button, Input, Select, Textarea, ProfilePicture } from "../../components/ui";
-import AuthLayout, { FormSection, FormRow } from "../auth/AuthLayout";
+import { Card, Input, Select, Textarea, ProfilePicture, Badge, StickySaveBar } from "../../components/ui";
+import { FormSection, FormRow } from "../auth/AuthLayout";
 
 const BAR_COUNCILS = [
   { value: "Punjab Bar Council", label: "Punjab Bar Council" },
@@ -45,6 +45,7 @@ export default function LawyerProfilePage() {
   });
 
   const profileLoadInitiated = useRef(false);
+  const [savedSnapshot, setSavedSnapshot] = useState("");
 
   useEffect(() => {
     // Only load profile if it hasn't been merged into auth state yet (e.g. bootstrap fetch failed).
@@ -68,7 +69,7 @@ export default function LawyerProfilePage() {
 
   useEffect(() => {
     if (user) {
-      setFormData({
+      const next = {
         fullName: user.fullName || "",
         phone: user.phone || "",
         email: user.email || "",
@@ -84,9 +85,13 @@ export default function LawyerProfilePage() {
         hourlyRate: user.hourlyRate || 0,
         consultationFee: user.consultationFee || 0,
         bio: user.bio || "",
-      });
+      };
+      setFormData(next);
+      setSavedSnapshot(JSON.stringify(next));
     }
   }, [user]);
+
+  const isDirty = savedSnapshot !== "" && JSON.stringify(formData) !== savedSnapshot;
 
   const loadConstants = async () => {
     try {
@@ -119,6 +124,7 @@ export default function LawyerProfilePage() {
     
     try {
       await updateProfile(formData);
+      setSavedSnapshot(JSON.stringify(formData));
       toast.success("Profile updated successfully!");
     } catch (error) {
       toast.error(error.message || "Failed to save profile");
@@ -278,20 +284,25 @@ export default function LawyerProfilePage() {
                 Specializations <span className="text-danger">*</span>
               </label>
               <div className="flex flex-wrap gap-2">
-                {constants.specializations.map((spec) => (
-                  <button
-                    key={spec}
-                    type="button"
-                    onClick={() => handleSpecializationToggle(spec)}
-                    className={`py-2 px-4 rounded-full border text-xs transition-all ${
-                      formData.specialization.includes(spec)
-                        ? "border-primary bg-primary text-primary-text"
-                        : "border-border bg-card hover:bg-card-hover text-text-secondary"
-                    }`}
-                  >
-                    {spec}
-                  </button>
-                ))}
+                {constants.specializations.map((spec) => {
+                  const selected = formData.specialization.includes(spec);
+                  return (
+                    <button
+                      key={spec}
+                      type="button"
+                      onClick={() => handleSpecializationToggle(spec)}
+                      className="border-0 bg-transparent p-0"
+                    >
+                      <Badge
+                        variant={selected ? "primary" : "default"}
+                        size="sm"
+                        className={selected ? "cursor-pointer" : "cursor-pointer hover:border-primary hover:text-primary"}
+                      >
+                        {spec}
+                      </Badge>
+                    </button>
+                  );
+                })}
               </div>
               {formData.specialization.length === 0 && (
                 <p className="mt-1 text-xs text-danger">Please select at least one specialization</p>
@@ -303,20 +314,25 @@ export default function LawyerProfilePage() {
                 Languages
               </label>
               <div className="flex flex-wrap gap-2">
-                {LANGUAGES.map((lang) => (
-                  <button
-                    key={lang.value}
-                    type="button"
-                    onClick={() => handleLanguageToggle(lang.value)}
-                    className={`py-2 px-4 rounded-full border text-xs transition-all ${
-                      formData.languages.includes(lang.value)
-                        ? "border-primary bg-primary text-primary-text"
-                        : "border-border bg-card hover:bg-card-hover text-text-secondary"
-                    }`}
-                  >
-                    {lang.label}
-                  </button>
-                ))}
+                {LANGUAGES.map((lang) => {
+                  const selected = formData.languages.includes(lang.value);
+                  return (
+                    <button
+                      key={lang.value}
+                      type="button"
+                      onClick={() => handleLanguageToggle(lang.value)}
+                      className="border-0 bg-transparent p-0"
+                    >
+                      <Badge
+                        variant={selected ? "primary" : "default"}
+                        size="sm"
+                        className={selected ? "cursor-pointer" : "cursor-pointer hover:border-primary hover:text-primary"}
+                      >
+                        {lang.label}
+                      </Badge>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -361,14 +377,13 @@ export default function LawyerProfilePage() {
           </FormSection>
         </Card>
 
-        <div className="flex justify-end gap-3">
-          <Button type="button" variant="secondary" onClick={() => window.history.back()}>
-            Cancel
-          </Button>
-          <Button type="submit" loading={profileLoading}>
-            Save Profile
-          </Button>
-        </div>
+        <StickySaveBar
+          dirty={isDirty}
+          submitType="submit"
+          loading={profileLoading}
+          saveLabel="Save profile"
+          onCancel={() => window.history.back()}
+        />
       </form>
     </div>
   );
