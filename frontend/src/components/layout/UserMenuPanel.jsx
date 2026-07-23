@@ -27,14 +27,19 @@ export default function UserMenuPanel({ onNavigate }) {
         <div className="font-semibold text-text-primary text-sm truncate">
           {user.fullName || "User"}
         </div>
-        <div className="text-xs text-text-secondary mt-1 truncate">{user.email}</div>
+        <div className="flex items-center gap-2 mt-1">
+          <div className="text-xs text-text-secondary truncate">{user.email}</div>
+          {user.isEmailVerified ? (
+            <span className="shrink-0 text-[10px] font-medium text-success">Verified</span>
+          ) : null}
+        </div>
       </div>
       <div className="py-1">
         <Link to={getDashboardPath(user.role)} onClick={close} className={linkClass}>
           Dashboard
         </Link>
         <Link to={getProfilePath(user.role)} onClick={close} className={linkClass}>
-          Profile
+          Settings
         </Link>
         <button type="button" onClick={handleLogout} className={logoutClass}>
           Logout

@@ -3,11 +3,13 @@ import {
   FiAlertCircle,
   FiBookOpen,
   FiPlus,
+  FiEye,
   FiRefreshCcw,
   FiSearch,
   FiTrash2
 } from "react-icons/fi";
-import { Badge, Button } from "../../components/ui";
+import { Badge, Button, ConfirmModal, PageFilterActions, PageFilterField, PageFilterGrid, PageFilters, PageHeader, PageShell } from "../../components/ui";
+import RagDocumentViewModal from "../../components/ai/RagDocumentViewModal";
 import CaseLawUploadModal from "../../components/admin/CaseLawUploadModal";
 import { adminRagApi } from "../../services/ai.api";
 import { getErrorMessage } from "../../utils/errorHandler";
@@ -40,6 +42,8 @@ export default function AdminCaseLawPage() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uploadBusy, setUploadBusy] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [confirmDeleteItem, setConfirmDeleteItem] = useState(null);
+  const [viewItemId, setViewItemId] = useState(null);
 
   const totalIndexed = useMemo(() => items.filter((d) => d.status === "INDEXED").length, [items]);
   const totalChunks = useMemo(
@@ -98,15 +102,14 @@ export default function AdminCaseLawPage() {
     }
   }
 
-  async function handleDelete(item) {
-    if (!window.confirm(`Delete "${item.title}"? This will remove its embeddings from the corpus.`)) {
-      return;
-    }
-    setDeletingId(item.id);
+  async function handleDelete() {
+    if (!confirmDeleteItem) return;
+    setDeletingId(confirmDeleteItem.id);
     setError(null);
     try {
-      await adminRagApi.deleteCaseLaw(item.id);
-      setItems((prev) => prev.filter((d) => d.id !== item.id));
+      await adminRagApi.deleteCaseLaw(confirmDeleteItem.id);
+      setItems((prev) => prev.filter((d) => d.id !== confirmDeleteItem.id));
+      setConfirmDeleteItem(null);
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -115,34 +118,28 @@ export default function AdminCaseLawPage() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0">
-            <FiBookOpen className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-lg sm:text-xl font-bold text-text-primary truncate">Case Law</h1>
-            <p className="text-xs text-text-muted">
-              Pakistani judgment corpus · shared across all lawyer accounts
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="secondary"
-            icon={FiRefreshCcw}
-            size="sm"
-            onClick={() => load(appliedFilters)}
-            disabled={loading}
-          >
-            Refresh
-          </Button>
-          <Button icon={FiPlus} size="sm" onClick={() => setUploadOpen(true)}>
-            Ingest judgment
-          </Button>
-        </div>
-      </div>
+    <PageShell>
+      <PageHeader
+        icon={FiBookOpen}
+        title="Case Law"
+        subtitle="Pakistani judgment corpus · shared across all lawyer accounts"
+        actions={
+          <>
+            <Button
+              variant="secondary"
+              icon={FiRefreshCcw}
+              size="sm"
+              onClick={() => load(appliedFilters)}
+              disabled={loading}
+            >
+              Refresh
+            </Button>
+            <Button icon={FiPlus} size="sm" onClick={() => setUploadOpen(true)}>
+              Ingest judgment
+            </Button>
+          </>
+        }
+      />
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <Stat label="Judgments" value={meta.total ?? items.length} />
@@ -150,84 +147,76 @@ export default function AdminCaseLawPage() {
         <Stat label="Indexed chunks" value={totalChunks} />
       </div>
 
-      <form onSubmit={applyFilters} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 items-end">
-        <div className="lg:col-span-2">
-          <label className="block text-[11px] font-semibold uppercase tracking-wide text-text-muted mb-1">
-            Search
-          </label>
-          <div className="relative">
-            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-            <input
-              value={filters.q}
-              onChange={(e) => setFilters({ ...filters, q: e.target.value })}
-              placeholder="Title, citation, case reference…"
-              className="w-full h-9 pl-9 pr-3 rounded-md border border-input-border bg-input-background text-sm outline-none focus:border-primary/50"
-            />
-          </div>
-        </div>
-        <div>
-          <label className="block text-[11px] font-semibold uppercase tracking-wide text-text-muted mb-1">
-            Court
-          </label>
-          <select
-            value={filters.court}
-            onChange={(e) => setFilters({ ...filters, court: e.target.value })}
-            className="w-full h-9 px-2 rounded-md border border-input-border bg-input-background text-sm outline-none"
-          >
-            <option value="">Any</option>
-            {COURTS.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-[11px] font-semibold uppercase tracking-wide text-text-muted mb-1">
-            Year from
-          </label>
-          <input
-            type="number"
-            value={filters.yearFrom}
-            onChange={(e) => setFilters({ ...filters, yearFrom: e.target.value })}
-            min={1900}
-            max={2100}
-            className="w-full h-9 px-2 rounded-md border border-input-border bg-input-background text-sm outline-none"
-          />
-        </div>
-        <div>
-          <label className="block text-[11px] font-semibold uppercase tracking-wide text-text-muted mb-1">
-            Year to
-          </label>
-          <input
-            type="number"
-            value={filters.yearTo}
-            onChange={(e) => setFilters({ ...filters, yearTo: e.target.value })}
-            min={1900}
-            max={2100}
-            className="w-full h-9 px-2 rounded-md border border-input-border bg-input-background text-sm outline-none"
-          />
-        </div>
-        <div className="lg:col-span-5 flex items-center gap-2">
-          <Button type="submit" size="sm" variant="secondary">
-            Apply filters
-          </Button>
-          {(appliedFilters.q || appliedFilters.court || appliedFilters.yearFrom || appliedFilters.yearTo) && (
-            <Button type="button" size="sm" variant="ghost" onClick={clearFilters}>
-              Clear
+      <PageFilters>
+        <form onSubmit={applyFilters}>
+          <PageFilterGrid columns={5}>
+            <PageFilterField label="Search" className="lg:col-span-2">
+              <div className="relative">
+                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+                <input
+                  value={filters.q}
+                  onChange={(e) => setFilters({ ...filters, q: e.target.value })}
+                  placeholder="Title, citation, case reference…"
+                  className="w-full h-9 pl-9 pr-3 rounded-md border border-input-border bg-input-background text-input-text text-sm outline-none focus:border-primary"
+                />
+              </div>
+            </PageFilterField>
+            <PageFilterField label="Court">
+              <select
+                value={filters.court}
+                onChange={(e) => setFilters({ ...filters, court: e.target.value })}
+                className="w-full h-9 px-2 rounded-md border border-input-border bg-input-background text-input-text text-sm outline-none"
+              >
+                <option value="">Any</option>
+                {COURTS.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </PageFilterField>
+            <PageFilterField label="Year from">
+              <input
+                type="number"
+                value={filters.yearFrom}
+                onChange={(e) => setFilters({ ...filters, yearFrom: e.target.value })}
+                min={1900}
+                max={2100}
+                className="w-full h-9 px-2 rounded-md border border-input-border bg-input-background text-input-text text-sm outline-none"
+              />
+            </PageFilterField>
+            <PageFilterField label="Year to">
+              <input
+                type="number"
+                value={filters.yearTo}
+                onChange={(e) => setFilters({ ...filters, yearTo: e.target.value })}
+                min={1900}
+                max={2100}
+                className="w-full h-9 px-2 rounded-md border border-input-border bg-input-background text-input-text text-sm outline-none"
+              />
+            </PageFilterField>
+          </PageFilterGrid>
+          <PageFilterActions className="mt-3">
+            <Button type="submit" size="sm" variant="secondary">
+              Apply filters
             </Button>
-          )}
-        </div>
-      </form>
+            {(appliedFilters.q || appliedFilters.court || appliedFilters.yearFrom || appliedFilters.yearTo) && (
+              <Button type="button" size="sm" variant="ghost" onClick={clearFilters}>
+                Clear
+              </Button>
+            )}
+          </PageFilterActions>
+        </form>
+      </PageFilters>
 
       {error && (
-        <div className="flex items-start gap-2 rounded-lg p-3 text-sm bg-danger/10 text-danger border border-danger/20">
+        <div className="flex items-start gap-2 rounded-lg p-3 text-sm bg-danger-light text-danger border border-danger">
           <FiAlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
           <div className="flex-1 min-w-0">
-            <p className="break-words">{error}</p>
+            <p className="break-words m-0">{error}</p>
           </div>
         </div>
       )}
 
-      <div className="border border-card-border rounded-xl bg-card overflow-hidden">
+      <div className="border border-card-border rounded-xl bg-card overflow-hidden shadow-sm">
         {loading ? (
           <SkeletonRows />
         ) : items.length === 0 ? (
@@ -237,9 +226,9 @@ export default function AdminCaseLawPage() {
             {items.map((item) => (
               <li
                 key={item.id}
-                className="p-4 flex items-start gap-3 hover:bg-surface-hover/40 transition-colors"
+                className="p-4 flex items-start gap-3 hover:bg-surface-hover transition-colors"
               >
-                <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-lg bg-primary-light text-primary flex items-center justify-center shrink-0">
                   <FiBookOpen className="w-5 h-5" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -269,15 +258,25 @@ export default function AdminCaseLawPage() {
                     )}
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleDelete(item)}
-                  disabled={deletingId === item.id}
-                  className="p-2 rounded-lg text-text-muted hover:text-danger hover:bg-danger/10 disabled:opacity-50 transition-colors shrink-0"
-                  aria-label={`Delete ${item.title}`}
-                >
-                  <FiTrash2 className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setViewItemId(item.id)}
+                    className="p-2 rounded-lg text-text-muted hover:text-primary hover:bg-primary/10 transition-colors"
+                    aria-label={`View ${item.title}`}
+                  >
+                    <FiEye className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDeleteItem(item)}
+                    disabled={deletingId === item.id}
+                    className="p-2 rounded-lg text-text-muted hover:text-danger hover:bg-danger/10 disabled:opacity-50 transition-colors"
+                    aria-label={`Delete ${item.title}`}
+                  >
+                    <FiTrash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
@@ -290,7 +289,31 @@ export default function AdminCaseLawPage() {
         onSubmit={handleUpload}
         busy={uploadBusy}
       />
-    </div>
+      <RagDocumentViewModal
+        isOpen={!!viewItemId}
+        onClose={() => setViewItemId(null)}
+        documentId={viewItemId}
+        fetchDocument={adminRagApi.getCaseLaw}
+        variant="case-law"
+      />
+      <ConfirmModal
+        isOpen={!!confirmDeleteItem}
+        onClose={() => setConfirmDeleteItem(null)}
+        onConfirm={handleDelete}
+        title="Delete case law entry permanently?"
+        confirmLabel="Delete permanently"
+        confirmVariant="danger"
+        loading={!!confirmDeleteItem && deletingId === confirmDeleteItem.id}
+      >
+        <p className="text-text-secondary mt-0 mb-0">
+          This will permanently delete{" "}
+          <span className="font-semibold text-text-primary">&quot;{confirmDeleteItem?.title}&quot;</span>{" "}
+          from
+          the shared corpus and remove its embeddings from AI retrieval for all lawyers. This action
+          cannot be undone.
+        </p>
+      </ConfirmModal>
+    </PageShell>
   );
 }
 

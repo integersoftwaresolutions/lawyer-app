@@ -22,6 +22,7 @@ const BookingSchema = new mongoose.Schema(
     notes: { type: String, default: "" },
     cancelReason: { type: String, default: "" },
     cancelledBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    reminderMinutesSent: { type: [Number], default: [] },
     deletedByClient: { type: Boolean, default: false, index: true },
     deletedByLawyer: { type: Boolean, default: false, index: true }
   },

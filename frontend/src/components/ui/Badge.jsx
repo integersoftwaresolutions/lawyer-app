@@ -1,7 +1,8 @@
 export default function Badge({ 
   children, 
   variant = "default",
-  size = "md",
+  size = "sm",
+  bordered = false,
   className = "",
   ...props 
 }) {
@@ -15,18 +16,32 @@ export default function Badge({
   };
 
   const variantClasses = {
-    default: "border border-border text-text-secondary bg-surface",
-    primary: "border border-primary text-primary bg-primary-light",
-    secondary: "border border-secondary text-secondary bg-secondary-light",
-    accent: "border border-accent text-accent bg-accent-light",
-    success: "border border-success text-success bg-success-light",
-    warning: "border border-warning text-warning bg-warning-light",
-    danger: "border border-danger text-danger bg-danger-light",
-    info: "border border-info text-info bg-info-light",
+    default: "text-text-secondary bg-surface",
+    primary: "text-primary bg-primary-light",
+    secondary: "text-secondary bg-secondary-light",
+    accent: "text-accent bg-accent-light",
+    success: "text-success bg-success-light",
+    warning: "text-warning bg-warning-light",
+    danger: "text-danger bg-danger-light",
+    info: "text-info bg-info-light",
+  };
+
+  const borderedClasses = {
+    default: "border border-border",
+    primary: "border border-primary",
+    secondary: "border border-secondary",
+    accent: "border border-accent",
+    success: "border border-success",
+    warning: "border border-warning",
+    danger: "border border-danger",
+    info: "border border-info",
   };
 
   return (
-    <span className={`${baseClasses} ${sizeClasses[size]} ${variantClasses[variant]} ${className}`} {...props}>
+    <span
+      className={`${baseClasses} ${sizeClasses[size]} ${variantClasses[variant]} ${bordered ? borderedClasses[variant] : ""} ${className}`}
+      {...props}
+    >
       {children}
     </span>
   );

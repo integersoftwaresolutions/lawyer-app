@@ -6,6 +6,7 @@ import Wallet from "../models/Wallet.js";
 import AdminSetting from "../models/AdminSetting.js";
 import { signAccessToken, signRefreshToken, verifyRefreshToken, hashToken, compareToken } from "./token.service.js";
 import * as otpService from "./otp.service.js";
+import { notifyEmailVerified, notifyPasswordChanged } from "../notifications/triggers/auth.notifications.js";
 
 async function ensureAdminSetting() {
   const existing = await AdminSetting.findOne();
@@ -76,20 +77,19 @@ export async function register({ role, email, password, fullName }) {
 }
 
 export async function login({ email, password }) {
-  const user = await User.findOne({ email });
+  const normalizedEmail = email.toLowerCase();
+  const user = await User.findOne({ email: normalizedEmail });
   if (!user) throw new ApiError(401, "Invalid credentials");
 
   const ok = await user.comparePassword(password);
   if (!ok) throw new ApiError(401, "Invalid credentials");
 
-  // If email is not verified, automatically send OTP
   if (!user.isEmailVerified) {
     try {
-      await otpService.sendOtp(email, "EMAIL_VERIFICATION");
-      console.log(`✅ Login: OTP sent to unverified email ${email}`);
+      await otpService.sendOtp(normalizedEmail, "EMAIL_VERIFICATION");
+      console.log(`✅ Login: OTP sent to unverified email ${normalizedEmail}`);
     } catch (error) {
-      console.error(`❌ Login: Failed to send OTP to ${email}:`, error.message);
-      // Don't fail login - user can request resend on verify page
+      console.error(`❌ Login: Failed to send OTP to ${normalizedEmail}:`, error.message);
     }
   }
 
@@ -137,18 +137,20 @@ export async function logout(userId) {
 }
 
 export async function sendOtp(email) {
-  const user = await User.findOne({ email });
+  const normalizedEmail = email.toLowerCase();
+  const user = await User.findOne({ email: normalizedEmail });
   if (!user) {
     throw new ApiError(404, "User not found");
   }
   if (user.isEmailVerified) {
     throw new ApiError(400, "Email already verified");
   }
-  return otpService.sendOtp(email, "EMAIL_VERIFICATION");
+  return otpService.sendOtp(normalizedEmail, "EMAIL_VERIFICATION");
 }
 
 export async function verifyOtp(email, code) {
-  const user = await User.findOne({ email });
+  const normalizedEmail = email.toLowerCase();
+  const user = await User.findOne({ email: normalizedEmail });
   if (!user) {
     throw new ApiError(404, "User not found");
   }
@@ -156,23 +158,96 @@ export async function verifyOtp(email, code) {
     throw new ApiError(400, "Email already verified");
   }
 
-  // Verify the OTP
-  await otpService.verifyOtp(email, code, "EMAIL_VERIFICATION");
+  await otpService.verifyOtp(normalizedEmail, code, "EMAIL_VERIFICATION");
 
-  // Mark email as verified
   user.isEmailVerified = true;
   await user.save();
+
+  notifyEmailVerified(user);
+
+  return {
+    success: true,
+    user: {
+      id: user._id.toString(),
+      email: user.email,
+      role: user.role,
+      isEmailVerified: true
+    }
+  };
+}
+
+export async function resendOtp(email) {
+  const normalizedEmail = email.toLowerCase();
+  const user = await User.findOne({ email: normalizedEmail });
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+  if (user.isEmailVerified) {
+    throw new ApiError(400, "Email already verified");
+  }
+  return otpService.resendOtp(normalizedEmail, "EMAIL_VERIFICATION");
+}
+
+export async function forgotPassword(email) {
+  const user = await User.findOne({ email: email.toLowerCase() });
+  // Always return success to avoid email enumeration
+  if (!user) {
+    return { success: true };
+  }
+
+  try {
+    await otpService.sendOtp(email, "PASSWORD_RESET");
+  } catch (error) {
+    console.error(`Failed to send password reset OTP to ${email}:`, error.message);
+  }
 
   return { success: true };
 }
 
-export async function resendOtp(email) {
-  const user = await User.findOne({ email });
+export async function resetPassword({ email, code, newPassword }) {
+  if (newPassword.length < 6) {
+    throw new ApiError(400, "Password must be at least 6 characters");
+  }
+
+  const user = await User.findOne({ email: email.toLowerCase() });
   if (!user) {
-    throw new ApiError(404, "User not found");
+    throw new ApiError(400, "Invalid or expired verification code");
   }
-  if (user.isEmailVerified) {
-    throw new ApiError(400, "Email already verified");
+
+  await otpService.verifyOtp(email, code, "PASSWORD_RESET");
+
+  user.passwordHash = await User.hashPassword(newPassword);
+  user.refreshTokenHash = null;
+  await user.save();
+
+  notifyPasswordChanged(user);
+
+  return { success: true };
+}
+
+export async function changePassword({ userId, currentPassword, newPassword }) {
+  const user = await User.findById(userId);
+  if (!user) throw new ApiError(404, "User not found");
+
+  const currentPasswordMatches = await user.comparePassword(currentPassword);
+  if (!currentPasswordMatches) {
+    throw new ApiError(400, "Current password is incorrect");
   }
-  return otpService.resendOtp(email, "EMAIL_VERIFICATION");
+
+  const isSamePassword = await user.comparePassword(newPassword);
+  if (isSamePassword) {
+    throw new ApiError(400, "New password must be different from current password");
+  }
+
+  user.passwordHash = await User.hashPassword(newPassword);
+  user.refreshTokenHash = null;
+  await user.save();
+
+  notifyPasswordChanged(user);
+
+  return { success: true };
+}
+
+export async function resendPasswordResetOtp(email) {
+  return forgotPassword(email);
 }

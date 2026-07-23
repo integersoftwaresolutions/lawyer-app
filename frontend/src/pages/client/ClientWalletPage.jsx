@@ -9,8 +9,9 @@ import {
   FiClock,
 } from "react-icons/fi";
 import { walletApi } from "../../services/wallet.api";
-import { Card, Button, Input, Modal, StateHandler, Table, Badge } from "../../components/ui";
+import { Card, Button, Input, Modal, StateHandler, Table, Badge, PageHeader, PageShell } from "../../components/ui";
 import { useStateHandler } from "../../hooks/useStateHandler";
+import { useToast } from "../../hooks/useToast";
 
 const CREDIT_PACKAGES = [
   { credits: 10, price: "$9.99", popular: false },
@@ -44,6 +45,7 @@ export default function ClientWalletPage() {
   const [topupAmount, setTopupAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const toast = useToast();
 
   const { loading, error, data, retry: retryWallet } = useStateHandler(async () => {
     const res = await walletApi.me();
@@ -66,7 +68,7 @@ export default function ClientWalletPage() {
       setRefreshKey((k) => k + 1);
     } catch (err) {
       console.error("Failed to delete history:", err);
-      alert(err.response?.data?.message || "Failed to delete history");
+      toast.error(err.response?.data?.message || "Failed to delete history");
     } finally {
       setSubmitting(false);
     }
@@ -75,7 +77,7 @@ export default function ClientWalletPage() {
   const handleTopup = async () => {
     const amount = parseInt(topupAmount, 10);
     if (!amount || amount <= 0) {
-      alert("Please enter a valid amount");
+      toast.error("Please enter a valid amount");
       return;
     }
 
@@ -88,7 +90,7 @@ export default function ClientWalletPage() {
       setRefreshKey((k) => k + 1);
     } catch (err) {
       console.error("Failed to topup:", err);
-      alert(err.response?.data?.message || "Failed to topup");
+      toast.error(err.response?.data?.message || "Failed to topup");
     } finally {
       setSubmitting(false);
     }
@@ -110,34 +112,23 @@ export default function ClientWalletPage() {
 
   return (
     <StateHandler loading={loading} error={error} retry={retryWallet}>
-      <div className="flex flex-col min-h-0">
-        {/* Page header */}
-        <div className="shrink-0 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4 sm:mb-6">
-          <div className="flex items-start gap-3 min-w-0">
-            <div className="p-2 rounded-xl bg-primary-light text-primary shrink-0">
-              <FiCreditCard className="w-5 h-5" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-lg sm:text-xl font-bold text-text-primary leading-tight m-0">
-                Wallet & Credits
-              </h1>
-              <p className="text-xs sm:text-sm text-text-muted mt-1 mb-0 max-w-2xl">
-                Top up credits, track your balance, and review purchase history for consultations.
-              </p>
-            </div>
-          </div>
-          <Button
-            size="sm"
-            icon={FiShoppingCart}
-            className="shrink-0 self-start sm:self-center"
-            onClick={() => openTopup("")}
-          >
-            Custom amount
-          </Button>
-        </div>
+      <PageShell>
+        <PageHeader
+          icon={FiCreditCard}
+          title="Wallet & Credits"
+          subtitle="Top up credits, track your balance, and review purchase history for consultations"
+          actions={
+            <Button
+              size="sm"
+              icon={FiShoppingCart}
+              onClick={() => openTopup("")}
+            >
+              Custom amount
+            </Button>
+          }
+        />
 
-        {/* Balance summary */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5 sm:mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Card padding="p-4 sm:p-5" className="flex items-center gap-4">
             <div className="p-2.5 rounded-xl bg-primary-light text-primary shrink-0">
               <FiCreditCard className="w-5 h-5" />
@@ -163,7 +154,7 @@ export default function ClientWalletPage() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-5 sm:mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Credit packages */}
           <Card
             title="Purchase credits"
@@ -240,14 +231,8 @@ export default function ClientWalletPage() {
           </Card>
         </div>
 
-        {/* Purchase history */}
-        <Card
-          title="Purchase history"
-          subtitle="Recent top-ups and consultation charges"
-          padding="p-4 sm:p-5"
-        >
-          <Table
-            columns={[
+        <Table
+          columns={[
               {
                 key: "createdAt",
                 label: "Date",
@@ -302,7 +287,6 @@ export default function ClientWalletPage() {
             dependencies={[refreshKey]}
             emptyMessage="No transactions yet"
           />
-        </Card>
 
         <Modal
           isOpen={deleteModal.open}
@@ -351,7 +335,7 @@ export default function ClientWalletPage() {
             Credits are added to your balance immediately after confirmation.
           </p>
         </Modal>
-      </div>
+      </PageShell>
     </StateHandler>
   );
 }

@@ -3,7 +3,17 @@ import { validate } from "../middlewares/validate.middleware.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
 import { uploadSingle } from "../middlewares/upload.middleware.js";
 import * as authCtrl from "../controllers/auth.controller.js";
-import { registerSchema, loginSchema, refreshSchema, sendOtpSchema, verifyOtpSchema, resendOtpSchema } from "../validators/auth.validators.js";
+import {
+  registerSchema,
+  loginSchema,
+  refreshSchema,
+  sendOtpSchema,
+  verifyOtpSchema,
+  resendOtpSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  changePasswordSchema
+} from "../validators/auth.validators.js";
 
 const r = Router();
 
@@ -14,6 +24,15 @@ r.post("/refresh", validate(refreshSchema), authCtrl.refresh);
 r.post("/send-otp", validate(sendOtpSchema), authCtrl.sendOtp);
 r.post("/verify-otp", validate(verifyOtpSchema), authCtrl.verifyOtp);
 r.post("/resend-otp", validate(resendOtpSchema), authCtrl.resendOtp);
+
+r.post("/forgot-password", validate(forgotPasswordSchema), authCtrl.forgotPassword);
+r.post("/reset-password", validate(resetPasswordSchema), authCtrl.resetPassword);
+r.post(
+  "/change-password",
+  authMiddleware,
+  validate(changePasswordSchema),
+  authCtrl.changePassword
+);
 
 r.get("/me", authMiddleware, authCtrl.me);
 r.post("/logout", authMiddleware, authCtrl.logout);

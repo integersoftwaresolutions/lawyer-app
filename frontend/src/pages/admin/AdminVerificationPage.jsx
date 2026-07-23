@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { adminApi } from "../../services/admin.api";
 import { getProfilePictureUrl } from "../../utils/profilePicture";
-import { Card, Button, Badge, Modal, Textarea, Select, StateHandler } from "../../components/ui";
+import { Button, Badge, Modal, Textarea, Select, StateHandler, PageHeader, PageShell } from "../../components/ui";
 import { useToast } from "../../hooks/useToast";
 import { useStateHandler } from "../../hooks/useStateHandler";
 import { 
@@ -100,132 +100,134 @@ export default function AdminVerificationPage() {
 
   return (
     <StateHandler loading={loading} error={error} retry={retry}>
-      <div>
-      <Card className="mb-6">
-        <div className="mb-5">
-          <h2 className="text-2xl font-bold text-text-primary mb-2 flex items-center gap-2">
-            <FiShield className="w-6 h-6 text-primary" />
-            Pending Verifications
-          </h2>
-          <p className="text-text-secondary m-0">
-            Review and approve lawyer verification requests. Verify documents before making a decision.
+      <PageShell>
+        <PageHeader
+          icon={FiShield}
+          title="Pending Verifications"
+          subtitle="Review and approve lawyer verification requests. Verify documents before making a decision."
+        />
+
+      {pendingLawyers.length === 0 ? (
+        <div className="rounded-xl border border-card-border bg-card text-center py-16 px-6">
+          <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-success-light text-success flex items-center justify-center">
+            <FiCheckCircle className="w-7 h-7" />
+          </div>
+          <p className="text-lg font-medium text-text-primary mb-2">No pending verifications</p>
+          <p className="text-sm text-text-secondary m-0">
+            All lawyer verification requests have been processed.
           </p>
         </div>
-
-        {pendingLawyers.length === 0 ? (
-          <div className="text-center py-16 text-text-secondary">
-            <FiCheckCircle className="w-16 h-16 mx-auto mb-4 text-success opacity-50" />
-            <p className="text-lg font-medium mb-2">No pending verifications</p>
-            <p className="text-sm">
-              All lawyer verification requests have been processed.
-            </p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-4">
-            {pendingLawyers.map((lawyer) => (
-              <Card key={lawyer._id} className="border-l-4 border-warning">
-                <div className="flex justify-between items-start gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                        <FiUser className="w-6 h-6" />
+      ) : (
+        <ul className="flex flex-col gap-3 m-0 p-0 list-none">
+          {pendingLawyers.map((lawyer) => (
+            <li
+              key={lawyer._id}
+              className="rounded-xl border border-card-border bg-card p-4 sm:p-5"
+            >
+              <div className="flex flex-col lg:flex-row lg:items-start gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="w-11 h-11 rounded-xl bg-primary-light text-primary flex items-center justify-center shrink-0">
+                      <FiUser className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <h3 className="text-base font-semibold text-text-primary m-0 truncate">
+                          {lawyer.fullName || "N/A"}
+                        </h3>
+                        <Badge variant="warning" size="sm">Pending</Badge>
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-lg font-semibold text-text-primary m-0">
-                            {lawyer.fullName || "N/A"}
-                          </h3>
-                          <Badge variant="warning" size="sm">Pending</Badge>
-                        </div>
+                      {lawyer.barCouncilNumber && (
                         <p className="text-sm text-text-secondary m-0">
-                          {lawyer.barCouncilNumber && `Bar Council: ${lawyer.barCouncilNumber}`}
+                          Bar Council: {lawyer.barCouncilNumber}
                         </p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                      <div className="flex items-center gap-2 text-sm">
-                        <FiMail className="w-4 h-4 text-text-secondary" />
-                        <span className="text-text-secondary">{lawyer.userId?.email || "N/A"}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <FiMapPin className="w-4 h-4 text-text-secondary" />
-                        <span className="text-text-secondary">{lawyer.city || "Not specified"}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <FiBriefcase className="w-4 h-4 text-text-secondary" />
-                        <span className="text-text-secondary">{lawyer.experienceYears || 0} years</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <FiDollarSign className="w-4 h-4 text-text-secondary" />
-                        <span className="text-text-secondary">${lawyer.hourlyRate || 0}/hr</span>
-                      </div>
-                    </div>
-
-                    {lawyer.specialization && lawyer.specialization.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {lawyer.specialization.map((spec) => (
-                          <Badge key={spec} size="sm" variant="secondary">{spec}</Badge>
-                        ))}
-                      </div>
-                    )}
-
-                    <div className="flex items-center gap-2 text-sm text-text-secondary">
-                      <FiCalendar className="w-4 h-4" />
-                      <span>Registered: {formatDate(lawyer.createdAt)}</span>
-                      {lawyer.documentCount !== undefined && (
-                        <>
-                          <span>•</span>
-                          <span>{lawyer.documentCount} document(s) uploaded</span>
-                          <span>•</span>
-                          <span>{lawyer.approvedDocuments || 0} approved</span>
-                        </>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-2 flex-shrink-0">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => loadLawyerDocuments(lawyer.userId?._id || lawyer.userId)}
-                      loading={loadingDocs}
-                      className="flex items-center gap-1"
-                    >
-                      <FiEye className="w-4 h-4" />
-                      View Documents
-                    </Button>
-                    <Button
-                      variant="success"
-                      size="sm"
-                      onClick={() => {
-                        setVerifyData({ status: "APPROVED", notes: "" });
-                        setVerifyModal({ open: true, lawyer });
-                      }}
-                      className="flex items-center gap-1"
-                    >
-                      <FiCheckCircle className="w-4 h-4" />
-                      Approve
-                    </Button>
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      onClick={() => {
-                        setVerifyData({ status: "REJECTED", notes: "" });
-                        setVerifyModal({ open: true, lawyer });
-                      }}
-                      className="flex items-center gap-1"
-                    >
-                      <FiXCircle className="w-4 h-4" />
-                      Reject
-                    </Button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+                    <div className="flex items-center gap-2 text-sm min-w-0">
+                      <FiMail className="w-4 h-4 text-text-muted shrink-0" />
+                      <span className="text-text-secondary truncate">{lawyer.userId?.email || "N/A"}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <FiMapPin className="w-4 h-4 text-text-muted shrink-0" />
+                      <span className="text-text-secondary">{lawyer.city || "Not specified"}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <FiBriefcase className="w-4 h-4 text-text-muted shrink-0" />
+                      <span className="text-text-secondary">{lawyer.experienceYears || 0} years</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <FiDollarSign className="w-4 h-4 text-text-muted shrink-0" />
+                      <span className="text-text-secondary">${lawyer.hourlyRate || 0}/hr</span>
+                    </div>
+                  </div>
+
+                  {lawyer.specialization && lawyer.specialization.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {lawyer.specialization.map((spec) => (
+                        <Badge key={spec} size="sm" variant="secondary">{spec}</Badge>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-muted">
+                    <FiCalendar className="w-3.5 h-3.5" />
+                    <span>Registered: {formatDate(lawyer.createdAt)}</span>
+                    {lawyer.documentCount !== undefined && (
+                      <>
+                        <span aria-hidden="true">·</span>
+                        <span>{lawyer.documentCount} document(s) uploaded</span>
+                        <span aria-hidden="true">·</span>
+                        <span>{lawyer.approvedDocuments || 0} approved</span>
+                      </>
+                    )}
                   </div>
                 </div>
-              </Card>
-            ))}
-          </div>
-        )}
-      </Card>
+
+                <div className="flex flex-row lg:flex-col gap-2 shrink-0 lg:w-40">
+                  <Button
+                    variant="primary"
+                    outline
+                    size="sm"
+                    icon={FiEye}
+                    onClick={() => loadLawyerDocuments(lawyer.userId?._id || lawyer.userId)}
+                    loading={loadingDocs}
+                    className="flex-1 lg:flex-none"
+                  >
+                    View Documents
+                  </Button>
+                  <Button
+                    variant="success"
+                    size="sm"
+                    icon={FiCheckCircle}
+                    onClick={() => {
+                      setVerifyData({ status: "APPROVED", notes: "" });
+                      setVerifyModal({ open: true, lawyer });
+                    }}
+                    className="flex-1 lg:flex-none"
+                  >
+                    Approve
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    icon={FiXCircle}
+                    onClick={() => {
+                      setVerifyData({ status: "REJECTED", notes: "" });
+                      setVerifyModal({ open: true, lawyer });
+                    }}
+                    className="flex-1 lg:flex-none"
+                  >
+                    Reject
+                  </Button>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {/* Verification Modal */}
       <Modal
@@ -259,9 +261,9 @@ export default function AdminVerificationPage() {
         }
       >
         <div className="space-y-4">
-          <div className="p-3 bg-warning/10 border border-warning/20 rounded-lg">
+          <div className="p-3 bg-warning-light border border-warning rounded-lg">
             <div className="flex items-start gap-2">
-              <FiAlertCircle className="w-5 h-5 text-warning mt-0.5 flex-shrink-0" />
+              <FiAlertCircle className="w-5 h-5 text-warning mt-0.5 shrink-0" />
               <p className="text-sm text-text-secondary m-0">
                 {verifyData.status === "APPROVED" 
                   ? "This will approve the lawyer and allow them to receive bookings."
@@ -297,34 +299,43 @@ export default function AdminVerificationPage() {
         size="large"
       >
         {documentsModal.documents.length === 0 ? (
-          <div className="text-center py-8 text-text-secondary">
-            <FiFile className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>No documents uploaded yet</p>
+          <div className="text-center py-8">
+            <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-surface text-text-muted flex items-center justify-center">
+              <FiFile className="w-6 h-6" />
+            </div>
+            <p className="text-text-secondary m-0">No documents uploaded yet</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <ul className="space-y-3 m-0 p-0 list-none">
             {documentsModal.documents.map((doc) => (
-              <Card key={doc._id} className="border-l-4 border-primary">
+              <li
+                key={doc._id}
+                className="rounded-xl border border-card-border bg-surface p-4"
+              >
                 <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <FiFile className="w-5 h-5 text-primary" />
-                      <h4 className="text-base font-semibold text-text-primary m-0">
-                        {doc.documentType.replace(/_/g, " ")}
-                      </h4>
-                      {getDocumentStatusBadge(doc.status)}
+                  <div className="flex items-start gap-3 min-w-0 flex-1">
+                    <div className="w-10 h-10 rounded-lg bg-primary-light text-primary flex items-center justify-center shrink-0">
+                      <FiFile className="w-5 h-5" />
                     </div>
-                    <p className="text-sm text-text-secondary m-0 mb-2">
-                      Uploaded: {formatDate(doc.createdAt)}
-                    </p>
-                    {doc.adminNotes && (
-                      <p className="text-sm text-text-secondary m-0">
-                        <strong>Admin Note:</strong> {doc.adminNotes}
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <h4 className="text-sm font-semibold text-text-primary m-0">
+                          {doc.documentType.replace(/_/g, " ")}
+                        </h4>
+                        {getDocumentStatusBadge(doc.status)}
+                      </div>
+                      <p className="text-xs text-text-muted m-0 mb-1">
+                        Uploaded: {formatDate(doc.createdAt)}
                       </p>
-                    )}
+                      {doc.adminNotes && (
+                        <p className="text-sm text-text-secondary m-0">
+                          <strong className="text-text-primary">Admin Note:</strong> {doc.adminNotes}
+                        </p>
+                      )}
+                    </div>
                   </div>
                   <Button
-                    variant="secondary"
+                    variant="primary"
                     outline
                     size="sm"
                     icon={FiEye}
@@ -336,12 +347,12 @@ export default function AdminVerificationPage() {
                     View
                   </Button>
                 </div>
-              </Card>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </Modal>
-      </div>
+      </PageShell>
     </StateHandler>
   );
 }

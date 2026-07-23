@@ -1,6 +1,13 @@
 import { useState } from "react";
+import { FiUsers } from "react-icons/fi";
 import { adminApi } from "../../services/admin.api";
-import { Card, Button, Badge, Table } from "../../components/ui";
+import {
+  Badge,
+  PageHeader,
+  PageShell,
+  PageTabFilters,
+  Table
+} from "../../components/ui";
 
 export default function AdminUsersPage() {
   const [filter, setFilter] = useState("");
@@ -62,33 +69,19 @@ export default function AdminUsersPage() {
   ];
 
   return (
-    <div>
-      <Card>
-        <div className="flex justify-between items-center mb-5">
-          <h2 className="text-xl font-bold text-text-primary m-0">
-            All Users
-          </h2>
-          <div className="flex gap-2">
-            {filterOptions.map((opt) => (
-              <Button
-                key={opt.value}
-                variant={filter === opt.value ? "primary" : "secondary"}
-                size="sm"
-                onClick={() => setFilter(opt.value)}
-              >
-                {opt.label}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        <Table
-          columns={columns}
-          data={fetchUsers}
-          dependencies={[filter]}
-          emptyMessage="No users found"
-        />
-      </Card>
-    </div>
+    <PageShell>
+      <PageHeader
+        icon={FiUsers}
+        title="All Users"
+        subtitle="Browse clients, lawyers, and administrators"
+      />
+      <PageTabFilters options={filterOptions} value={filter} onChange={setFilter} />
+      <Table
+        columns={columns}
+        data={fetchUsers}
+        dependencies={[filter]}
+        emptyMessage="No users found"
+      />
+    </PageShell>
   );
 }

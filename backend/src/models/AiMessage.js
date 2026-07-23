@@ -2,11 +2,21 @@ import mongoose from "mongoose";
 
 const CitationSchema = new mongoose.Schema(
   {
+    index: { type: Number, required: true },
+    sourceType: { type: String, default: "" },
+    chunkId: { type: mongoose.Schema.Types.ObjectId, default: null },
+    sourceId: { type: mongoose.Schema.Types.ObjectId, default: null },
+    title: { type: String, default: "" },
     court: { type: String, default: "" },
     year: { type: Number, default: null },
     caseReference: { type: String, default: "" },
+    citation: { type: String, default: "" },
+    caseRef: { type: String, default: "" },
     sourceUrl: { type: String, default: "" },
-    excerpt: { type: String, default: "" }
+    excerpt: { type: String, default: "" },
+    score: { type: Number, default: 0 },
+    semanticScore: { type: Number, default: 0 },
+    retrievalMethods: { type: [String], default: [] }
   },
   { _id: false }
 );

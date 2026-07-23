@@ -1,5 +1,6 @@
 import { sendSuccess } from "../helpers/response.helper.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiError } from "../helpers/apiError.js";
 import * as authService from "../services/auth.service.js";
 import { env } from "../config/env.js";
 import { uploadSingle } from "../middlewares/upload.middleware.js";
@@ -76,14 +77,41 @@ export const sendOtp = asyncHandler(async (req, res) => {
 
 export const verifyOtp = asyncHandler(async (req, res) => {
   const { email, code } = req.body;
-  await authService.verifyOtp(email, code);
-  return sendSuccess(res, { message: "Email verified successfully" });
+  const out = await authService.verifyOtp(email, code);
+  return sendSuccess(res, { message: "Email verified successfully", data: out });
 });
 
 export const resendOtp = asyncHandler(async (req, res) => {
   const { email } = req.body;
   await authService.resendOtp(email);
   return sendSuccess(res, { message: "Verification code resent to your email" });
+});
+
+export const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  await authService.forgotPassword(email);
+  return sendSuccess(res, {
+    message: "If an account exists for this email, a reset code has been sent"
+  });
+});
+
+export const resetPassword = asyncHandler(async (req, res) => {
+  const { email, code, newPassword } = req.body;
+  await authService.resetPassword({ email, code, newPassword });
+  return sendSuccess(res, { message: "Password reset successfully. You can now log in." });
+});
+
+export const changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  await authService.changePassword({
+    userId: req.user.id,
+    currentPassword,
+    newPassword
+  });
+  res.clearCookie("refreshToken", { path: "/api/auth/refresh" });
+  return sendSuccess(res, {
+    message: "Password changed successfully. Please sign in again."
+  });
 });
 
 // Profile picture management

@@ -2,7 +2,7 @@ import { Outlet } from "react-router-dom";
 import { DashboardLayout } from "../../components/layout";
 import {
   FiHome,
-  FiUser,
+  FiSettings,
   FiCalendar,
   FiClock,
   FiFileText,
@@ -25,7 +25,7 @@ const menuItems = [
   { id: "earnings", label: "Earnings", icon: FiDollarSign },
   { id: "verification", label: "Verification", icon: FiCheckCircle },
   { id: "reviews", label: "Reviews", icon: FiStar },
-  { id: "profile", label: "My Profile", icon: FiUser }
+  { id: "settings", label: "Settings", icon: FiSettings }
 ];
 
 export default function LawyerDashboardLayout() {

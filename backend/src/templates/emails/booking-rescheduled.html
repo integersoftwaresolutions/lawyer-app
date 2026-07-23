@@ -1,0 +1,12 @@
+<h2>Booking rescheduled</h2>
+<p>Hi{{recipientName}},</p>
+<p>{{rescheduledByName}} has rescheduled your consultation to a new time.</p>
+<div class="info-card">
+  <p><span class="info-label">Previous time:</span> {{previousScheduledAt}}</p>
+  <p><span class="info-label">New time:</span> {{scheduledAt}}</p>
+  <p><span class="info-label">With:</span> {{counterpartyName}}</p>
+  <p><span class="info-label">Duration:</span> {{durationMinutes}} minutes</p>
+</div>
+<div class="cta-wrap">
+  <a class="cta" href="{{bookingUrl}}">View Booking</a>
+</div>

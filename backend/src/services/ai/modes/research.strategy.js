@@ -44,6 +44,9 @@ export const researchStrategy = {
       citations: result.citations,
       matchCount: result.matchCount,
       topScore: result.topScore,
+      rawMatchCount: result.rawMatchCount,
+      semanticMatchCount: result.semanticMatchCount,
+      lexicalMatchCount: result.lexicalMatchCount,
       filters
     };
   },
@@ -57,6 +60,9 @@ export const researchStrategy = {
         retrieval: {
           matchCount: context?.matchCount || 0,
           topScore: context?.topScore || 0,
+          rawMatchCount: context?.rawMatchCount || 0,
+          semanticMatchCount: context?.semanticMatchCount || 0,
+          lexicalMatchCount: context?.lexicalMatchCount || 0,
           usedCitations: citations.length,
           filters: context?.filters || {}
         }

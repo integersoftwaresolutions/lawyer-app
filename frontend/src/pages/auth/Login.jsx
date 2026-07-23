@@ -6,6 +6,7 @@ import { useAuthForm } from "../../hooks/useAuthForm";
 import { Input, Button } from "../../components/ui";
 import AuthLayout, { AuthDivider, AuthLink, ErrorMessage, FormSection } from "./AuthLayout";
 import { GoogleAuthButton } from "./components/GoogleAuthButton";
+import { getDashboardPath } from "../../utils/authRoutes";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -13,6 +14,9 @@ export default function Login() {
   const { login } = useAuth();
   const toast = useToast();
   const fromVerify = searchParams.get("from") === "verify";
+  const requestedRole = searchParams.get("role")?.toUpperCase();
+  const selectedRole = ["CLIENT", "LAWYER"].includes(requestedRole) ? requestedRole : "";
+  const roleLabel = selectedRole === "LAWYER" ? "Lawyer" : "Client";
   
   const { formData, errors, loading, setLoading, handleChange, setError, setErrors, clearErrors } = useAuthForm({
     email: "",
@@ -51,20 +55,15 @@ export default function Login() {
     
     try {
       const res = await login(formData);
-      
-      // Check if email is verified
+
       if (!res.data.user?.isEmailVerified) {
+        toast.info("Please verify your email to continue.");
         navigate(`/verify-email?email=${encodeURIComponent(formData.email)}&from=login`);
         return;
       }
       
       toast.success("Login successful!");
-      const redirectMap = {
-        CLIENT: "/client/dashboard",
-        LAWYER: "/lawyer/dashboard",
-        ADMIN: "/admin/dashboard",
-      };
-      navigate(redirectMap[res.data.user?.role || res.data.role] || "/");
+      navigate(getDashboardPath(res.data.user?.role || res.data.role), { replace: true });
     } catch (error) {
       handleLoginError(error);
     } finally {
@@ -80,17 +79,17 @@ export default function Login() {
     if (statusCode === 401 || statusCode === 400) {
       if (lowerMessage.includes('email') && (lowerMessage.includes('not found') || lowerMessage.includes('user'))) {
         setError("email", "No account found with this email");
-        toast.error("No account found with this email");
+        toast.error(message);
       } else if (lowerMessage.includes('password') || lowerMessage.includes('invalid credentials')) {
         setError("password", "Incorrect password");
-        toast.error("Incorrect password");
+        toast.error(message);
       } else {
         setError("submit", message);
         toast.error(message);
       }
     } else if (statusCode === 404) {
       setError("email", "No account found with this email");
-      toast.error("No account found with this email");
+      toast.error(message);
     } else {
       setError("submit", message);
       toast.error(message);
@@ -120,14 +119,22 @@ export default function Login() {
 
   return (
     <AuthLayout
-      title="Welcome Back"
-      subtitle="Sign in to continue to your account"
+      title={selectedRole ? `${roleLabel} Sign In` : "Welcome Back"}
+      subtitle={
+        selectedRole
+          ? `Sign in to continue to your ${roleLabel.toLowerCase()} account`
+          : "Sign in to continue to your account"
+      }
       showBackButton={fromVerify}
       onBack={handleBack}
       footer={
         <>
           Don't have an account?{" "}
-          <AuthLink onClick={() => navigate("/register")}>Create one</AuthLink>
+          <AuthLink
+            onClick={() => navigate(selectedRole ? `/register?role=${selectedRole}` : "/register")}
+          >
+            Create one
+          </AuthLink>
         </>
       }
     >
@@ -160,6 +167,12 @@ export default function Login() {
             onChange={handleChange("password")}
             error={errors.password}
           />
+
+          <div className="text-right -mt-2">
+            <AuthLink onClick={() => navigate("/forgot-password")}>
+              Forgot password?
+            </AuthLink>
+          </div>
         </FormSection>
 
         <Button

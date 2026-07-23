@@ -9,6 +9,7 @@ import LedgerEntry from "../models/LedgerEntry.js";
 import AdminSetting from "../models/AdminSetting.js";
 import { getPagination, buildPaginationMeta } from "../utils/pagination.js";
 import { BOOKING_STATUS, LEDGER_TYPES } from "../config/constants.js";
+import { LAWYER_PROFILE_FIELDS } from "../utils/userProfileFields.js";
 
 export async function searchLawyers(query) {
   const { page, limit, skip } = getPagination(query);
@@ -106,7 +107,6 @@ export async function searchLawyers(query) {
     }
     // Mask contact details in search results
     delete item.phone;
-    delete item.email;
     delete item.whatsapp;
     delete item.officeAddress;
 
@@ -180,7 +180,6 @@ export async function getLawyerProfile(lawyerUserId) {
   // Always exclude contact details from public profile - use /contact endpoint for clients with access
   if (profile) {
     delete profile.phone;
-    delete profile.email;
     delete profile.whatsapp;
     delete profile.officeAddress;
   }
@@ -222,15 +221,12 @@ export async function getLawyerContactDetails(lawyerUserId, clientId) {
     throw new ApiError(403, "Contact details are available after you complete a consultation with this lawyer");
   }
 
-  let email = profile.email || "";
-  if (!email && profile.userId) {
-    const user = await User.findById(profile.userId).select("email").lean();
-    email = user?.email || "";
-  }
+  const user = await User.findById(lawyerUserId).select("email").lean();
+  if (!user) throw new ApiError(404, "Lawyer not found");
 
   return {
     phone: profile.phone || "",
-    email,
+    email: user.email || "",
     whatsapp: profile.whatsapp || ""
   };
 }
@@ -290,12 +286,7 @@ export async function updateLawyerProfile(userId, data) {
   const profile = await LawyerProfile.findOne({ userId });
   if (!profile) throw new ApiError(404, "Lawyer profile not found");
 
-  const allowedFields = [
-    "fullName", "phone", "email", "whatsapp", "city", "officeAddress",
-    "cnic", "barCouncilNumber", "barCouncil",
-    "specialization", "languages", "experienceYears", "hourlyRate",
-    "consultationFee", "bio", "profileImage"
-  ];
+  const allowedFields = LAWYER_PROFILE_FIELDS;
 
   for (const field of allowedFields) {
     if (data[field] !== undefined) {

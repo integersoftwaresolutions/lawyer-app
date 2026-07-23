@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
+import { FiUser } from "react-icons/fi";
 import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../hooks/useToast";
 import { constantsApi } from "../../services/constants.api";
-import { Card, Input, Select, Textarea, ProfilePicture, StickySaveBar } from "../../components/ui";
+import { Card, Input, Select, Textarea, ProfilePicture, PageHeader, PageShell, StickySaveBar } from "../../components/ui";
 import { FormSection, FormRow } from "../auth/AuthLayout";
 
 const GENDERS = [
@@ -104,11 +105,12 @@ export default function ClientProfilePage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-text-primary mb-2">Complete Your Profile</h1>
-        <p className="text-text-secondary">Please provide your information to get started</p>
-      </div>
+    <PageShell>
+      <PageHeader
+        icon={FiUser}
+        title="My Profile"
+        subtitle="Please provide your information to get started"
+      />
 
       <form onSubmit={handleSave}>
         <Card className="mb-6">
@@ -156,6 +158,14 @@ export default function ClientProfilePage() {
 
             <FormRow>
               <Input
+                label="Email"
+                type="email"
+                value={user?.email || ""}
+                readOnly
+                disabled
+                helperText="Account email is managed in Security settings"
+              />
+              <Input
                 label="Phone Number"
                 type="tel"
                 value={formData.phone}
@@ -163,6 +173,9 @@ export default function ClientProfilePage() {
                 placeholder="+92 300 1234567"
                 required
               />
+            </FormRow>
+
+            <FormRow>
               <Input
                 label="WhatsApp Number"
                 type="tel"
@@ -171,9 +184,6 @@ export default function ClientProfilePage() {
                 placeholder="+92 300 1234567"
                 helperText="Optional - for direct communication"
               />
-            </FormRow>
-
-            <FormRow>
               <Select
                 label="City"
                 value={formData.city}
@@ -181,6 +191,9 @@ export default function ClientProfilePage() {
                 options={cities.map(c => ({ value: c, label: c }))}
                 placeholder="Select your city"
               />
+            </FormRow>
+
+            <FormRow>
               <Select
                 label="Gender"
                 value={formData.gender}
@@ -188,15 +201,14 @@ export default function ClientProfilePage() {
                 options={GENDERS}
                 placeholder="Select gender"
               />
+              <Input
+                label="Date of Birth"
+                type="date"
+                value={formData.dateOfBirth}
+                onChange={handleChange("dateOfBirth")}
+                helperText="Optional"
+              />
             </FormRow>
-
-            <Input
-              label="Date of Birth"
-              type="date"
-              value={formData.dateOfBirth}
-              onChange={handleChange("dateOfBirth")}
-              helperText="Optional"
-            />
 
             <Textarea
               label="Address"
@@ -217,6 +229,6 @@ export default function ClientProfilePage() {
           onCancel={() => window.history.back()}
         />
       </form>
-    </div>
+    </PageShell>
   );
 }

@@ -8,6 +8,12 @@ import Wallet from "../models/Wallet.js";
 import * as availabilityService from "./availability.service.js";
 import * as walletService from "./wallet.service.js";
 import { syncBookingToPlanner, cancelFromBooking as cancelPlannerFromBooking } from "./planner/bookingSync.service.js";
+import {
+  notifyBookingConfirmed,
+  notifyBookingRescheduled,
+  notifyBookingCancelled
+} from "../notifications/triggers/booking.notifications.js";
+import ClientProfile from "../models/ClientProfile.js";
 import { BOOKING_STATUS, CONSULTATION_TYPE, LEDGER_TYPES } from "../config/constants.js";
 import { toDate, now } from "../utils/time.js";
 
@@ -135,6 +141,8 @@ export async function createBooking({ clientId, lawyerUserId, startAt, durationM
   });
 
   await syncBookingToPlanner(booking.toObject());
+
+  notifyBookingConfirmed(booking._id.toString());
 
   return booking.toObject();
 }
@@ -282,6 +290,9 @@ export async function rescheduleBooking({ bookingId, clientId, startAt, duration
   const lawyerProfile = await LawyerProfile.findOne({ userId: booking.lawyerUserId });
   if (!lawyerProfile) throw new ApiError(404, "Lawyer not found");
 
+  const previousStartAt = booking.startAt;
+  const clientProfile = await ClientProfile.findOne({ userId: booking.clientId }).lean();
+
   const settings = await getAdminSettings();
   const hourlyRate = lawyerProfile.hourlyRate || 0;
   const amount = Math.round((hourlyRate * duration) / 60);
@@ -293,9 +304,16 @@ export async function rescheduleBooking({ bookingId, clientId, startAt, duration
   booking.amount = amount;
   booking.platformFee = platformFee;
   booking.lawyerEarning = lawyerEarning;
+  booking.reminderMinutesSent = [];
   await booking.save();
 
   await syncBookingToPlanner(booking.toObject());
+
+  notifyBookingRescheduled(booking._id.toString(), {
+    previousStartAt,
+    rescheduledByRole: "client",
+    rescheduledByName: clientProfile?.fullName || "The client"
+  });
 
   return booking.toObject();
 }
@@ -310,6 +328,7 @@ export async function deleteBookingForClient({ bookingId, clientId }) {
   booking.deletedByLawyer = true;
   await booking.save();
   await cancelPlannerFromBooking(booking._id);
+  notifyBookingCancelled(booking._id.toString(), { cancelledByRole: "client" });
   return { ok: true };
 }
 
@@ -373,6 +392,9 @@ export async function rescheduleBookingAsLawyer({ bookingId, lawyerUserId, start
   const lawyerProfile = await LawyerProfile.findOne({ userId: booking.lawyerUserId });
   if (!lawyerProfile) throw new ApiError(404, "Lawyer not found");
 
+  const previousStartAt = booking.startAt;
+  const clientProfile = await ClientProfile.findOne({ userId: booking.clientId }).lean();
+
   const settings = await getAdminSettings();
   const hourlyRate = lawyerProfile.hourlyRate || 0;
   const amount = Math.round((hourlyRate * duration) / 60);
@@ -384,9 +406,16 @@ export async function rescheduleBookingAsLawyer({ bookingId, lawyerUserId, start
   booking.amount = amount;
   booking.platformFee = platformFee;
   booking.lawyerEarning = lawyerEarning;
+  booking.reminderMinutesSent = [];
   await booking.save();
 
   await syncBookingToPlanner(booking.toObject());
+
+  notifyBookingRescheduled(booking._id.toString(), {
+    previousStartAt,
+    rescheduledByRole: "lawyer",
+    rescheduledByName: lawyerProfile.fullName || "The lawyer"
+  });
 
   return booking.toObject();
 }
@@ -401,5 +430,6 @@ export async function deleteBookingForLawyer({ bookingId, lawyerUserId }) {
   booking.deletedByClient = true;
   await booking.save();
   await cancelPlannerFromBooking(booking._id);
+  notifyBookingCancelled(booking._id.toString(), { cancelledByRole: "lawyer" });
   return { ok: true };
 }

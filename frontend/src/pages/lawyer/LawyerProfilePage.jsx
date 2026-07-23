@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
+import { FiUser } from "react-icons/fi";
 import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../hooks/useToast";
 import { constantsApi } from "../../services/constants.api";
-import { Card, Input, Select, Textarea, ProfilePicture, Badge, StickySaveBar } from "../../components/ui";
+import { Card, Input, Select, Textarea, ProfilePicture, Badge, PageHeader, PageShell, StickySaveBar } from "../../components/ui";
 import { FormSection, FormRow } from "../auth/AuthLayout";
 
 const BAR_COUNCILS = [
@@ -29,7 +30,6 @@ export default function LawyerProfilePage() {
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
-    email: "",
     whatsapp: "",
     city: "",
     officeAddress: "",
@@ -72,7 +72,6 @@ export default function LawyerProfilePage() {
       const next = {
         fullName: user.fullName || "",
         phone: user.phone || "",
-        email: user.email || "",
         whatsapp: user.whatsapp || "",
         city: user.city || "",
         officeAddress: user.officeAddress || "",
@@ -159,11 +158,12 @@ export default function LawyerProfilePage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-text-primary mb-2">Complete Your Profile</h1>
-        <p className="text-text-secondary">Please provide your professional information</p>
-      </div>
+    <PageShell>
+      <PageHeader
+        icon={FiUser}
+        title="My Profile"
+        subtitle="Please provide your professional information"
+      />
 
       <form onSubmit={handleSave}>
         <Card className="mb-6">
@@ -213,9 +213,10 @@ export default function LawyerProfilePage() {
               <Input
                 label="Email"
                 type="email"
-                value={formData.email}
-                onChange={handleChange("email")}
-                placeholder="lawyer@example.com"
+                value={user?.email || ""}
+                readOnly
+                disabled
+                helperText="Account email is managed in Security settings"
               />
               <Input
                 label="Phone Number"
@@ -385,6 +386,6 @@ export default function LawyerProfilePage() {
           onCancel={() => window.history.back()}
         />
       </form>
-    </div>
+    </PageShell>
   );
 }

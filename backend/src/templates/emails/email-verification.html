@@ -1,0 +1,10 @@
+<h2>Verify your email</h2>
+<p>Hi{{recipientName}},</p>
+<p>Thanks for signing up. Use the verification code below to confirm your email address. This code expires in <strong>{{expiryMinutes}} minutes</strong>.</p>
+<div class="otp-box">
+  <div class="otp-code">{{otpCode}}</div>
+</div>
+<p class="muted">If you didn't create an account, you can safely ignore this email.</p>
+<div class="cta-wrap">
+  <a class="cta" href="{{verifyUrl}}">Verify Email</a>
+</div>

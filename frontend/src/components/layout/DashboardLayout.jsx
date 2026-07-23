@@ -6,7 +6,9 @@ import SidebarUserFooter from "./SidebarUserFooter";
 import Navbar from "./Navbar";
 
 function isChatPagePath(pathname) {
-  return /\/(ai)\/?$/.test(pathname);
+  // Keep chat-like pages in a fixed-height container so their internal
+  // scroll regions don't cause layout reflow while loading.
+  return /\/(ai|cross-exam)\/?$/.test(pathname);
 }
 
 export default function DashboardLayout({

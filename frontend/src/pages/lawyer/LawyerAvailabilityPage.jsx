@@ -8,7 +8,7 @@ import {
   FiSun
 } from "react-icons/fi";
 import { lawyerApi } from "../../services/lawyer.api";
-import { Button, Card, IconButton, StateHandler, StickySaveBar } from "../../components/ui";
+import { Button, Card, IconButton, StateHandler, StickySaveBar, PageHeader, PageShell } from "../../components/ui";
 import { useStateHandler } from "../../hooks/useStateHandler";
 import { useToast } from "../../hooks/useToast";
 
@@ -259,37 +259,26 @@ export default function LawyerAvailabilityPage() {
 
   return (
     <StateHandler loading={loading} error={error} retry={retry}>
-      <div className="flex flex-col min-h-0">
-        {/* Page header */}
-        <div className="shrink-0 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4 sm:mb-6">
-          <div className="flex items-start gap-3 min-w-0">
-            <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0">
-              <FiClock className="w-5 h-5" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-lg sm:text-xl font-bold text-text-primary leading-tight">
-                Weekly Availability
-              </h1>
-              <p className="text-xs sm:text-sm text-text-muted mt-1 max-w-xl">
-                Set when clients can book consultations. Times are shown in PKT (Asia/Karachi).
-              </p>
-            </div>
-          </div>
+      <PageShell>
+        <PageHeader
+          icon={FiClock}
+          title="Weekly Availability"
+          subtitle="Set when clients can book consultations. Times are shown in PKT (Asia/Karachi)."
+          actions={
+            <>
+              <Button variant="secondary" size="sm" onClick={enableWeekdays}>
+                Enable weekdays
+              </Button>
+              <Button variant="secondary" size="sm" icon={FiCopy} onClick={copyMondayToWeekdays}>
+                Copy Mon → Fri
+              </Button>
+            </>
+          }
+        />
 
-          <div className="flex flex-wrap gap-2 shrink-0">
-            <Button variant="secondary" size="sm" onClick={enableWeekdays}>
-              Enable weekdays
-            </Button>
-            <Button variant="secondary" size="sm" icon={FiCopy} onClick={copyMondayToWeekdays}>
-              Copy Mon → Fri
-            </Button>
-          </div>
-        </div>
-
-        {/* Summary stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5 sm:mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <Card padding="p-4" className="flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-primary/10 text-primary">
+            <div className="p-2.5 rounded-lg bg-primary-light text-primary">
               <FiCalendar className="w-5 h-5" />
             </div>
             <div>
@@ -365,7 +354,7 @@ export default function LawyerAvailabilityPage() {
           saveLabel="Save availability"
           hint="Clients only see slots within your enabled hours"
         />
-      </div>
+      </PageShell>
     </StateHandler>
   );
 }

@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { lawyerApi } from "../../services/lawyer.api";
-import { Card, Badge, Button, StateHandler, Modal } from "../../components/ui";
+import { Card, Badge, Button, StateHandler, Modal, PageHeader, PageShell } from "../../components/ui";
 import { useToast } from "../../hooks/useToast";
 import { useStateHandler } from "../../hooks/useStateHandler";
 import { getProfilePictureUrl } from "../../utils/profilePicture";
@@ -304,7 +304,7 @@ export default function LawyerVerificationPage() {
 
   return (
     <StateHandler loading={loading} error={error} retry={retry}>
-      <div className="flex flex-col min-h-0">
+      <PageShell>
         <input
           ref={fileInputRef}
           type="file"
@@ -313,29 +313,14 @@ export default function LawyerVerificationPage() {
           accept="image/*,application/pdf"
         />
 
-        {/* Page header */}
-        <div className="shrink-0 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4 sm:mb-6">
-          <div className="flex items-start gap-3 min-w-0">
-            <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0">
-              <FiShield className="w-5 h-5" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-lg sm:text-xl font-bold text-text-primary leading-tight">
-                Profile Verification
-              </h1>
-              <p className="text-xs sm:text-sm text-text-muted mt-1 max-w-2xl">
-                Submit your credentials to become a verified lawyer and unlock bookings, visibility,
-                and profile boosts.
-              </p>
-            </div>
-          </div>
-          <Badge variant={statusMeta.badge} size="lg" className="w-fit shrink-0">
-            {status}
-          </Badge>
-        </div>
+        <PageHeader
+          icon={FiShield}
+          title="Profile Verification"
+          subtitle="Submit your credentials to become a verified lawyer and unlock bookings, visibility, and profile boosts"
+          actions={<Badge variant={statusMeta.badge} size="lg">{status}</Badge>}
+        />
 
-        {/* Summary stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5 sm:mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <Card padding="p-4" className="flex items-center gap-3">
             <div className={`p-2.5 rounded-lg ${statusMeta.iconBg} ${statusMeta.color}`}>
               <StatusIcon className="w-5 h-5" />
@@ -565,7 +550,7 @@ export default function LawyerVerificationPage() {
             </div>
           )}
         </Modal>
-      </div>
+      </PageShell>
     </StateHandler>
   );
 }

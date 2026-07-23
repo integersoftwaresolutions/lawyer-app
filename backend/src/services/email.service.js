@@ -26,27 +26,36 @@ function getTransporter() {
   }
 
   try {
-    // For Gmail, use service instead of host/port
     const isGmail = env.emailHost.includes("gmail");
-    
+
     transporter = nodemailer.createTransport(
-      isGmail
+      isGmail && env.emailPort === 465
         ? {
-            service: "gmail",
+            host: "smtp.gmail.com",
+            port: 465,
+            secure: true,
             auth: {
               user: env.emailUser,
               pass: env.emailPassword
             }
           }
-        : {
-            host: env.emailHost,
-            port: env.emailPort,
-            secure: env.emailSecure, // true for 465, false for other ports
-            auth: {
-              user: env.emailUser,
-              pass: env.emailPassword
+        : isGmail
+          ? {
+              service: "gmail",
+              auth: {
+                user: env.emailUser,
+                pass: env.emailPassword
+              }
             }
-          }
+          : {
+              host: env.emailHost,
+              port: env.emailPort,
+              secure: env.emailSecure,
+              auth: {
+                user: env.emailUser,
+                pass: env.emailPassword
+              }
+            }
     );
 
     // Verify connection
@@ -139,18 +148,15 @@ export async function sendEmail({ to, subject, template, variables = {}, html, t
 }
 
 /**
- * Send verification email with OTP
- * @param {string} email - Recipient email
- * @param {string} otpCode - OTP code to send
+ * Send verification email with OTP (legacy wrapper — prefer notification service)
  */
 export async function sendVerificationEmail(email, otpCode) {
-  return sendEmail({
-    to: email,
-    subject: "Verify Your Email Address",
-    template: "verification-email",
-    variables: {
-      otpCode,
-      expiryMinutes: env.otpExpiryMinutes.toString()
-    }
-  });
+  const { notify } = await import("../notifications/notification.service.js");
+  const { NOTIFICATION_TYPES } = await import("../config/notification.constants.js");
+  const { buildOtpVariables } = await import("../notifications/notification.context.js");
+
+  return notify(NOTIFICATION_TYPES.EMAIL_VERIFICATION, [{
+    email,
+    variables: buildOtpVariables({ otpCode, purpose: "EMAIL_VERIFICATION" })
+  }]);
 }

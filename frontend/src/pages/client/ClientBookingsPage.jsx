@@ -6,7 +6,8 @@ import {
   FiMessageCircle,
   FiStar,
   FiTrash2,
-  FiAlertTriangle
+  FiAlertTriangle,
+  FiCalendar
 } from "react-icons/fi";
 import { clientApi } from "../../services/client.api";
 import { lawyerApi } from "../../services/lawyer.api";
@@ -19,11 +20,14 @@ import {
   Input,
   Select,
   Table,
-  FilterTabs,
+  PageHeader,
+  PageShell,
+  PageTabFilters,
   ActionMenu,
   IconButton
 } from "../../components/ui";
 import { usePaginatedQuery } from "../../hooks/usePaginatedQuery";
+import { useToast } from "../../hooks/useToast";
 
 const SLOT_DURATION_MINUTES = 30;
 
@@ -37,6 +41,7 @@ const getTodayIso = () => {
 
 export default function ClientBookingsPage() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [filter, setFilter] = useState("");
   const [reviewModal, setReviewModal] = useState({ open: false, booking: null });
   const [reviewData, setReviewData] = useState({ rating: 5, comment: "" });
@@ -99,7 +104,7 @@ export default function ClientBookingsPage() {
       setRefreshKey((k) => k + 1);
     } catch (error) {
       console.error("Failed to delete booking:", error);
-      alert(error.response?.data?.message || "Failed to delete booking");
+      toast.error(error.response?.data?.message || "Failed to delete booking");
     } finally {
       setSubmitting(false);
     }
@@ -126,7 +131,7 @@ export default function ClientBookingsPage() {
   const loadEditSlots = async () => {
     if (!editModal.booking || !editData.date) return;
     if (editData.date < getTodayIso()) {
-      alert("Please select today's date or a future date");
+      toast.error("Please select today's date or a future date");
       return;
     }
     try {
@@ -136,7 +141,7 @@ export default function ClientBookingsPage() {
       setEditSlots(res.data || []);
     } catch (error) {
       console.error("Failed to load slots:", error);
-      alert(error.response?.data?.message || "Failed to load available slots");
+      toast.error(error.response?.data?.message || "Failed to load available slots");
     } finally {
       setEditSlotsLoading(false);
     }
@@ -145,11 +150,11 @@ export default function ClientBookingsPage() {
   const handleEditSubmit = async () => {
     if (!editModal.booking) return;
     if (!editData.date || !editData.slot) {
-      alert("Please select a date and an available slot");
+      toast.error("Please select a date and an available slot");
       return;
     }
     if (editData.date < getTodayIso()) {
-      alert("You cannot reschedule to a date in the past");
+      toast.error("You cannot reschedule to a date in the past");
       return;
     }
 
@@ -166,7 +171,7 @@ export default function ClientBookingsPage() {
       setRefreshKey((k) => k + 1);
     } catch (error) {
       console.error("Failed to edit booking:", error);
-      alert(error.response?.data?.message || "Failed to edit booking");
+      toast.error(error.response?.data?.message || "Failed to edit booking");
     } finally {
       setSubmitting(false);
     }
@@ -235,9 +240,9 @@ export default function ClientBookingsPage() {
       setDisputeModal({ open: false, booking: null });
       setDisputeData({ reason: "OTHER", description: "" });
       setRefreshKey((k) => k + 1);
-      alert("Dispute raised. Our team will review it shortly.");
+      toast.success("Dispute raised. Our team will review it shortly.");
     } catch (error) {
-      alert(error.response?.data?.message || "Failed to raise dispute");
+      toast.error(error.response?.data?.message || "Failed to raise dispute");
     } finally {
       setSubmitting(false);
     }
@@ -258,7 +263,7 @@ export default function ClientBookingsPage() {
       setRefreshKey((k) => k + 1);
     } catch (error) {
       console.error("Failed to submit review:", error);
-      alert(error.response?.data?.message || "Failed to submit review");
+      toast.error(error.response?.data?.message || "Failed to submit review");
     } finally {
       setSubmitting(false);
     }
@@ -392,31 +397,29 @@ export default function ClientBookingsPage() {
   ];
 
   return (
-    <div>
-      <Card padding="p-0" className="overflow-hidden">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-5 border-b border-card-border">
-          <h2 className="text-lg font-bold text-text-primary m-0">My Bookings</h2>
-          <FilterTabs options={filterOptions} value={filter} onChange={setFilter} />
-        </div>
-
-        <Table
-          columns={columns}
-          data={items}
-          loading={loading}
-          error={error}
-          retry={retry}
-          density="compact"
-          className="border-0 rounded-none shadow-none"
-          emptyMessage="No bookings found"
-          pagination={{
-            currentPage: meta.page,
-            totalPages: meta.pages,
-            totalItems: meta.total,
-            itemsPerPage: meta.limit,
-            onPageChange: setPage
-          }}
-        />
-      </Card>
+    <PageShell>
+      <PageHeader
+        icon={FiCalendar}
+        title="My Bookings"
+        subtitle="View, manage, and join your consultations"
+      />
+      <PageTabFilters options={filterOptions} value={filter} onChange={setFilter} />
+      <Table
+        columns={columns}
+        data={items}
+        loading={loading}
+        error={error}
+        retry={retry}
+        density="compact"
+        emptyMessage="No bookings found"
+        pagination={{
+          currentPage: meta.page,
+          totalPages: meta.pages,
+          totalItems: meta.total,
+          itemsPerPage: meta.limit,
+          onPageChange: setPage
+        }}
+      />
 
       <Modal
         isOpen={viewModal.open}
@@ -635,6 +638,6 @@ export default function ClientBookingsPage() {
           </div>
         )}
       </Modal>
-    </div>
+    </PageShell>
   );
 }

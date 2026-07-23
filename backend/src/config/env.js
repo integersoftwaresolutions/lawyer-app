@@ -18,6 +18,7 @@ export const env = {
 
   mongoUri: must("MONGO_URI"),
   clientOrigin: must("CLIENT_ORIGIN"),
+  appBaseUrl: optional("APP_BASE_URL") || optional("CLIENT_ORIGIN"),
 
   jwtAccessSecret: must("JWT_ACCESS_SECRET"),
   jwtRefreshSecret: must("JWT_REFRESH_SECRET"),
@@ -31,17 +32,22 @@ export const env = {
   rateLimitMax: Number(process.env.RATE_LIMIT_MAX || 120),
 
   // Email configuration (optional - will log to console in development if not configured)
-  emailHost: optional("EMAIL_HOST", "smtp.gmail.com"),
-  emailPort: Number(optional("EMAIL_PORT", "587")),
-  emailSecure: (optional("EMAIL_SECURE", "false")) === "true",
+  emailHost: optional("EMAIL_HOST") || optional("SMTP_HOST", "smtp.gmail.com"),
+  emailPort: Number(optional("EMAIL_PORT") || optional("SMTP_PORT", "587")),
+  emailSecure:
+    (optional("EMAIL_SECURE", "") === "true") ||
+    Number(optional("EMAIL_PORT") || optional("SMTP_PORT", "587")) === 465,
   emailUser: optional("EMAIL_USER"),
-  emailPassword: optional("EMAIL_PASSWORD"),
+  emailPassword: optional("EMAIL_PASSWORD") || optional("EMAIL_PASS"),
   emailFrom: optional("EMAIL_FROM") || optional("EMAIL_USER") || "noreply@lawyerapp.com",
   emailFromName: optional("EMAIL_FROM_NAME", "Lawyer App"),
 
   // OTP configuration
   otpExpiryMinutes: Number(process.env.OTP_EXPIRY_MINUTES || 10),
   otpLength: Number(process.env.OTP_LENGTH || 6),
+
+  // Scheduled reminder job interval (ms)
+  reminderJobIntervalMs: Number(process.env.REMINDER_JOB_INTERVAL_MS || 5 * 60 * 1000),
 
   // AI / Phase 2
   openaiApiKey: optional("OPENAI_API_KEY"),
@@ -58,6 +64,13 @@ export const env = {
   ragEmbeddingDimensions: Number(process.env.RAG_EMBEDDING_DIMENSIONS || 1536),
   ragChunkSizeTokens: Number(process.env.RAG_CHUNK_SIZE_TOKENS || 800),
   ragChunkOverlapTokens: Number(process.env.RAG_CHUNK_OVERLAP_TOKENS || 100),
+  ragPrivateDocumentChunkSizeTokens: Number(
+    process.env.RAG_PRIVATE_DOCUMENT_CHUNK_SIZE_TOKENS || 400
+  ),
+  ragPrivateDocumentChunkOverlapTokens: Number(
+    process.env.RAG_PRIVATE_DOCUMENT_CHUNK_OVERLAP_TOKENS || 80
+  ),
   ragTopK: Number(process.env.RAG_TOP_K || 6),
-  ragMinScore: Number(process.env.RAG_MIN_SCORE || 0.35)
+  ragMinScore: Number(process.env.RAG_MIN_SCORE || 0.35),
+  ragPrivateDocumentMinScore: Number(process.env.RAG_PRIVATE_DOCUMENT_MIN_SCORE || 0.18)
 };

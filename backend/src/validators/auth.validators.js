@@ -40,3 +40,26 @@ export const resendOtpSchema = Joi.object({
     email: Joi.string().email().required()
   }).required()
 });
+
+export const forgotPasswordSchema = Joi.object({
+  body: Joi.object({
+    email: Joi.string().email().required()
+  }).required()
+});
+
+export const resetPasswordSchema = Joi.object({
+  body: Joi.object({
+    email: Joi.string().email().required(),
+    code: Joi.string().length(6).pattern(/^\d+$/).required(),
+    newPassword: Joi.string().min(6).required()
+  }).required()
+});
+
+export const changePasswordSchema = Joi.object({
+  body: Joi.object({
+    currentPassword: Joi.string().required(),
+    newPassword: Joi.string().min(6).required()
+      .invalid(Joi.ref("currentPassword"))
+      .messages({ "any.invalid": "New password must be different from current password" })
+  }).required()
+});

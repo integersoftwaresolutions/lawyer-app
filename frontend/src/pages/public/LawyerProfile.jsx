@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { lawyerApi } from "../../services/lawyer.api";
 import { bookingApi } from "../../services/booking.api";
 import { useAuth } from "../../hooks/useAuth";
+import { useToast } from "../../hooks/useToast";
 import { Navbar } from "../../components/layout";
 import { Modal, Button, Input, Select, StateHandler, Card, Badge, Avatar } from "../../components/ui";
 import { useStateHandler } from "../../hooks/useStateHandler";
@@ -134,6 +135,7 @@ export default function LawyerProfile() {
   const [bookingData, setBookingData] = useState({ slot: "", notes: "" });
   const [submitting, setSubmitting] = useState(false);
   const [contactDetails, setContactDetails] = useState(null);
+  const toast = useToast();
 
   const todayIso = useMemo(() => todayIsoDate(), []);
 
@@ -156,7 +158,7 @@ export default function LawyerProfile() {
   const loadSlots = async () => {
     if (!availabilityDate) return;
     if (availabilityDate < todayIso) {
-      alert("Please select today's date or a future date");
+      toast.error("Please select today's date or a future date");
       return;
     }
     try {
@@ -165,7 +167,7 @@ export default function LawyerProfile() {
       setAvailableSlots(res.data || []);
     } catch (error) {
       console.error("Failed to load slots:", error);
-      alert(error.response?.data?.message || "Failed to load available slots");
+      toast.error(error.response?.data?.message || "Failed to load available slots");
     } finally {
       setSlotsLoading(false);
     }
@@ -173,11 +175,11 @@ export default function LawyerProfile() {
 
   const handleBooking = async () => {
     if (!availabilityDate || !bookingData.slot) {
-      alert("Please select a date and an available slot");
+      toast.error("Please select a date and an available slot");
       return;
     }
     if (availabilityDate < todayIso) {
-      alert("You cannot book a slot in the past");
+      toast.error("You cannot book a slot in the past");
       return;
     }
 
@@ -194,11 +196,11 @@ export default function LawyerProfile() {
         notes: bookingData.notes,
       });
       setBookingModal(false);
-      alert("Booking created successfully!");
+      toast.success("Booking created successfully");
       navigate("/client/bookings");
     } catch (error) {
       console.error("Failed to create booking:", error);
-      alert(error.response?.data?.message || "Failed to create booking");
+      toast.error(error.response?.data?.message || "Failed to create booking");
     } finally {
       setSubmitting(false);
     }

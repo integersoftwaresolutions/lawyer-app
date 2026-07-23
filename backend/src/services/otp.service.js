@@ -1,7 +1,9 @@
 import Otp from "../models/Otp.js";
-import { sendVerificationEmail } from "./email.service.js";
 import { env } from "../config/env.js";
 import { ApiError } from "../helpers/apiError.js";
+import { NOTIFICATION_TYPES } from "../config/notification.constants.js";
+import { notify } from "../notifications/notification.service.js";
+import { buildOtpVariables, greetingName } from "../notifications/notification.context.js";
 
 /**
  * Generate a random OTP code
@@ -15,49 +17,50 @@ function generateOtpCode() {
   return code;
 }
 
+const OTP_NOTIFICATION_MAP = {
+  EMAIL_VERIFICATION: NOTIFICATION_TYPES.EMAIL_VERIFICATION,
+  PASSWORD_RESET: NOTIFICATION_TYPES.PASSWORD_RESET
+};
+
+async function sendOtpEmail(email, code, purpose) {
+  const notificationType = OTP_NOTIFICATION_MAP[purpose];
+  if (!notificationType) return;
+
+  const variables = buildOtpVariables({ otpCode: code, purpose });
+  variables.recipientName = greetingName("");
+
+  await notify(notificationType, [{
+    email,
+    variables
+  }], { metadata: { purpose } });
+}
+
 /**
  * Send OTP to email
  */
 export async function sendOtp(email, purpose = "EMAIL_VERIFICATION") {
   console.log(`\n📧 Sending OTP to ${email} (purpose: ${purpose})`);
-  
-  // Delete any existing OTPs for this email and purpose
-  await Otp.deleteMany({ email: email.toLowerCase(), purpose });
-  console.log(`   Deleted existing OTPs for ${email}`);
 
-  // Generate new OTP
+  await Otp.deleteMany({ email: email.toLowerCase(), purpose });
+
   const code = generateOtpCode();
   const expiresAt = new Date(Date.now() + env.otpExpiryMinutes * 60 * 1000);
   console.log(`   Generated OTP: ${code} (expires in ${env.otpExpiryMinutes} minutes)`);
 
-  // Store OTP in database
   await Otp.create({
     email: email.toLowerCase(),
     code,
     purpose,
     expiresAt
   });
-  console.log(`   ✅ OTP stored in database`);
 
-  // Send email
-  if (purpose === "EMAIL_VERIFICATION") {
-    try {
-      console.log(`   Attempting to send verification email...`);
-      const result = await sendVerificationEmail(email, code);
-      if (result.sent) {
-        console.log(`   ✅ OTP email sent successfully to ${email} (Message ID: ${result.messageId})`);
-      } else {
-        console.log(`   ⚠️  OTP generated for ${email} but email not sent (dev mode - check console above for email content)`);
-      }
-    } catch (error) {
-      console.error(`   ❌ Failed to send OTP email to ${email}:`, error.message);
-      console.error(`   Stack:`, error.stack);
-      // Don't throw error - OTP is still stored in DB, user can request resend
-      // This allows the system to work even if email service is temporarily down
-    }
+  try {
+    await sendOtpEmail(email, code, purpose);
+    console.log(`   ✅ OTP email dispatched to ${email}`);
+  } catch (error) {
+    console.error(`   ❌ Failed to send OTP email to ${email}:`, error.message);
   }
 
-  console.log(`📧 OTP process completed for ${email}\n`);
   return { success: true };
 }
 
@@ -75,13 +78,11 @@ export async function verifyOtp(email, code, purpose = "EMAIL_VERIFICATION") {
     throw new ApiError(400, "Invalid or expired verification code");
   }
 
-  // Check if expired (MongoDB TTL should handle this, but double-check)
   if (new Date() > otp.expiresAt) {
     await Otp.deleteOne({ _id: otp._id });
     throw new ApiError(400, "Verification code has expired");
   }
 
-  // Delete the OTP after successful verification
   await Otp.deleteOne({ _id: otp._id });
 
   return { success: true };

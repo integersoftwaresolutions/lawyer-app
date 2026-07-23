@@ -6,6 +6,7 @@ import Button from "../ui/Button";
 import Popover from "../ui/Popover";
 import Avatar from "../ui/Avatar";
 import ThemeToggle from "../ThemeToggle";
+import NotificationBell from "../notifications/NotificationBell";
 import UserMenuPanel from "./UserMenuPanel";
 import { getDashboardPath, getProfilePath } from "../../utils/authRoutes";
 import { FiMenu, FiX, FiMoreVertical } from "react-icons/fi";
@@ -82,6 +83,8 @@ export default function Navbar({
 
           <ThemeToggle />
 
+          {user ? <NotificationBell /> : null}
+
           {user ? (
             <Popover
               trigger={
@@ -112,6 +115,8 @@ export default function Navbar({
 
         <div className="flex items-center gap-2 sm:gap-3 md:hidden">
           <ThemeToggle />
+
+          {user ? <NotificationBell /> : null}
 
           {user ? (
             <Popover
@@ -212,7 +217,7 @@ export default function Navbar({
                 onClick={closeMobileMenu}
                 className="block px-4 py-3 rounded-lg text-text-primary no-underline text-sm font-medium hover:bg-surface-hover transition-colors"
               >
-                Profile
+                Settings
               </Link>
               <button
                 type="button"

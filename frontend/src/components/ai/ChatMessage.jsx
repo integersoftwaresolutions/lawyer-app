@@ -1,8 +1,12 @@
 import { useState } from "react";
 import { FiCopy, FiCheck, FiUser, FiCpu, FiBookOpen, FiFileText, FiExternalLink, FiChevronDown, FiChevronUp } from "react-icons/fi";
+import AssistantAvatar from "./AssistantAvatar";
 
-export default function ChatMessage({ message }) {
-  const [copied, setCopied] = useState(false);
+export default function ChatMessage({
+  message,
+  assistantIcon: AssistantIcon = FiCpu,
+  assistantIconClassName = "bg-primary-light text-primary"
+}) {  const [copied, setCopied] = useState(false);
   const [showCitations, setShowCitations] = useState(true);
   const isUser = message.role === "user";
   const citations = Array.isArray(message.citations) ? message.citations : [];
@@ -24,7 +28,7 @@ export default function ChatMessage({ message }) {
           <div className="rounded-2xl rounded-br-md bg-secondary text-secondary-text px-4 py-2.5 shadow-sm">
             <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.content}</p>
           </div>
-          <div className="w-7 h-7 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0 mb-0.5">
+          <div className="w-7 h-7 rounded-full bg-primary-light text-primary flex items-center justify-center shrink-0 mb-0.5">
             <FiUser className="w-3.5 h-3.5" />
           </div>
         </div>
@@ -34,10 +38,7 @@ export default function ChatMessage({ message }) {
 
   return (
     <div className="flex gap-3 group">
-      <div className="w-8 h-8 rounded-full bg-primary/15 text-primary flex items-center justify-center shrink-0 mt-0.5">
-        <FiCpu className="w-4 h-4" />
-      </div>
-      <div className="flex-1 min-w-0 max-w-[85%] sm:max-w-none">
+      <AssistantAvatar icon={AssistantIcon} className={assistantIconClassName} />      <div className="flex-1 min-w-0 max-w-[85%] sm:max-w-none">
         <div className="rounded-2xl rounded-tl-md bg-surface border border-card-border px-4 py-3 shadow-sm">
           <AssistantText content={message.content} citationCount={citations.length} />
         </div>

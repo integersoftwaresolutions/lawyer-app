@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
+import { FiSettings } from "react-icons/fi";
 import { adminApi } from "../../services/admin.api";
-import { Card, Input, StateHandler, StickySaveBar } from "../../components/ui";
+import { Card, Input, PageHeader, PageShell, StateHandler, StickySaveBar } from "../../components/ui";
 import { useStateHandler } from "../../hooks/useStateHandler";
+import { useToast } from "../../hooks/useToast";
 
 export default function AdminSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [savedSnapshot, setSavedSnapshot] = useState("");
+  const toast = useToast();
 
   const { loading, error, data, retry, setData } = useStateHandler(
     async () => {
@@ -41,11 +44,11 @@ export default function AdminSettingsPage() {
       setSaving(true);
       await adminApi.updateSettings(settings);
       setSavedSnapshot(JSON.stringify(settings));
-      alert("Settings updated successfully!");
+      toast.success("Settings updated successfully");
       retry();
     } catch (error) {
       console.error("Failed to save settings:", error);
-      alert(error.response?.data?.message || "Failed to save settings");
+      toast.error(error.response?.data?.message || "Failed to save settings");
     } finally {
       setSaving(false);
     }
@@ -57,8 +60,13 @@ export default function AdminSettingsPage() {
 
   return (
     <StateHandler loading={loading} error={error} retry={retry}>
-      <div>
-      <Card title="Platform Settings" subtitle="Configure platform-wide settings">
+      <PageShell>
+        <PageHeader
+          icon={FiSettings}
+          title="Platform Settings"
+          subtitle="Configure platform-wide settings and fees"
+        />
+        <Card>
         <div className="max-w-[500px]">
           <Input
             label="Commission Percentage (%)"
@@ -113,7 +121,7 @@ export default function AdminSettingsPage() {
         />
       </Card>
 
-      <Card title="Platform Information" className="mt-6">
+      <Card title="Platform Information">
         <div className="text-text-secondary">
           <h4 className="text-text-primary mb-3">Commission Model</h4>
           <p className="mb-4">
@@ -137,7 +145,7 @@ export default function AdminSettingsPage() {
           </p>
         </div>
       </Card>
-      </div>
+      </PageShell>
     </StateHandler>
   );
 }

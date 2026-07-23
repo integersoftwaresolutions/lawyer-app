@@ -3,6 +3,16 @@ export { default as Button } from "./Button";
 export { default as IconButton } from "./IconButton";
 export { default as Spinner } from "./Spinner";
 export { default as FilterTabs } from "./FilterTabs";
+export { default as PageShell } from "./PageShell";
+export { default as PageHeader } from "./PageHeader";
+export {
+  default as PageFilters,
+  PageTabFilters,
+  PageFilterGrid,
+  PageFilterField,
+  PageFilterActions,
+  PageSearchField
+} from "./PageFilters";
 export { default as ActionMenu } from "./ActionMenu";
 export { default as Input } from "./Input";
 export { default as Card } from "./Card";
@@ -18,6 +28,7 @@ export { default as ProfilePicture } from "./ProfilePicture";
 export { default as Table } from "./Table";
 export { default as Pagination } from "./Pagination";
 export { default as Sidebar } from "./Sidebar";
+export { default as Switch } from "./Switch";
 export { default as StickySaveBar } from "./StickySaveBar";
 export { Toast, ToastContainer } from "./Toast";
 export { default as StateHandler } from "../StateHandler";

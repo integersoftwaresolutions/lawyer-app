@@ -1,6 +1,16 @@
 import { useState } from "react";
 import { adminApi } from "../../services/admin.api";
-import { Card, Button, Badge, Table, Modal, Textarea, Select } from "../../components/ui";
+import {
+  Badge,
+  Button,
+  Modal,
+  PageHeader,
+  PageShell,
+  PageTabFilters,
+  Select,
+  Table,
+  Textarea
+} from "../../components/ui";
 import { useToast } from "../../hooks/useToast";
 import {
   FiAlertCircle,
@@ -183,31 +193,19 @@ export default function AdminDisputesPage() {
   ];
 
   return (
-    <div>
-      <Card>
-        <div className="flex justify-between items-center mb-5">
-          <h2 className="text-xl font-bold text-text-primary m-0">Disputes</h2>
-          <div className="flex gap-2">
-            {filterOptions.map((opt) => (
-              <Button
-                key={opt.value}
-                variant={filter === opt.value ? "primary" : "secondary"}
-                size="sm"
-                onClick={() => setFilter(opt.value)}
-              >
-                {opt.label}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        <Table
-          columns={columns}
-          data={fetchDisputes}
-          dependencies={[filter, refreshKey]}
-          emptyMessage="No disputes found"
-        />
-      </Card>
+    <PageShell>
+      <PageHeader
+        icon={FiAlertCircle}
+        title="Disputes"
+        subtitle="Review and resolve client–lawyer disputes"
+      />
+      <PageTabFilters options={filterOptions} value={filter} onChange={setFilter} />
+      <Table
+        columns={columns}
+        data={fetchDisputes}
+        dependencies={[filter, refreshKey]}
+        emptyMessage="No disputes found"
+      />
 
       <Modal
         isOpen={resolveModal.open}
@@ -294,6 +292,6 @@ export default function AdminDisputesPage() {
           </div>
         )}
       </Modal>
-    </div>
+    </PageShell>
   );
 }

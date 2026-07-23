@@ -1,6 +1,13 @@
 import { useState } from "react";
+import { FiCalendar } from "react-icons/fi";
 import { adminApi } from "../../services/admin.api";
-import { Card, Button, Badge, Table } from "../../components/ui";
+import {
+  Badge,
+  PageHeader,
+  PageShell,
+  PageTabFilters,
+  Table
+} from "../../components/ui";
 
 export default function AdminBookingsPage() {
   const [filter, setFilter] = useState("");
@@ -91,33 +98,19 @@ export default function AdminBookingsPage() {
   ];
 
   return (
-    <div>
-      <Card>
-        <div className="flex justify-between items-center mb-5">
-          <h2 className="text-xl font-bold text-text-primary m-0">
-            All Bookings
-          </h2>
-          <div className="flex gap-2">
-            {filterOptions.map((opt) => (
-              <Button
-                key={opt.value}
-                variant={filter === opt.value ? "primary" : "secondary"}
-                size="sm"
-                onClick={() => setFilter(opt.value)}
-              >
-                {opt.label}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        <Table
-          columns={columns}
-          data={fetchBookings}
-          dependencies={[filter]}
-          emptyMessage="No bookings found"
-        />
-      </Card>
-    </div>
+    <PageShell>
+      <PageHeader
+        icon={FiCalendar}
+        title="All Bookings"
+        subtitle="Monitor every consultation on the platform"
+      />
+      <PageTabFilters options={filterOptions} value={filter} onChange={setFilter} />
+      <Table
+        columns={columns}
+        data={fetchBookings}
+        dependencies={[filter]}
+        emptyMessage="No bookings found"
+      />
+    </PageShell>
   );
 }

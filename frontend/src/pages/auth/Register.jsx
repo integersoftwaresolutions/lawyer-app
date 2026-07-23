@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../hooks/useToast";
 import { useStepNavigation } from "../../hooks/useStepNavigation";
@@ -25,15 +25,18 @@ const REGISTER_STEPS = {
 
 export default function Register() {
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { register, login } = useAuth();
   const toast = useToast();
+  const requestedRole = searchParams.get("role")?.toUpperCase();
+  const initialRole = ["CLIENT", "LAWYER"].includes(requestedRole) ? requestedRole : "";
   
-  const { step, goNext, goBack, canGoBack } = useStepNavigation(REGISTER_STEPS.METHOD, {
-    defaultBackPath: "/login"
+  const { step, goNext, goBack, goTo, canGoBack } = useStepNavigation(REGISTER_STEPS.METHOD, {
+    defaultBackPath: initialRole ? `/login?role=${initialRole}` : "/login"
   });
   
   const { formData, errors, loading, setLoading, handleChange, setError, setErrors, clearErrors } = useAuthForm(INITIAL_FORM_DATA);
-  const [role, setRole] = useState("");
+  const [role, setRole] = useState(initialRole);
 
   const validate = () => {
     const newErrors = {};
@@ -90,6 +93,10 @@ export default function Register() {
       };
       
       await register(payload);
+
+      // Auto-login so verify-email flow has an active session
+      await login({ email: formData.email, password: formData.password });
+
       toast.success("Registration successful! Please verify your email.");
       navigate(`/verify-email?email=${encodeURIComponent(formData.email)}&from=register`);
     } catch (error) {
@@ -109,17 +116,38 @@ export default function Register() {
     setRole(selectedRole);
   };
 
+  const handleMethodContinue = () => {
+    if (role) {
+      goTo(REGISTER_STEPS.FORM);
+      return;
+    }
+    goNext();
+  };
+
+  const handleBack = () => {
+    if (step === REGISTER_STEPS.FORM && initialRole) {
+      goTo(REGISTER_STEPS.METHOD);
+      return;
+    }
+    goBack();
+  };
+
   const authFooter = (
     <>
       Already have an account?{" "}
-      <AuthLink onClick={() => navigate("/login")}>Sign in</AuthLink>
+      <AuthLink onClick={() => navigate(role ? `/login?role=${role}` : "/login")}>
+        Sign in
+      </AuthLink>
     </>
   );
 
   const getStepTitle = () => {
     switch (step) {
       case REGISTER_STEPS.METHOD:
-        return { title: "Create Account", subtitle: "Get started with your free account" };
+        return {
+          title: role ? `Create ${role === "LAWYER" ? "Lawyer" : "Client"} Account` : "Create Account",
+          subtitle: "Get started with your free account"
+        };
       case REGISTER_STEPS.ROLE:
         return { title: "Choose Your Role", subtitle: "How will you be using the platform?" };
       case REGISTER_STEPS.FORM:
@@ -136,13 +164,13 @@ export default function Register() {
       title={title}
       subtitle={subtitle}
       showBackButton={canGoBack}
-      onBack={goBack}
+      onBack={handleBack}
       footer={authFooter}
     >
       {step === REGISTER_STEPS.METHOD && (
         <RegisterMethodStep
-          onEmailClick={goNext}
-          onGoogleSuccess={() => goNext()}
+          onEmailClick={handleMethodContinue}
+          onGoogleSuccess={handleMethodContinue}
         />
       )}
 

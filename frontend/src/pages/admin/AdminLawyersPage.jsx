@@ -1,6 +1,18 @@
 import { useState } from "react";
+import { FiBriefcase } from "react-icons/fi";
 import { adminApi } from "../../services/admin.api";
-import { Card, Button, Badge, Modal, Textarea, Select, Table } from "../../components/ui";
+import {
+  Badge,
+  Button,
+  Modal,
+  PageHeader,
+  PageShell,
+  PageTabFilters,
+  Select,
+  Table,
+  Textarea
+} from "../../components/ui";
+import { useToast } from "../../hooks/useToast";
 
 export default function AdminLawyersPage() {
   const [filter, setFilter] = useState("");
@@ -8,6 +20,7 @@ export default function AdminLawyersPage() {
   const [verifyData, setVerifyData] = useState({ status: "APPROVED", notes: "" });
   const [submitting, setSubmitting] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const toast = useToast();
 
   const fetchLawyers = async () => {
     const params = filter ? { status: filter } : {};
@@ -27,7 +40,7 @@ export default function AdminLawyersPage() {
       setRefreshKey((k) => k + 1);
     } catch (error) {
       console.error("Failed to verify:", error);
-      alert(error.response?.data?.message || "Failed to update verification");
+      toast.error(error.response?.data?.message || "Failed to update verification");
     } finally {
       setSubmitting(false);
     }
@@ -116,33 +129,19 @@ export default function AdminLawyersPage() {
   ];
 
   return (
-    <div>
-      <Card>
-        <div className="flex justify-between items-center mb-5">
-          <h2 className="text-xl font-bold text-text-primary m-0">
-            All Lawyers
-          </h2>
-          <div className="flex gap-2">
-            {filterOptions.map((opt) => (
-              <Button
-                key={opt.value}
-                variant={filter === opt.value ? "primary" : "secondary"}
-                size="sm"
-                onClick={() => setFilter(opt.value)}
-              >
-                {opt.label}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        <Table
-          columns={columns}
-          data={fetchLawyers}
-          dependencies={[filter, refreshKey]}
-          emptyMessage="No lawyers found"
-        />
-      </Card>
+    <PageShell>
+      <PageHeader
+        icon={FiBriefcase}
+        title="All Lawyers"
+        subtitle="Manage lawyer profiles and verification status"
+      />
+      <PageTabFilters options={filterOptions} value={filter} onChange={setFilter} />
+      <Table
+        columns={columns}
+        data={fetchLawyers}
+        dependencies={[filter, refreshKey]}
+        emptyMessage="No lawyers found"
+      />
 
       <Modal
         isOpen={verifyModal.open}
@@ -176,6 +175,6 @@ export default function AdminLawyersPage() {
           onChange={(e) => setVerifyData({ ...verifyData, notes: e.target.value })}
         />
       </Modal>
-    </div>
+    </PageShell>
   );
 }

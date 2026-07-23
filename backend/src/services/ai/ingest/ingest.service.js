@@ -155,7 +155,10 @@ export async function ingestLegalDocument(input, options = {}) {
 
   try {
     const namespace = getLawyerNamespace(input.ownerUserId);
-    const chunks = chunkText(text);
+    const chunks = chunkText(text, {
+      chunkSizeTokens: ragConfig.privateDocumentChunkSizeTokens,
+      chunkOverlapTokens: ragConfig.privateDocumentChunkOverlapTokens
+    });
     if (chunks.length === 0) throw new ApiError(400, "No chunks produced from document");
 
     await deleteExistingChunks(RAG_SOURCE_TYPES.LEGAL_DOCUMENT, doc._id, namespace);

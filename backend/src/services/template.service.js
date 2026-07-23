@@ -7,64 +7,66 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const templatesDir = path.join(__dirname, "../templates");
 
-/**
- * Read template file
- */
-function readTemplate(templateName) {
-  const templatePath = path.join(templatesDir, `${templateName}.html`);
+function readTemplate(relativePath) {
+  const templatePath = path.join(templatesDir, `${relativePath}.html`);
   try {
     return fs.readFileSync(templatePath, "utf-8");
   } catch (error) {
-    console.error(`Failed to read template ${templateName}:`, error);
-    throw new Error(`Template ${templateName} not found`);
+    console.error(`Failed to read template ${relativePath}:`, error);
+    throw new Error(`Template ${relativePath} not found`);
   }
 }
 
-/**
- * Replace template variables with actual values
- */
 function renderTemplate(template, variables) {
   let rendered = template;
   for (const [key, value] of Object.entries(variables)) {
-    const regex = new RegExp(`{{${key}}}`, "g");
-    rendered = rendered.replace(regex, value);
+    const safeValue = value == null ? "" : String(value);
+    rendered = rendered.replace(new RegExp(`{{${key}}}`, "g"), safeValue);
   }
   return rendered;
 }
 
-/**
- * Get base template variables
- */
 function getBaseVariables() {
+  const baseUrl = (env.appBaseUrl || env.clientOrigin || "").replace(/\/$/, "");
   return {
     appName: env.emailFromName || "Lawyer App",
     year: new Date().getFullYear().toString(),
-    supportEmail: env.emailFrom || "support@lawyerapp.com"
+    supportEmail: env.emailFrom || "support@lawyerapp.com",
+    appBaseUrl: baseUrl,
+    brandColor: "#085456",
+    brandColorLight: "#0a6b6e"
   };
 }
 
 /**
- * Render email template
- * @param {string} templateName - Name of the template (without .html extension)
- * @param {object} variables - Variables to replace in template
- * @returns {string} Rendered HTML
+ * Render an email: content partial wrapped in the shared layout.
+ * @param {string} templateName - File name under templates/emails/ (without .html)
  */
 export function renderEmailTemplate(templateName, variables = {}) {
-  const template = readTemplate(templateName);
+  const content = readTemplate(`emails/${templateName}`);
+  const layout = readTemplate("layouts/email-layout");
   const baseVars = getBaseVariables();
-  const allVariables = { ...baseVars, ...variables };
-  return renderTemplate(template, allVariables);
+  const allVariables = {
+    preheader: "",
+    headline: "",
+    ctaUrl: "",
+    ctaLabel: "",
+    ...baseVars,
+    ...variables
+  };
+
+  const renderedContent = renderTemplate(content, allVariables);
+  const withContent = layout.replace("{{content}}", renderedContent);
+  return renderTemplate(withContent, allVariables);
 }
 
-/**
- * Generate plain text version from HTML (simple version)
- */
 export function htmlToText(html) {
   return html
     .replace(/<style[^>]*>.*?<\/style>/gis, "")
     .replace(/<script[^>]*>.*?<\/script>/gis, "")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n\n")
     .replace(/<[^>]+>/g, "")
     .replace(/\n\s*\n/g, "\n")
     .trim();
 }
-

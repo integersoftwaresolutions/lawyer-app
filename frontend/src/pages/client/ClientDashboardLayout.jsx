@@ -5,7 +5,7 @@ import {
   FiCalendar, 
   FiCreditCard, 
   FiStar, 
-  FiUser 
+  FiSettings
 } from "react-icons/fi";
 
 const menuItems = [
@@ -13,7 +13,7 @@ const menuItems = [
   { id: "bookings", label: "My Bookings", icon: FiCalendar },
   { id: "wallet", label: "Wallet & Credits", icon: FiCreditCard },
   { id: "reviews", label: "My Reviews", icon: FiStar },
-  { id: "profile", label: "My Profile", icon: FiUser },
+  { id: "settings", label: "Settings", icon: FiSettings },
 ];
 
 export default function ClientDashboardLayout() {

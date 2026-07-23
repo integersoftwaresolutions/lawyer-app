@@ -4,6 +4,7 @@ import Booking from "../models/Booking.js";
 import Dispute from "../models/Dispute.js";
 import { BOOKING_STATUS } from "../config/constants.js";
 import { getPagination, buildPaginationMeta } from "../utils/pagination.js";
+import { CLIENT_PROFILE_FIELDS } from "../utils/userProfileFields.js";
 
 export async function getClientProfile(userId) {
   let profile = await ClientProfile.findOne({ userId });
@@ -22,7 +23,7 @@ export async function updateClientProfile(userId, data) {
     profile = new ClientProfile({ userId });
   }
   
-  const allowedFields = ["fullName", "phone", "whatsapp", "city", "address", "cnic", "dateOfBirth", "gender", "profileImage"];
+  const allowedFields = CLIENT_PROFILE_FIELDS;
   for (const field of allowedFields) {
     if (data[field] !== undefined) {
       profile[field] = data[field];

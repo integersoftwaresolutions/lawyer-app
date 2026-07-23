@@ -4,12 +4,23 @@ import {
   FiFile,
   FiFolder,
   FiPlus,
+  FiEye,
   FiRefreshCcw,
   FiSearch,
   FiTrash2
 } from "react-icons/fi";
-import { Badge, Button, Input } from "../../components/ui";
+import {
+  Badge,
+  Button,
+  ConfirmModal,
+  PageFilterActions,
+  PageFilterField,
+  PageFilters,
+  PageHeader,
+  PageShell
+} from "../../components/ui";
 import DocumentUploadModal from "../../components/ai/DocumentUploadModal";
+import RagDocumentViewModal from "../../components/ai/RagDocumentViewModal";
 import { aiApi } from "../../services/ai.api";
 import { getErrorMessage } from "../../utils/errorHandler";
 
@@ -30,6 +41,8 @@ export default function LawyerDocumentsPage() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uploadBusy, setUploadBusy] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [confirmDeleteDoc, setConfirmDeleteDoc] = useState(null);
+  const [viewDocId, setViewDocId] = useState(null);
 
   const totalReady = useMemo(() => items.filter((d) => d.status === "ready").length, [items]);
   const totalChunks = useMemo(
@@ -78,13 +91,14 @@ export default function LawyerDocumentsPage() {
     }
   }
 
-  async function handleDelete(doc) {
-    if (!window.confirm(`Delete "${doc.title}"? This will also remove its embeddings.`)) return;
-    setDeletingId(doc.id);
+  async function handleDelete() {
+    if (!confirmDeleteDoc) return;
+    setDeletingId(confirmDeleteDoc.id);
     setError(null);
     try {
-      await aiApi.deleteDocument(doc.id);
-      setItems((prev) => prev.filter((d) => d.id !== doc.id));
+      await aiApi.deleteDocument(confirmDeleteDoc.id);
+      setItems((prev) => prev.filter((d) => d.id !== confirmDeleteDoc.id));
+      setConfirmDeleteDoc(null);
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -93,81 +107,79 @@ export default function LawyerDocumentsPage() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0">
-            <FiFolder className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-lg sm:text-xl font-bold text-text-primary truncate">My Documents</h1>
-            <p className="text-xs text-text-muted">
-              Private knowledge base · indexed for AI retrieval
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="secondary"
-            icon={FiRefreshCcw}
-            size="sm"
-            onClick={() => load(appliedSearch ? { q: appliedSearch } : {})}
-            disabled={loading}
-          >
-            Refresh
-          </Button>
-          <Button icon={FiPlus} size="sm" onClick={() => setUploadOpen(true)}>
-            Upload document
-          </Button>
-        </div>
-      </div>
+    <PageShell>
+      <PageHeader
+        icon={FiFolder}
+        title="My Documents"
+        subtitle="Private knowledge base · indexed for AI retrieval"
+        actions={
+          <>
+            <Button
+              variant="secondary"
+              icon={FiRefreshCcw}
+              size="sm"
+              onClick={() => load(appliedSearch ? { q: appliedSearch } : {})}
+              disabled={loading}
+            >
+              Refresh
+            </Button>
+            <Button icon={FiPlus} size="sm" onClick={() => setUploadOpen(true)}>
+              Upload document
+            </Button>
+          </>
+        }
+      />
 
-      {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <Stat label="Documents" value={meta.total ?? items.length} />
         <Stat label="Ready" value={totalReady} accent="success" />
         <Stat label="Indexed chunks" value={totalChunks} />
       </div>
 
-      {/* Search */}
-      <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 max-w-md">
-        <div className="relative flex-1">
-          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by title or case ref…"
-            className="w-full h-9 pl-9 pr-3 rounded-md border border-input-border bg-input-background text-sm outline-none focus:border-primary/50"
-          />
-        </div>
-        <Button type="submit" variant="secondary" size="sm">
-          Search
-        </Button>
-        {appliedSearch && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setSearch("");
-              setAppliedSearch("");
-            }}
-          >
-            Clear
-          </Button>
-        )}
-      </form>
+      <PageFilters>
+        <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row sm:items-end gap-3">
+          <PageFilterField label="Search" className="flex-1 max-w-md">
+            <div className="relative">
+              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by title or case ref…"
+                className="w-full h-9 pl-9 pr-3 rounded-md border border-input-border bg-input-background text-input-text text-sm outline-none focus:border-primary"
+              />
+            </div>
+          </PageFilterField>
+          <PageFilterActions>
+            <Button type="submit" variant="secondary" size="sm">
+              Search
+            </Button>
+            {appliedSearch && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSearch("");
+                  setAppliedSearch("");
+                }}
+              >
+                Clear
+              </Button>
+            )}
+          </PageFilterActions>
+        </form>
+      </PageFilters>
 
       {error && (
-        <div className="flex items-start gap-2 rounded-lg p-3 text-sm bg-danger/10 text-danger border border-danger/20">
+        <div className="flex items-start gap-2 rounded-lg p-3 text-sm bg-danger-light text-danger border border-danger">
           <FiAlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
           <div className="flex-1 min-w-0">
-            <p className="break-words">{error}</p>
+            <p className="break-words m-0">{error}</p>
           </div>
         </div>
       )}
 
-      <div className="border border-card-border rounded-xl bg-card overflow-hidden">
+      <div className="border border-card-border rounded-xl bg-card overflow-hidden shadow-sm">
         {loading ? (
           <SkeletonRows />
         ) : items.length === 0 ? (
@@ -175,8 +187,8 @@ export default function LawyerDocumentsPage() {
         ) : (
           <ul className="divide-y divide-card-border">
             {items.map((doc) => (
-              <li key={doc.id} className="p-4 flex items-start gap-3 hover:bg-surface-hover/40 transition-colors">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <li key={doc.id} className="p-4 flex items-start gap-3 hover:bg-surface-hover transition-colors">
+                <div className="w-10 h-10 rounded-lg bg-primary-light text-primary flex items-center justify-center shrink-0">
                   <FiFile className="w-5 h-5" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -205,15 +217,25 @@ export default function LawyerDocumentsPage() {
                     )}
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleDelete(doc)}
-                  disabled={deletingId === doc.id}
-                  className="p-2 rounded-lg text-text-muted hover:text-danger hover:bg-danger/10 disabled:opacity-50 transition-colors shrink-0"
-                  aria-label={`Delete ${doc.title}`}
-                >
-                  <FiTrash2 className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setViewDocId(doc.id)}
+                    className="p-2 rounded-lg text-text-muted hover:text-primary hover:bg-primary/10 transition-colors"
+                    aria-label={`View ${doc.title}`}
+                  >
+                    <FiEye className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDeleteDoc(doc)}
+                    disabled={deletingId === doc.id}
+                    className="p-2 rounded-lg text-text-muted hover:text-danger hover:bg-danger/10 disabled:opacity-50 transition-colors"
+                    aria-label={`Delete ${doc.title}`}
+                  >
+                    <FiTrash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
@@ -226,7 +248,30 @@ export default function LawyerDocumentsPage() {
         onSubmit={handleUpload}
         busy={uploadBusy}
       />
-    </div>
+      <RagDocumentViewModal
+        isOpen={!!viewDocId}
+        onClose={() => setViewDocId(null)}
+        documentId={viewDocId}
+        fetchDocument={aiApi.getDocument}
+        variant="document"
+      />
+      <ConfirmModal
+        isOpen={!!confirmDeleteDoc}
+        onClose={() => setConfirmDeleteDoc(null)}
+        onConfirm={handleDelete}
+        title="Delete document permanently?"
+        confirmLabel="Delete permanently"
+        confirmVariant="danger"
+        loading={!!confirmDeleteDoc && deletingId === confirmDeleteDoc.id}
+      >
+        <p className="text-text-secondary mt-0 mb-0">
+          This will permanently delete{" "}
+          <span className="font-semibold text-text-primary">&quot;{confirmDeleteDoc?.title}&quot;</span>{" "}
+          and
+          remove all of its indexed embeddings from AI retrieval. This action cannot be undone.
+        </p>
+      </ConfirmModal>
+    </PageShell>
   );
 }
 

@@ -16,9 +16,22 @@ export function getProfilePath(role) {
     case "ADMIN":
       return "/admin/settings";
     case "LAWYER":
-      return "/lawyer/profile";
+      return "/lawyer/settings/profile";
     case "CLIENT":
-      return "/client/profile";
+      return "/client/settings/profile";
+    default:
+      return "/login";
+  }
+}
+
+export function getNotificationsPath(role) {
+  switch (role) {
+    case "ADMIN":
+      return "/admin/notifications";
+    case "LAWYER":
+      return "/lawyer/notifications";
+    case "CLIENT":
+      return "/client/notifications";
     default:
       return "/login";
   }

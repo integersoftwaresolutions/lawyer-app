@@ -1,12 +1,13 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { FiAlertCircle, FiCpu, FiMessageSquare, FiX } from "react-icons/fi";
-import { Badge } from "../ui";
+import { Badge, ConfirmModal } from "../ui";
 import { useAiChat } from "../../hooks/useAiChat";
 import SessionList from "./SessionList";
 import ChatMessage from "./ChatMessage";
 import ChatInput from "./ChatInput";
 import ChatTypingIndicator from "./ChatTypingIndicator";
 import ChatEmptyState from "./ChatEmptyState";
+import AssistantAvatar from "./AssistantAvatar";
 import ResearchFilters from "./ResearchFilters";
 
 const SCROLL_THRESHOLD = 100;
@@ -17,11 +18,26 @@ export default function ChatPanel({
   initialMessage = null,
   compactSessions = false,
   className = "",
-  showFilters = mode === "research"
+  showFilters = mode === "research",
+  conversationsLabel = "Conversations",
+  headerIcon: HeaderIcon = FiCpu,
+  headerIconClassName = "bg-primary-light text-primary",
+  headerTitle,
+  headerSubtitle,
+  headerBadge,
+  toolbarContent,
+  beforeSendGuard,
+  emptyStateRenderer,
+  postMessagesContent,
+  errorRenderer,
+  onNewChat,
+  onDeleteSession,
+  onContextChange
 }) {
   const {
     sessions,
     activeSessionId,
+    activeSession,
     messages,
     sessionsLoading,
     messagesLoading,
@@ -29,6 +45,7 @@ export default function ChatPanel({
     error,
     usageSummary,
     createSession,
+    updateSession,
     selectSession,
     sendMessage,
     deleteSession,
@@ -42,8 +59,7 @@ export default function ChatPanel({
   const initialMessageSent = useRef(false);
   const [conversationsOpen, setConversationsOpen] = useState(false);
   const [filters, setFilters] = useState({});
-
-  const activeSession = sessions.find((s) => s.id === activeSessionId);
+  const [pendingDeleteSessionId, setPendingDeleteSessionId] = useState(null);
 
   function buildSendOptions() {
     const out = {};
@@ -86,18 +102,90 @@ export default function ChatPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialMessage, messagesLoading, sending, sendMessage]);
 
+  const panelContext = {
+    mode,
+    sessions,
+    activeSessionId,
+    activeSession,
+    messages,
+    sessionsLoading,
+    messagesLoading,
+    sending,
+    error,
+    usageSummary,
+    filters,
+    setFilters,
+    createSession,
+    updateSession,
+    selectSession,
+    sendMessage: handleSend,
+    deleteSession,
+    clearError,
+    loadSession
+  };
+
+  useEffect(() => {
+    onContextChange?.(panelContext);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    onContextChange,
+    mode,
+    activeSessionId,
+    sessionsLoading,
+    messagesLoading,
+    sending,
+    error,
+    sessions,
+    activeSession,
+    messages,
+    usageSummary,
+    filters
+  ]);
+
+  const guardResult = beforeSendGuard ? beforeSendGuard(panelContext) : { allowed: true };
+  const canSend =
+    typeof guardResult === "boolean" ? guardResult : (guardResult?.allowed ?? true);
+  const guardReason =
+    typeof guardResult === "object" && guardResult?.reason ? guardResult.reason : "";
+
+  const resolvedHeaderTitle =
+    typeof headerTitle === "function"
+      ? headerTitle(panelContext)
+      : (headerTitle || activeSession?.title || "New conversation");
+  const resolvedHeaderSubtitle =
+    typeof headerSubtitle === "function"
+      ? headerSubtitle(panelContext)
+      : (headerSubtitle || "Pakistani law · research mode");
+  const resolvedHeaderBadge =
+    typeof headerBadge === "function" ? headerBadge(panelContext) : headerBadge;
+  const resolvedToolbar =
+    typeof toolbarContent === "function" ? toolbarContent(panelContext) : toolbarContent;
+
   async function handleNewChat() {
     clearError();
     try {
-      await createSession();
+      if (onNewChat) {
+        await onNewChat(panelContext);
+      } else {
+        await createSession();
+      }
     } catch {
       // error shown in banner
     }
   }
 
   async function handleDelete(sessionId) {
-    if (!window.confirm("Delete this conversation?")) return;
-    await deleteSession(sessionId);
+    if (onDeleteSession) {
+      await onDeleteSession(sessionId, panelContext);
+      return;
+    }
+    setPendingDeleteSessionId(sessionId);
+  }
+
+  async function confirmDeleteSession() {
+    if (!pendingDeleteSessionId) return;
+    await deleteSession(pendingDeleteSessionId);
+    setPendingDeleteSessionId(null);
   }
 
   function handleSelectSession(sessionId) {
@@ -148,7 +236,7 @@ export default function ChatPanel({
           }`}
         >
           <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-card-border">
-            <span className="text-sm font-semibold">Conversations</span>
+            <span className="text-sm font-semibold">{conversationsLabel}</span>
             <button
               type="button"
               onClick={() => setConversationsOpen(false)}
@@ -164,7 +252,7 @@ export default function ChatPanel({
 
       {/* Desktop conversations sidebar */}
       <aside
-        className={`hidden lg:flex shrink-0 flex-col min-h-0 border-r border-card-border bg-surface/30 ${
+        className={`hidden lg:flex shrink-0 flex-col min-h-0 border-r border-card-border bg-surface ${
           compactSessions ? "w-[240px]" : "w-[260px]"
         }`}
       >
@@ -184,50 +272,61 @@ export default function ChatPanel({
             >
               <FiMessageSquare className="w-5 h-5" />
             </button>
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 hidden sm:flex">
-              <FiCpu className="w-4 h-4" />
+            <div
+              className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 hidden sm:flex ${headerIconClassName}`}
+            >
+              <HeaderIcon className="w-4 h-4" />
             </div>
             <div className="min-w-0">
               <h3 className="text-sm font-semibold text-text-primary truncate">
-                {activeSession?.title || "New conversation"}
+                {resolvedHeaderTitle}
               </h3>
               <p className="text-[11px] text-text-muted truncate">
-                Pakistani law · research mode
+                {resolvedHeaderSubtitle}
               </p>
             </div>
           </div>
-          {usageSummary && (
-            <Badge variant="info" size="sm" className="shrink-0 hidden sm:inline-flex">
-              {(usageSummary.totalTokens || 0).toLocaleString()} tokens
-            </Badge>
+          {resolvedToolbar && <div className="flex items-center gap-2 flex-wrap">{resolvedToolbar}</div>}
+          {resolvedHeaderBadge || (
+            usageSummary && (
+              <Badge variant="info" size="sm" className="shrink-0 hidden sm:inline-flex">
+                {(usageSummary.totalTokens || 0).toLocaleString()} tokens
+              </Badge>
+            )
           )}
         </header>
 
         {/* Error banner — fixed */}
-        {error && (
-          <div
-            className={`shrink-0 mx-4 mt-3 flex items-start gap-2 rounded-lg p-3 text-sm ${
-              isRateLimited
-                ? "bg-warning/15 text-warning border border-warning/30"
-                : "bg-danger/10 text-danger border border-danger/20"
-            }`}
-          >
-            <FiAlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-            <div className="flex-1 min-w-0">
-              <p className="break-words">{error}</p>
-              {isRateLimited && (
-                <p className="text-xs mt-1 opacity-90">Limit resets tomorrow.</p>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={clearError}
-              className="text-xs shrink-0 underline opacity-80 hover:opacity-100"
+        {errorRenderer
+          ? errorRenderer({
+              ...panelContext,
+              isRateLimited,
+              clearError
+            })
+          : error && (
+            <div
+              className={`shrink-0 mx-4 mt-3 flex items-start gap-2 rounded-lg p-3 text-sm border ${
+                isRateLimited
+                  ? "bg-warning-light text-warning border-warning-border"
+                  : "bg-danger-light text-danger border-danger-border"
+              }`}
             >
-              Dismiss
-            </button>
-          </div>
-        )}
+              <FiAlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="break-words m-0">{error}</p>
+                {isRateLimited && (
+                  <p className="text-xs mt-1 mb-0">Limit resets tomorrow.</p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={clearError}
+                className="text-xs shrink-0 underline"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
 
         {/* Messages — scrollable fixed-height region */}
         <div
@@ -241,23 +340,43 @@ export default function ChatPanel({
                 <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-3" />
                 <p className="text-sm text-text-secondary">Loading messages…</p>
               </div>
+            ) : (sessionsLoading && messages.length === 0) ? (
+              <div className="flex flex-col items-center justify-center py-16">
+                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-3" />
+                <p className="text-sm text-text-secondary">Loading messages…</p>
+              </div>
             ) : messages.length === 0 && !sending ? (
-              <ChatEmptyState onSuggestion={handleSuggestion} onNewChat={handleNewChat} />
+              emptyStateRenderer ? (
+                emptyStateRenderer({
+                  ...panelContext,
+                  onSuggestion: handleSuggestion,
+                  onNewChat: handleNewChat
+                })
+              ) : (
+                <ChatEmptyState onSuggestion={handleSuggestion} onNewChat={handleNewChat} />
+              )
             ) : (
               <div className="space-y-6">
                 {messages.map((msg) => (
-                  <ChatMessage key={msg.id} message={msg} />
+                  <ChatMessage
+                    key={msg.id}
+                    message={msg}
+                    assistantIcon={HeaderIcon}
+                    assistantIconClassName={headerIconClassName}
+                  />
                 ))}
                 {sending && (
                   <div className="flex gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/15 text-primary flex items-center justify-center shrink-0">
-                      <FiCpu className="w-4 h-4" />
-                    </div>
-                    <div className="rounded-2xl rounded-tl-md bg-surface border border-card-border px-4 py-2">
+                    <AssistantAvatar icon={HeaderIcon} className={headerIconClassName} />
+                    <div className="rounded-2xl rounded-tl-md bg-surface border border-card-border px-4 py-3 shadow-sm">
                       <ChatTypingIndicator />
                     </div>
                   </div>
                 )}
+                {postMessagesContent &&
+                  (typeof postMessagesContent === "function"
+                    ? postMessagesContent(panelContext)
+                    : postMessagesContent)}
               </div>
             )}
             <div ref={messagesEndRef} className="h-px shrink-0" aria-hidden="true" />
@@ -274,9 +393,23 @@ export default function ChatPanel({
         {/* Input — pinned to bottom */}
         <ChatInput
           onSend={handleSend}
-          disabled={sending || messagesLoading}
+          disabled={sending || messagesLoading || !canSend}
+          placeholder={guardReason || undefined}
         />
       </div>
+      <ConfirmModal
+        isOpen={!!pendingDeleteSessionId}
+        onClose={() => setPendingDeleteSessionId(null)}
+        onConfirm={confirmDeleteSession}
+        title="Delete conversation?"
+        confirmLabel="Delete permanently"
+        confirmVariant="danger"
+      >
+        <p className="text-text-secondary mt-0 mb-0">
+          This will permanently delete this conversation, including all messages and citations. This
+          action cannot be undone.
+        </p>
+      </ConfirmModal>
     </div>
   );
 }

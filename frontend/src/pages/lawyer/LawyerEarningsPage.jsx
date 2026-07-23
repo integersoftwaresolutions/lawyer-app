@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { lawyerApi } from "../../services/lawyer.api";
-import { Card, Badge, StatCard, Button, Modal, Table } from "../../components/ui";
+import { Card, Badge, StatCard, Button, Modal, PageHeader, PageShell, Table } from "../../components/ui";
+import { useToast } from "../../hooks/useToast";
 import { 
   FiDollarSign, 
   FiCreditCard, 
@@ -11,6 +12,7 @@ export default function LawyerEarningsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [deleteModal, setDeleteModal] = useState({ open: false, item: null });
   const [summary, setSummary] = useState({});
+  const toast = useToast();
 
   const fetchEarnings = async () => {
     const res = await lawyerApi.getMyEarnings({});
@@ -34,7 +36,7 @@ export default function LawyerEarningsPage() {
       fetchEarnings();
     } catch (error) {
       console.error("Failed to delete earning history:", error);
-      alert(error.response?.data?.message || "Failed to delete history");
+      toast.error(error.response?.data?.message || "Failed to delete history");
     } finally {
       setSubmitting(false);
     }
@@ -105,8 +107,14 @@ export default function LawyerEarningsPage() {
   ];
 
   return (
-    <div>
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-6">
+    <PageShell>
+      <PageHeader
+        icon={FiDollarSign}
+        title="Earnings"
+        subtitle="Track payouts, balance, and transaction history"
+      />
+
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
         <StatCard
           icon={FiDollarSign}
           value={`$${summary.totalEarnings || 0}`}
@@ -124,13 +132,11 @@ export default function LawyerEarningsPage() {
         />
       </div>
 
-      <Card title="Transaction History">
-        <Table
-          columns={columns}
-          data={fetchEarnings}
-          emptyMessage="No transactions yet"
-        />
-      </Card>
+      <Table
+        columns={columns}
+        data={fetchEarnings}
+        emptyMessage="No transactions yet"
+      />
 
       <Modal
         isOpen={deleteModal.open}
@@ -151,6 +157,6 @@ export default function LawyerEarningsPage() {
           This will remove the item from your history. It will not change your wallet balance.
         </p>
       </Modal>
-    </div>
+    </PageShell>
   );
 }

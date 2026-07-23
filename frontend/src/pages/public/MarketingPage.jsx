@@ -10,7 +10,9 @@ import {
   FiDollarSign,
   FiCheck,
   FiStar,
-  FiArrowRight
+  FiArrowRight,
+  FiBriefcase,
+  FiUser
 } from "react-icons/fi";
 
 export default function MarketingPage() {
@@ -50,19 +52,32 @@ export default function MarketingPage() {
             <p className="text-xl md:text-2xl text-text-secondary mb-10 max-w-[700px] mx-auto leading-relaxed">
               Connect with verified lawyers, book consultations instantly, and get expert legal advice tailored to your needs.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+            <div className="mx-auto mb-16 grid w-full max-w-2xl gap-4 sm:grid-cols-2">
               <Link
-                to="/register"
-                className="py-4 px-8 rounded-lg bg-primary text-primary-text cursor-pointer font-semibold no-underline inline-flex items-center justify-center gap-2 hover:bg-primary-hover transition-all shadow-lg hover:shadow-xl"
+                to="/register?role=LAWYER"
+                className="group flex items-center gap-4 rounded-xl bg-primary px-6 py-5 text-left text-primary-text no-underline shadow-lg transition-all hover:bg-primary-hover hover:shadow-xl"
               >
-                Get Started Free
-                <FiArrowRight className="w-5 h-5" />
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/15">
+                  <FiBriefcase className="h-5 w-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-base font-semibold">I am a lawyer</span>
+                  <span className="mt-0.5 block text-sm opacity-80">Grow your legal practice</span>
+                </span>
+                <FiArrowRight className="h-5 w-5 shrink-0 transition-transform group-hover:translate-x-1" />
               </Link>
               <Link
-                to="/login"
-                className="py-4 px-8 rounded-lg border-2 border-border bg-secondary text-secondary-text cursor-pointer font-semibold no-underline inline-flex items-center justify-center hover:bg-secondary-hover transition-all"
+                to="/register?role=CLIENT"
+                className="group flex items-center gap-4 rounded-xl border-2 border-border bg-card px-6 py-5 text-left text-text-primary no-underline shadow-sm transition-all hover:border-primary hover:shadow-lg"
               >
-                Sign In
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <FiUser className="h-5 w-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-base font-semibold">I need legal help</span>
+                  <span className="mt-0.5 block text-sm text-text-secondary">Continue as a client</span>
+                </span>
+                <FiArrowRight className="h-5 w-5 shrink-0 text-primary transition-transform group-hover:translate-x-1" />
               </Link>
             </div>
             <div className="flex flex-wrap justify-center gap-8 text-sm text-text-secondary">

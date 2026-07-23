@@ -6,6 +6,11 @@ import AdminSetting from "../models/AdminSetting.js";
 import { VERIFICATION_STATUS, DOCUMENT_TYPES } from "../config/constants.js";
 import { mediaService } from "./media.service.js";
 import * as walletService from "./wallet.service.js";
+import {
+  notifyDocumentsReceived,
+  notifyDocumentRejected,
+  notifyVerificationDecision
+} from "../notifications/triggers/verification.notifications.js";
 
 /**
  * Professional Verification Service
@@ -213,6 +218,9 @@ export async function uploadVerificationDocument({ file, lawyerUserId, documentT
 
   // Populate media for response
   await document.populate("mediaId");
+
+  notifyDocumentsReceived({ lawyerUserId, documentType });
+
   return document.toObject();
 }
 
@@ -247,6 +255,14 @@ export async function reviewDocument({ documentId, status, notes, adminId }) {
 
   // Check if all required documents are approved
   await checkAndUpdateVerificationStatus(document.lawyerUserId);
+
+  if (status === VERIFICATION_STATUS.REJECTED) {
+    notifyDocumentRejected({
+      lawyerUserId: document.lawyerUserId.toString(),
+      documentType: document.documentType,
+      notes
+    });
+  }
 
   return document.toObject();
 }
@@ -323,6 +339,12 @@ export async function verifyLawyer({ lawyerUserId, status, notes, adminId }) {
   }
 
   await profile.save();
+
+  notifyVerificationDecision({
+    lawyerUserId: lawyerUserId.toString(),
+    status,
+    notes
+  });
 
   return profile.toObject();
 }

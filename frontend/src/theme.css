@@ -26,6 +26,8 @@
   --color-input-border: #D1D5DB;
   --color-input-text: #111827;
   --color-input-placeholder: #9CA3AF;
+  --color-select-native-bg: #FFFFFF;
+  --color-select-native-text: #111827;
   
   /* Primary — seagreen */
   --color-primary: #085456;
@@ -98,6 +100,12 @@
   --color-link-text: #085456;
   --color-link-light: #C8E8E9;
   --color-link-light-hover: #B5DDDE;
+
+  /* Charts */
+  --color-chart-grid: #CBD5E1;
+  --color-chart-axis: #CBD5E1;
+  --color-chart-cursor: #F9FAFB;
+  --color-chart-crosshair: #CBD5E1;
 }
 
 /* Dark Theme */
@@ -127,6 +135,8 @@
   --color-input-border: #262626;
   --color-input-text: #E5E5E5;
   --color-input-placeholder: #737373;
+  --color-select-native-bg: #171717;
+  --color-select-native-text: #E5E5E5;
   
   /* Primary — seagreen */
   --color-primary: #0A6B6E;
@@ -199,5 +209,11 @@
   --color-link-text: #2DD4BF;
   --color-link-light: #173739;
   --color-link-light-hover: #204C4F;
+
+  /* Charts */
+  --color-chart-grid: #262626;
+  --color-chart-axis: #262626;
+  --color-chart-cursor: #262626;
+  --color-chart-crosshair: #404040;
 }
 

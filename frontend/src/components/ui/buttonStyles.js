@@ -43,7 +43,7 @@ function solidVariants(outline) {
     danger: "border border-transparent bg-danger text-danger-text hover:bg-danger-hover shadow-sm",
     success: "border border-transparent bg-success text-success-text hover:bg-success-hover shadow-sm",
     ghost: "border border-transparent bg-transparent text-text-secondary hover:bg-surface-hover hover:text-text-primary",
-    warning: "border border-transparent bg-warning text-warning-text hover:bg-warning/90 shadow-sm"
+    warning: "border border-transparent bg-warning text-warning-text hover:bg-warning-hover shadow-sm"
   };
 }
 

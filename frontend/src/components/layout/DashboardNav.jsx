@@ -7,7 +7,8 @@ export default function DashboardNav({ items = [], basePath = "", onNavigate }) 
     <nav className="space-y-0.5">
       {items.map((item) => {
         const path = `${basePath}/${item.id}`;
-        const isActive = location.pathname === path;
+        const isActive =
+          location.pathname === path || location.pathname.startsWith(`${path}/`);
         const IconComponent = item.icon;
 
         return (

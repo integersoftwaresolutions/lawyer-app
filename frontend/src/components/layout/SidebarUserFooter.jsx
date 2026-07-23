@@ -1,6 +1,6 @@
 import { useAuth } from "../../hooks/useAuth";
 import { useLogoutConfirm } from "../../context/LogoutConfirmContext";
-import { Avatar, Button } from "../ui";
+import { Avatar } from "../ui";
 import { FiLogOut } from "react-icons/fi";
 
 export default function SidebarUserFooter({ onNavigate }) {
@@ -24,19 +24,15 @@ export default function SidebarUserFooter({ onNavigate }) {
           </p>
           <p className="text-xs text-text-muted truncate m-0 mt-0.5">{user.email}</p>
         </div>
-      </div>
-
-      <div className="mt-2.5">
-        <Button
-          variant="danger"
-          outline
-          size="sm"
-          fullWidth
-          icon={FiLogOut}
+        <button
+          type="button"
           onClick={handleLogout}
+          aria-label="Log out"
+          title="Log out"
+          className="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg text-danger hover:bg-danger/10 transition-colors"
         >
-          Log out
-        </Button>
+          <FiLogOut size={18} />
+        </button>
       </div>
     </div>
   );

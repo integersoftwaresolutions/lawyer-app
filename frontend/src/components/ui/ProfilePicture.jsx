@@ -7,6 +7,7 @@ import { getProfilePictureUrl, getUserInitials, getProfilePictureData } from "..
 import Popover from "./Popover";
 import Modal from "./Modal";
 import Button from "./Button";
+import ConfirmModal from "./ConfirmModal";
 
 /**
  * ProfilePicture Component
@@ -35,6 +36,7 @@ export default function ProfilePicture({
   const [uploading, setUploading] = useState(false);
   const [hovering, setHovering] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
   const fileInputRef = useRef(null);
   const toast = useToast();
@@ -46,11 +48,15 @@ export default function ProfilePicture({
   const initials = getUserInitials(displayName);
 
   const sizeClasses = {
-    sm: "w-8 h-8 text-xs",
-    md: "w-12 h-12 text-sm",
-    lg: "w-24 h-24 text-lg",
-    xl: "w-32 h-32 text-xl"
+    sm: { box: "w-8 h-8", px: 32 },
+    md: { box: "w-12 h-12", px: 48 },
+    lg: { box: "w-24 h-24", px: 96 },
+    xl: { box: "w-32 h-32", px: 128 }
   };
+
+  const INITIAL_RATIO = 0.52;
+  const { box: sizeBox, px: sizePx } = sizeClasses[size] || sizeClasses.md;
+  const initialFontSize = Math.round(sizePx * INITIAL_RATIO);
 
   const iconSizes = {
     sm: 12,
@@ -121,10 +127,10 @@ export default function ProfilePicture({
 
   const handleDelete = async () => {
     setPopoverOpen(false);
-    if (!window.confirm("Are you sure you want to delete your profile picture?")) {
-      return;
-    }
+    setConfirmDeleteOpen(true);
+  };
 
+  const confirmDelete = async () => {
     try {
       setUploading(true);
       const response = await authApi.deleteProfilePicture();
@@ -145,6 +151,7 @@ export default function ProfilePicture({
       toast.error(error.response?.data?.message || "Failed to delete profile picture");
     } finally {
       setUploading(false);
+      setConfirmDeleteOpen(false);
     }
   };
 
@@ -160,7 +167,7 @@ export default function ProfilePicture({
     return (
       <div className={`relative inline-block ${className}`}>
         <div
-          className={`relative ${sizeClasses[size]} rounded-full overflow-hidden border-2 border-border bg-surface flex items-center justify-center`}
+          className={`relative ${sizeBox} rounded-full overflow-hidden border-2 border-border bg-surface flex items-center justify-center`}
         >
           {image ? (
             <img
@@ -175,10 +182,10 @@ export default function ProfilePicture({
             />
           ) : null}
           <div
-            className={`w-full h-full flex items-center justify-center bg-primary text-primary-text font-semibold ${
+            className={`w-full h-full flex items-center justify-center bg-primary text-primary-text font-bold leading-none ${
               image ? "hidden" : ""
             }`}
-            style={{ display: image ? "none" : "flex" }}
+            style={{ display: image ? "none" : "flex", fontSize: `${initialFontSize}px` }}
           >
             {initials}
           </div>
@@ -196,7 +203,7 @@ export default function ProfilePicture({
           onClose={() => setPopoverOpen(false)}
           trigger={
             <div
-              className={`relative ${sizeClasses[size]} rounded-full overflow-hidden border-2 border-border bg-surface flex items-center justify-center cursor-pointer ${
+              className={`relative ${sizeBox} rounded-full overflow-hidden border-2 border-border bg-surface flex items-center justify-center cursor-pointer ${
                 uploading ? "opacity-50" : ""
               }`}
               onMouseEnter={() => setHovering(true)}
@@ -215,10 +222,10 @@ export default function ProfilePicture({
                 />
               ) : null}
               <div
-                className={`w-full h-full flex items-center justify-center bg-primary text-primary-text font-semibold ${
+                className={`w-full h-full flex items-center justify-center bg-primary text-primary-text font-bold leading-none ${
                   image ? "hidden" : ""
                 }`}
-                style={{ display: image ? "none" : "flex" }}
+                style={{ display: image ? "none" : "flex", fontSize: `${initialFontSize}px` }}
               >
                 {initials}
               </div>
@@ -247,7 +254,7 @@ export default function ProfilePicture({
                 <button
                   type="button"
                   onClick={handleView}
-                  className="w-full px-4 py-2 text-sm text-text-primary hover:bg-surface transition-colors flex items-center gap-2"
+                  className="w-full px-4 py-2 text-sm text-text-primary hover:bg-surface-hover transition-colors flex items-center gap-2"
                 >
                   <FiEye size={16} />
                   View Profile Picture
@@ -256,7 +263,7 @@ export default function ProfilePicture({
                   type="button"
                   onClick={handleUpdate}
                   disabled={uploading}
-                  className="w-full px-4 py-2 text-sm text-text-primary hover:bg-surface transition-colors flex items-center gap-2 disabled:opacity-50"
+                  className="w-full px-4 py-2 text-sm text-text-primary hover:bg-surface-hover transition-colors flex items-center gap-2 disabled:opacity-50"
                 >
                   <FiUpload size={16} />
                   Update Picture
@@ -266,7 +273,7 @@ export default function ProfilePicture({
                   type="button"
                   onClick={handleDelete}
                   disabled={uploading}
-                  className="w-full px-4 py-2 text-sm text-danger hover:bg-surface transition-colors flex items-center gap-2 disabled:opacity-50"
+                  className="w-full px-4 py-2 text-sm text-danger hover:bg-surface-hover transition-colors flex items-center gap-2 disabled:opacity-50"
                 >
                   <FiTrash2 size={16} />
                   Delete Picture
@@ -277,7 +284,7 @@ export default function ProfilePicture({
                 type="button"
                 onClick={handleUpdate}
                 disabled={uploading}
-                className="w-full px-4 py-2 text-sm text-text-primary hover:bg-surface transition-colors flex items-center gap-2 disabled:opacity-50"
+                className="w-full px-4 py-2 text-sm text-text-primary hover:bg-surface-hover transition-colors flex items-center gap-2 disabled:opacity-50"
               >
                 <FiUpload size={16} />
                 Add Profile Picture
@@ -312,13 +319,27 @@ export default function ProfilePicture({
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-12">
-            <div className="w-32 h-32 rounded-full bg-primary text-primary-text flex items-center justify-center text-4xl font-semibold mb-4">
+            <div className="w-32 h-32 rounded-full bg-primary text-primary-text flex items-center justify-center font-bold leading-none mb-4" style={{ fontSize: "67px" }}>
               {initials}
             </div>
             <p className="text-text-secondary">No profile picture</p>
           </div>
         )}
       </Modal>
+      <ConfirmModal
+        isOpen={confirmDeleteOpen}
+        onClose={() => setConfirmDeleteOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete profile picture?"
+        confirmLabel="Delete permanently"
+        confirmVariant="danger"
+        loading={uploading}
+      >
+        <p className="text-text-secondary mt-0 mb-0">
+          This will permanently remove your current profile picture. Your account will show initials
+          until you upload a new image.
+        </p>
+      </ConfirmModal>
     </>
   );
 }

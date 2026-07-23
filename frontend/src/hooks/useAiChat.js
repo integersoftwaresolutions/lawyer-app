@@ -108,6 +108,16 @@ export function useAiChat({ mode = "research", autoSelectLatest = true } = {}) {
         sessionId = session.id;
       }
 
+      const optimisticId = `pending-user-${Date.now()}`;
+      const optimisticMessage = {
+        id: optimisticId,
+        role: "user",
+        content: trimmed,
+        createdAt: new Date().toISOString(),
+        optimistic: true
+      };
+
+      setMessages((prev) => [...prev, optimisticMessage]);
       setSending(true);
       setError(null);
       try {
@@ -117,7 +127,10 @@ export function useAiChat({ mode = "research", autoSelectLatest = true } = {}) {
 
         const res = await aiApi.sendMessage(sessionId, body);
         const { userMessage, assistantMessage } = res.data;
-        setMessages((prev) => [...prev, userMessage, assistantMessage]);
+        setMessages((prev) => {
+          const withoutOptimistic = prev.filter((m) => m.id !== optimisticId);
+          return [...withoutOptimistic, userMessage, assistantMessage];
+        });
         setSessions((prev) =>
           prev.map((s) =>
             s.id === sessionId
@@ -138,6 +151,7 @@ export function useAiChat({ mode = "research", autoSelectLatest = true } = {}) {
         await loadUsage();
         return assistantMessage;
       } catch (err) {
+        setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
         setError(getErrorMessage(err));
         throw err;
       } finally {

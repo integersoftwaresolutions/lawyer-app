@@ -9,14 +9,21 @@ import AuthLayout, { AuthDivider, AuthLink, ErrorMessage, FormSection } from "./
 import { OtpInput } from "./components/OtpInput";
 import { ResendOtpButton } from "./components/ResendOtpButton";
 
+function profilePathForRole(role) {
+  if (role === "LAWYER") return "/lawyer/settings/profile";
+  if (role === "CLIENT") return "/client/settings/profile";
+  if (role === "ADMIN") return "/admin/overview";
+  return "/login";
+}
+
 export default function VerifyEmail() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, markVerified, isAuthenticated } = useAuth();
   const toast = useToast();
-  
+
   const email = searchParams.get("email") || user?.email || "";
-  const from = searchParams.get("from") || ""; // "register" or "login"
+  const from = searchParams.get("from") || "";
   const [code, setCode] = useState("");
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -29,7 +36,12 @@ export default function VerifyEmail() {
       return;
     }
 
-    // Automatically send OTP when page loads (if coming from login or if not sent yet)
+    // Skip auto-send when coming from login/register (OTP already sent)
+    if (from === "login" || from === "register") {
+      setOtpSent(true);
+      return;
+    }
+
     const sendOtpOnLoad = async () => {
       if (!otpSent && email) {
         try {
@@ -37,55 +49,54 @@ export default function VerifyEmail() {
           setOtpSent(true);
           toast.success("Verification code sent to your email!");
         } catch (error) {
-          const message = error.response?.data?.message || "Failed to send verification code";
           console.error("Failed to send OTP on load:", error);
-          // Don't show error toast here - user can manually resend
         }
       }
     };
 
     sendOtpOnLoad();
-  }, [email, navigate, otpSent, toast]);
+  }, [email, from, navigate, otpSent, toast]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (code.length !== 6) {
       setErrors({ code: "Please enter a 6-digit code" });
       return;
     }
-    
+
     setLoading(true);
     setErrors({});
-    
+
     try {
-      await authApi.verifyOtp(email, code);
-      setSuccess(true);
-      toast.success("Email verified successfully!");
-      
-      // Refresh user data to get updated verification status
-      if (refreshUser) {
+      const res = await authApi.verifyOtp(email, code);
+      const verifiedUser = res.data?.user;
+
+      markVerified();
+
+      if (isAuthenticated && refreshUser) {
         try {
           await refreshUser();
         } catch (err) {
           console.error("Failed to refresh user:", err);
         }
       }
-      
-      // Redirect after 2 seconds
+
+      setSuccess(true);
+      toast.success("Email verified successfully!");
+
+      const role = verifiedUser?.role || user?.role;
       setTimeout(() => {
-        const redirectMap = {
-          CLIENT: "/client/profile",
-          LAWYER: "/lawyer/profile",
-          ADMIN: "/admin/dashboard",
-        };
-        navigate(redirectMap[user?.role] || "/login");
-      }, 2000);
+        navigate(profilePathForRole(role));
+      }, 1500);
     } catch (error) {
       const message = error.response?.data?.message || "Verification failed. Please try again.";
-      setErrors({ 
-        submit: message, 
-        code: message.includes("code") || message.includes("Invalid") || message.includes("expired") ? message : null 
+      setErrors({
+        submit: message,
+        code:
+          message.includes("code") || message.includes("Invalid") || message.includes("expired")
+            ? message
+            : null
       });
       toast.error(message);
     } finally {
@@ -143,7 +154,7 @@ export default function VerifyEmail() {
       showBackButton={!!from}
       onBack={handleBack}
       footer={
-        <ResendOtpButton 
+        <ResendOtpButton
           onResend={handleResend}
           email={email}
           cooldownSeconds={60}
@@ -154,11 +165,7 @@ export default function VerifyEmail() {
         <ErrorMessage message={errors.submit} />
 
         <FormSection>
-          <OtpInput
-            value={code}
-            onChange={setCode}
-            error={errors.code}
-          />
+          <OtpInput value={code} onChange={setCode} error={errors.code} />
         </FormSection>
 
         <Button
@@ -173,9 +180,7 @@ export default function VerifyEmail() {
         <AuthDivider />
 
         <div className="text-center">
-          <AuthLink onClick={() => navigate("/login")}>
-            Back to Login
-          </AuthLink>
+          <AuthLink onClick={() => navigate("/login")}>Back to Login</AuthLink>
         </div>
       </form>
     </AuthLayout>

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { lawyerApi } from "../../services/lawyer.api";
-import { Card, Badge, StateHandler, Avatar } from "../../components/ui";
+import { Card, Badge, StateHandler, Avatar, PageHeader, PageShell } from "../../components/ui";
 import { useStateHandler } from "../../hooks/useStateHandler";
 import { FiStar, FiMessageSquare, FiTrendingUp } from "react-icons/fi";
 
@@ -123,27 +123,16 @@ export default function LawyerReviewsPage() {
 
   return (
     <StateHandler loading={loading} error={error} retry={retry}>
-      <div className="flex flex-col min-h-0">
-        {/* Page header */}
-        <div className="shrink-0 flex items-start gap-3 mb-4 sm:mb-6">
-          <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0">
-            <FiStar className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-lg sm:text-xl font-bold text-text-primary leading-tight">
-              Client Reviews
-            </h1>
-            <p className="text-xs sm:text-sm text-text-muted mt-1 max-w-2xl">
-              See what clients are saying about your consultations and track your reputation over
-              time.
-            </p>
-          </div>
-        </div>
+      <PageShell>
+        <PageHeader
+          icon={FiStar}
+          title="Client Reviews"
+          subtitle="See what clients are saying about your consultations and track your reputation over time"
+        />
 
-        {/* Summary stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5 sm:mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <Card padding="p-4" className="flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-warning/10 text-warning">
+            <div className="p-2.5 rounded-lg bg-warning-light text-warning">
               <FiStar className="w-5 h-5" />
             </div>
             <div className="min-w-0">
@@ -155,7 +144,7 @@ export default function LawyerReviewsPage() {
           </Card>
 
           <Card padding="p-4" className="flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-primary/10 text-primary">
+            <div className="p-2.5 rounded-lg bg-primary-light text-primary">
               <FiMessageSquare className="w-5 h-5" />
             </div>
             <div className="min-w-0">
@@ -167,7 +156,7 @@ export default function LawyerReviewsPage() {
           </Card>
 
           <Card padding="p-4" className="flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-success/10 text-success">
+            <div className="p-2.5 rounded-lg bg-success-light text-success">
               <FiTrendingUp className="w-5 h-5" />
             </div>
             <div className="min-w-0">
@@ -245,7 +234,7 @@ export default function LawyerReviewsPage() {
             )}
           </Card>
         </div>
-      </div>
+      </PageShell>
     </StateHandler>
   );
 }

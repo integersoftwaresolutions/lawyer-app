@@ -5,6 +5,10 @@ import LawyerProfile from "../pages/public/LawyerProfile.jsx";
 import Login from "../pages/auth/Login.jsx";
 import Register from "../pages/auth/Register.jsx";
 import VerifyEmail from "../pages/auth/VerifyEmail.jsx";
+import ForgotPassword from "../pages/auth/ForgotPassword.jsx";
+import { AccountSettingsLayout } from "../components/layout";
+import SecuritySettingsPage from "../pages/settings/SecuritySettingsPage.jsx";
+import NotificationSettingsPage from "../pages/settings/NotificationSettingsPage.jsx";
 
 import ClientDashboardLayout from "../pages/client/ClientDashboardLayout.jsx";
 import ClientOverviewPage from "../pages/client/ClientOverviewPage.jsx";
@@ -37,15 +41,32 @@ import AdminSettingsPage from "../pages/admin/AdminSettingsPage.jsx";
 import AdminCaseLawPage from "../pages/admin/AdminCaseLawPage.jsx";
 
 import SessionChat from "../pages/client/SessionChat.jsx";
+import NotificationsPage from "../components/notifications/NotificationsPage.jsx";
 import NotFoundPage from "../pages/NotFoundPage.jsx";
 import ProtectedRoute from "./ProtectedRoute.jsx";
 import AuthRoute from "./AuthRoute.jsx";
+import VerifyEmailRoute from "./VerifyEmailRoute.jsx";
+import LandingRoute from "./LandingRoute.jsx";
 
 export default function RoutesRoot() {
   return (
     <Routes>
-      <Route path="/" element={<MarketingPage />} />
-      <Route path="/marketing" element={<MarketingPage />} />
+      <Route
+        path="/"
+        element={
+          <LandingRoute>
+            <MarketingPage />
+          </LandingRoute>
+        }
+      />
+      <Route
+        path="/marketing"
+        element={
+          <LandingRoute>
+            <MarketingPage />
+          </LandingRoute>
+        }
+      />
       <Route path="/pricing" element={<MarketingPage />} />
       
       {/* Client Dashboard Routes */}
@@ -62,8 +83,23 @@ export default function RoutesRoot() {
         <Route path="bookings" element={<ClientBookingsPage />} />
         <Route path="wallet" element={<ClientWalletPage />} />
         <Route path="reviews" element={<ClientReviewsPage />} />
-        <Route path="profile" element={<ClientProfilePage />} />
+        <Route path="profile" element={<Navigate to="/client/settings/profile" replace />} />
+        <Route path="notifications" element={<NotificationsPage />} />
         <Route path="dashboard" element={<Navigate to="/client/overview" replace />} />
+      </Route>
+
+      <Route
+        path="/client/settings"
+        element={
+          <ProtectedRoute roles={["CLIENT"]}>
+            <AccountSettingsLayout basePath="/client/settings" />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Navigate to="profile" replace />} />
+        <Route path="profile" element={<ClientProfilePage />} />
+        <Route path="security" element={<SecuritySettingsPage />} />
+        <Route path="notifications" element={<NotificationSettingsPage />} />
       </Route>
       
       {/* Lawyer Dashboard Routes */}
@@ -81,13 +117,28 @@ export default function RoutesRoot() {
         <Route path="cross-exam" element={<LawyerCrossExamPage />} />
         <Route path="documents" element={<LawyerDocumentsPage />} />
         <Route path="planner" element={<LawyerPlannerPage />} />
-        <Route path="profile" element={<LawyerProfilePage />} />
+        <Route path="profile" element={<Navigate to="/lawyer/settings/profile" replace />} />
         <Route path="availability" element={<LawyerAvailabilityPage />} />
         <Route path="bookings" element={<LawyerBookingsPage />} />
         <Route path="earnings" element={<LawyerEarningsPage />} />
         <Route path="verification" element={<LawyerVerificationPage />} />
         <Route path="reviews" element={<LawyerReviewsPage />} />
+        <Route path="notifications" element={<NotificationsPage />} />
         <Route path="dashboard" element={<Navigate to="/lawyer/overview" replace />} />
+      </Route>
+
+      <Route
+        path="/lawyer/settings"
+        element={
+          <ProtectedRoute roles={["LAWYER"]}>
+            <AccountSettingsLayout basePath="/lawyer/settings" />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Navigate to="profile" replace />} />
+        <Route path="profile" element={<LawyerProfilePage />} />
+        <Route path="security" element={<SecuritySettingsPage />} />
+        <Route path="notifications" element={<NotificationSettingsPage />} />
       </Route>
       
       {/* Admin Dashboard Routes */}
@@ -108,6 +159,7 @@ export default function RoutesRoot() {
         <Route path="disputes" element={<AdminDisputesPage />} />
         <Route path="case-law" element={<AdminCaseLawPage />} />
         <Route path="settings" element={<AdminSettingsPage />} />
+        <Route path="notifications" element={<NotificationsPage />} />
         <Route path="dashboard" element={<Navigate to="/admin/overview" replace />} />
       </Route>
       
@@ -149,10 +201,14 @@ export default function RoutesRoot() {
       <Route 
         path="/verify-email" 
         element={
-          <AuthRoute>
+          <VerifyEmailRoute>
             <VerifyEmail />
-          </AuthRoute>
+          </VerifyEmailRoute>
         } 
+      />
+      <Route 
+        path="/forgot-password" 
+        element={<ForgotPassword />}
       />
 
       {/* Chat Route */}

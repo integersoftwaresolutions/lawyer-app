@@ -15,12 +15,21 @@ export default function AuthRoute({ children }) {
     return null;
   }
 
-  // If user is authenticated, redirect to their dashboard
+  // Authenticated users should not access login/register
   if (user) {
+    if (!user.isEmailVerified) {
+      return (
+        <Navigate
+          to={`/verify-email?email=${encodeURIComponent(user.email)}&from=login`}
+          replace
+        />
+      );
+    }
+
     const dashboardMap = {
       CLIENT: "/client/overview",
       LAWYER: "/lawyer/overview",
-      ADMIN: "/admin/overview",
+      ADMIN: "/admin/overview"
     };
     const dashboard = dashboardMap[user.role] || "/";
     return <Navigate to={dashboard} replace />;

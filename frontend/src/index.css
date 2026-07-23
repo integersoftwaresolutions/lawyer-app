@@ -4,3 +4,54 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Native select + dropdown options should follow theme tokens */
+select {
+  background-color: var(--color-select-native-bg);
+  color: var(--color-select-native-text);
+}
+
+select option,
+select optgroup {
+  background-color: var(--color-select-native-bg);
+  color: var(--color-select-native-text);
+}
+
+.dark select {
+  color-scheme: dark;
+}
+
+.light select {
+  color-scheme: light;
+}
+
+/* Dashboard charts — theme-aware Recharts defaults */
+.dashboard-chart .recharts-cartesian-grid line,
+.dashboard-chart .recharts-cartesian-grid path {
+  stroke: var(--color-chart-grid);
+}
+
+.dashboard-chart .recharts-cartesian-axis-line,
+.dashboard-chart .recharts-cartesian-axis-tick-line {
+  stroke: var(--color-chart-axis);
+}
+
+.dashboard-chart .recharts-tooltip-cursor {
+  fill: var(--color-chart-cursor);
+}
+
+.dashboard-chart .recharts-tooltip-cursor-stroke {
+  stroke: var(--color-chart-crosshair);
+}
+
+.dashboard-chart .recharts-active-dot circle {
+  stroke: var(--color-card);
+}
+
+.dashboard-chart .recharts-legend-item-text {
+  color: var(--color-text-secondary) !important;
+}
+
+.dashboard-chart .recharts-pie-sector:focus {
+  outline: none;
+}

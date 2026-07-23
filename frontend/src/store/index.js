@@ -1,12 +1,13 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./slices/authSlice";
-// Profile is now part of auth slice - keeping profileReducer for backward compatibility
 import profileReducer from "./slices/profileSlice";
+import notificationsReducer from "./slices/notificationsSlice";
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
-    profile: profileReducer // Kept for backward compatibility, but profile data is in auth.user
+    profile: profileReducer,
+    notifications: notificationsReducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

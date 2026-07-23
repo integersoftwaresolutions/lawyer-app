@@ -5,7 +5,6 @@ const LawyerProfileSchema = new mongoose.Schema(
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", unique: true, index: true, required: true },
     fullName: { type: String, default: "" },
     phone: { type: String, default: "" },
-    email: { type: String, default: "" },
     whatsapp: { type: String, default: "" },
     city: { type: String, index: true, default: "" },
     officeAddress: { type: String, default: "" },

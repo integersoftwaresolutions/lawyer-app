@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "rag:reindex-documents": "node scripts/reindex-legal-documents.js"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.2.0",

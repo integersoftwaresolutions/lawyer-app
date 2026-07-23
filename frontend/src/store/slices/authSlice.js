@@ -4,6 +4,10 @@ import { clientApi } from "../../services/client.api";
 import { lawyerApi } from "../../services/lawyer.api";
 import { storage } from "../../utils/storage";
 import { getErrorMessage } from "../../utils/errorHandler";
+import {
+  mergeUserWithProfile,
+  stripAuthFieldsFromProfilePayload
+} from "../../utils/mergeUserProfile";
 
 // Helper to get the right profile API based on role
 const getProfileApi = (role) => {
@@ -13,28 +17,11 @@ const getProfileApi = (role) => {
 // Helper to fetch and merge profile data
 const fetchUserWithProfile = async (user) => {
   if (!user?.role) return user;
-  
+
   try {
     const api = getProfileApi(user.role);
     const profileRes = await api.getMyProfile();
-    const profile = profileRes.data || {};
-    
-    // IMPORTANT: Preserve profileImage from user (it's stored in User model, not in LawyerProfile/ClientProfile)
-    // The profile object might have empty profileImage which would overwrite the user's profileImage
-    const userProfileImage = user.profileImage;
-    const userProfileImageMediaId = user.profileImageMediaId;
-    
-    // Merge profile data into user, but preserve user's profileImage fields
-    const merged = {
-      ...user,
-      ...profile, // Profile data takes precedence for other fields
-      // Override with user's profileImage (from User model) - this is the source of truth
-      profileImage: userProfileImage || "",
-      profileImageMediaId: userProfileImageMediaId || null,
-      profile // Keep full profile as nested object for detailed access
-    };
-    
-    return merged;
+    return mergeUserWithProfile(user, profileRes.data || {});
   } catch (error) {
     // If profile fetch fails, return user without profile
     console.warn("Failed to fetch profile:", error);
@@ -92,7 +79,11 @@ export const loginUser = createAsyncThunk(
       
       return { user: userWithProfile, accessToken: res.data.accessToken };
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || "Login failed");
+      return rejectWithValue({
+        message: error.response?.data?.message || "Login failed",
+        status: error.response?.status,
+        errors: error.response?.data?.errors
+      });
     }
   }
 );
@@ -104,7 +95,11 @@ export const registerUser = createAsyncThunk(
       const res = await authApi.register(payload);
       return res.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || "Registration failed");
+      return rejectWithValue({
+        message: error.response?.data?.message || "Registration failed",
+        status: error.response?.status,
+        errors: error.response?.data?.errors
+      });
     }
   }
 );
@@ -157,19 +152,7 @@ export const fetchUserProfile = createAsyncThunk(
       
       const api = getProfileApi(user.role);
       const res = await api.getMyProfile();
-      const profile = res.data || {};
-
-      // Preserve profileImage from user - it's stored on User (auth), not in LawyerProfile/ClientProfile
-      const userProfileImage = user.profileImage;
-      const userProfileImageMediaId = user.profileImageMediaId;
-
-      return {
-        ...user,
-        ...profile,
-        profileImage: userProfileImage || profile.profileImage || "",
-        profileImageMediaId: userProfileImageMediaId ?? profile.profileImageMediaId ?? null,
-        profile
-      };
+      return mergeUserWithProfile(user, res.data || {});
     } catch (error) {
       return rejectWithValue(getErrorMessage(error));
     }
@@ -188,29 +171,15 @@ export const updateUserProfile = createAsyncThunk(
       }
       
       const api = getProfileApi(user.role);
-      
+
       // Convert dateOfBirth string to Date if present
-      const payload = { ...data };
+      const payload = stripAuthFieldsFromProfilePayload({ ...data });
       if (payload.dateOfBirth) {
         payload.dateOfBirth = new Date(payload.dateOfBirth).toISOString();
       }
-      
+
       const res = await api.updateMyProfile(payload);
-      const updatedProfile = res.data || {};
-
-      // Preserve profileImage from User - it's stored via auth/profile-picture, not in LawyerProfile/ClientProfile.
-      // The profile response may have empty profileImage which would overwrite and remove the picture.
-      const userProfileImage = user.profileImage;
-      const userProfileImageMediaId = user.profileImageMediaId;
-
-      // Return merged user with updated profile, keeping User's profile picture
-      return {
-        ...user,
-        ...updatedProfile,
-        profileImage: userProfileImage || updatedProfile.profileImage || "",
-        profileImageMediaId: userProfileImageMediaId ?? updatedProfile.profileImageMediaId ?? null,
-        profile: updatedProfile
-      };
+      return mergeUserWithProfile(user, res.data || {});
     } catch (error) {
       return rejectWithValue(getErrorMessage(error));
     }
@@ -235,6 +204,11 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.error = null;
       storage.clear();
+    },
+    markEmailVerified: (state) => {
+      if (state.user) {
+        state.user.isEmailVerified = true;
+      }
     }
   },
   extraReducers: (builder) => {
@@ -261,18 +235,15 @@ const authSlice = createSlice({
     // Login
     builder
       .addCase(loginUser.pending, (state) => {
-        state.loading = true;
         state.error = null;
       })
       .addCase(loginUser.fulfilled, (state, action) => {
-        state.loading = false;
         state.user = action.payload.user;
         state.accessToken = action.payload.accessToken;
         state.isAuthenticated = true;
         state.error = null;
       })
       .addCase(loginUser.rejected, (state, action) => {
-        state.loading = false;
         state.error = action.payload;
         state.isAuthenticated = false;
       });
@@ -280,32 +251,25 @@ const authSlice = createSlice({
     // Register
     builder
       .addCase(registerUser.pending, (state) => {
-        state.loading = true;
         state.error = null;
       })
       .addCase(registerUser.fulfilled, (state) => {
-        state.loading = false;
         state.error = null;
       })
       .addCase(registerUser.rejected, (state, action) => {
-        state.loading = false;
         state.error = action.payload;
       });
 
     // Logout
     builder
-      .addCase(logoutUser.pending, (state) => {
-        state.loading = true;
-      })
+      .addCase(logoutUser.pending, () => {})
       .addCase(logoutUser.fulfilled, (state) => {
-        state.loading = false;
         state.user = null;
         state.accessToken = null;
         state.isAuthenticated = false;
         state.error = null;
       })
       .addCase(logoutUser.rejected, (state) => {
-        state.loading = false;
         state.user = null;
         state.accessToken = null;
         state.isAuthenticated = false;
@@ -362,5 +326,5 @@ const authSlice = createSlice({
   }
 });
 
-export const { clearError, setAccessToken, clearAuth } = authSlice.actions;
+export const { clearError, setAccessToken, clearAuth, markEmailVerified } = authSlice.actions;
 export default authSlice.reducer;

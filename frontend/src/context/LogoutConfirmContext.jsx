@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { ConfirmModal } from "../components/ui";
+import ConfirmModal from "../components/ui/ConfirmModal";
 
 const LogoutConfirmContext = createContext(null);
 
@@ -19,7 +19,7 @@ export function LogoutConfirmProvider({ children }) {
       setLoading(true);
       await logout();
       setIsOpen(false);
-      navigate("/login");
+      navigate("/", { replace: true });
     } finally {
       setLoading(false);
     }

@@ -23,20 +23,17 @@ export default function NotFoundPage() {
             <Button
               onClick={() => window.history.back()}
               variant="secondary"
-              className="flex items-center gap-2"
+              icon={FiArrowLeft}
             >
-              <FiArrowLeft className="w-4 h-4" />
               Go Back
             </Button>
             <Link to="/">
-              <Button className="flex items-center gap-2">
-                <FiHome className="w-4 h-4" />
+              <Button icon={FiHome}>
                 Go Home
               </Button>
             </Link>
             <Link to="/lawyers">
-              <Button variant="secondary" className="flex items-center gap-2">
-                <FiSearch className="w-4 h-4" />
+              <Button variant="secondary" icon={FiSearch}>
                 Find Lawyers
               </Button>
             </Link>

@@ -7,6 +7,7 @@ import walletRoutes from "./wallet.routes.js";
 import adminRoutes from "./admin.routes.js";
 import aiRoutes from "./ai.routes.js";
 import plannerRoutes from "./planner.routes.js";
+import notificationsRoutes from "./notifications.routes.js";
 import { SPECIALIZATIONS, CITIES } from "../config/constants.js";
 
 const router = Router();
@@ -19,6 +20,7 @@ router.use("/wallet", walletRoutes);
 router.use("/admin", adminRoutes);
 router.use("/ai", aiRoutes);
 router.use("/planner", plannerRoutes);
+router.use("/notifications", notificationsRoutes);
 
 router.get("/constants", (req, res) => {
   res.json({

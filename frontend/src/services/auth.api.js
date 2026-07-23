@@ -8,6 +8,9 @@ export const authApi = {
   sendOtp: (email) => api.post("/auth/send-otp", { email }).then((r) => r.data),
   verifyOtp: (email, code) => api.post("/auth/verify-otp", { email, code }).then((r) => r.data),
   resendOtp: (email) => api.post("/auth/resend-otp", { email }).then((r) => r.data),
+  forgotPassword: (email) => api.post("/auth/forgot-password", { email }).then((r) => r.data),
+  resetPassword: (payload) => api.post("/auth/reset-password", payload).then((r) => r.data),
+  changePassword: (payload) => api.post("/auth/change-password", payload).then((r) => r.data),
   uploadProfilePicture: (formData) => api.post("/auth/profile-picture", formData, {
     headers: { "Content-Type": "multipart/form-data" }
   }).then((r) => r.data),
