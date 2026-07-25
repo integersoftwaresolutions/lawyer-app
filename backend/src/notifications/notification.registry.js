@@ -53,6 +53,10 @@ export const EMAIL_TEMPLATE_MAP = {
   [NOTIFICATION_TYPES.ADMIN_LAWYER_PENDING_VERIFICATION]: {
     template: "admin-lawyer-pending-verification",
     subject: (v) => `Lawyer pending verification: ${v.lawyerName || "review required"}`
+  },
+  [NOTIFICATION_TYPES.WORKSPACE_INVITE]: {
+    template: "workspace-invite",
+    subject: (v) => `Invitation to join ${v.workspaceName || "a firm"}`
   }
 };
 

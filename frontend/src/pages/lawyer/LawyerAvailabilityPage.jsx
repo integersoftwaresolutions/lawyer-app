@@ -118,9 +118,9 @@ function DayRow({
       <div className="flex items-center gap-4 py-3.5 sm:py-4">
         <div className="w-24 sm:w-28 shrink-0">
           <p className="text-sm font-medium text-text-muted">{meta.label}</p>
-          {isWeekend && <p className="text-[10px] text-text-muted/70 mt-0.5">Weekend</p>}
+          {isWeekend && <p className="text-[10px] text-text-muted mt-0.5">Weekend</p>}
         </div>
-        <p className="flex-1 text-sm text-text-muted/80">Unavailable</p>
+        <p className="flex-1 text-sm text-text-muted">Unavailable</p>
         <DayToggle enabled={false} onChange={onToggle} label={meta.label} />
       </div>
     );
@@ -156,7 +156,7 @@ function DayRow({
                   label="Remove time slot"
                   variant="ghost"
                   size="icon-sm"
-                  className="text-text-muted hover:text-danger hover:bg-danger/10 -ml-1"
+                  className="text-text-muted hover:text-danger hover:bg-danger-light -ml-1"
                   onClick={() => onRemoveSlot(index)}
                 />
               )}

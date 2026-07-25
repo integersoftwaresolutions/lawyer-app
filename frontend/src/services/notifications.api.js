@@ -1,10 +1,13 @@
 import api from "./apiClient";
+import { normalizeListResponse } from "../utils/listResponse";
 
 export const notificationsApi = {
   list: ({ page = 1, limit = 20, unreadOnly = false } = {}) =>
     api
-      .get("/notifications", { params: { page, limit, unreadOnly: unreadOnly ? "true" : "false" } })
-      .then((r) => r.data),
+      .get("/notifications", {
+        params: { page, limit, unreadOnly: unreadOnly ? "true" : "false" }
+      })
+      .then((r) => normalizeListResponse(r.data)),
 
   unreadCount: () => api.get("/notifications/unread-count").then((r) => r.data),
 

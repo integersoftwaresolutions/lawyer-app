@@ -271,7 +271,7 @@ export default function VideoCall({ sessionId, socket, durationMinutes, onEnd, o
     return (
       <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
         <div className="flex flex-col items-center justify-center py-10 px-6">
-          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-5 ring-4 ring-primary/20">
+          <div className="w-20 h-20 rounded-full bg-primary-light flex items-center justify-center mb-5 ring-4 ring-primary-light">
             <FiVideo className="w-10 h-10 text-primary" />
           </div>
           <h3 className="text-lg font-semibold text-text-primary mb-1">Video consultation</h3>
@@ -279,7 +279,7 @@ export default function VideoCall({ sessionId, socket, durationMinutes, onEnd, o
             Start a time-limited video call with your lawyer. Duration: {durationMinutes} minutes.
           </p>
           {error && (
-            <p className="text-danger text-sm mb-4 px-4 py-2 rounded-lg bg-danger/10 w-full max-w-sm text-center">
+            <p className="text-danger text-sm mb-4 px-4 py-2 rounded-lg bg-danger-light w-full max-w-sm text-center">
               {error}
             </p>
           )}
@@ -317,7 +317,7 @@ export default function VideoCall({ sessionId, socket, durationMinutes, onEnd, o
           <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${!hasRemoteStream ? "bg-neutral-900/90" : "bg-transparent pointer-events-none"}`}>
             {status === "connecting" && !hasRemoteStream && (
               <div className="flex flex-col items-center gap-3">
-                <div className="w-10 h-10 border-2 border-primary/50 border-t-primary rounded-full animate-spin" />
+                <div className="w-10 h-10 border-2 border-primary-border border-t-primary rounded-full animate-spin" />
                 <span className="text-sm text-white/80">Connecting to {otherUserName}...</span>
               </div>
             )}
@@ -340,7 +340,7 @@ export default function VideoCall({ sessionId, socket, durationMinutes, onEnd, o
             type="button"
             onClick={toggleMute}
             className={`flex items-center justify-center w-11 h-11 rounded-full transition-all ${
-              muted ? "bg-danger/15 text-danger hover:bg-danger/25" : "bg-surface-hover text-text-primary hover:bg-border border border-border"
+              muted ? "bg-danger-light text-danger hover:bg-danger-light-hover" : "bg-surface-hover text-text-primary hover:bg-border border border-border"
             }`}
             title={muted ? "Unmute" : "Mute"}
           >
@@ -350,7 +350,7 @@ export default function VideoCall({ sessionId, socket, durationMinutes, onEnd, o
             type="button"
             onClick={toggleVideo}
             className={`flex items-center justify-center w-11 h-11 rounded-full transition-all ${
-              videoOff ? "bg-danger/15 text-danger hover:bg-danger/25" : "bg-surface-hover text-text-primary hover:bg-border border border-border"
+              videoOff ? "bg-danger-light text-danger hover:bg-danger-light-hover" : "bg-surface-hover text-text-primary hover:bg-border border border-border"
             }`}
             title={videoOff ? "Turn camera on" : "Turn camera off"}
           >

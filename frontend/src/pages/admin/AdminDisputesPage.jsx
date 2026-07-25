@@ -1,24 +1,22 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { adminApi } from "../../services/admin.api";
 import {
   Badge,
   Button,
+  DataList,
+  DataTable,
   Modal,
+  PageFilters,
   PageHeader,
   PageShell,
   PageTabFilters,
+  Pagination,
   Select,
-  Table,
   Textarea
 } from "../../components/ui";
+import { usePaginatedQuery } from "../../hooks/usePaginatedQuery";
 import { useToast } from "../../hooks/useToast";
-import {
-  FiAlertCircle,
-  FiCheckCircle,
-  FiXCircle,
-  FiDollarSign,
-  FiUser
-} from "react-icons/fi";
+import { FiAlertCircle } from "react-icons/fi";
 
 const DISPUTE_REASON_LABELS = {
   NO_SHOW: "No Show",
@@ -44,11 +42,15 @@ export default function AdminDisputesPage() {
   const [submitting, setSubmitting] = useState(false);
   const toast = useToast();
 
-  const fetchDisputes = async () => {
-    const params = filter ? { status: filter } : {};
-    const res = await adminApi.getDisputes(params);
-    return res.data || [];
-  };
+  const fetchDisputes = useCallback(
+    (params) => adminApi.getDisputes({ ...params, ...(filter ? { status: filter } : {}) }),
+    [filter]
+  );
+
+  const { items, meta, setPage, loading, error, retry } = usePaginatedQuery(fetchDisputes, {
+    dependencies: [filter, refreshKey],
+    defaultLimit: 20
+  });
 
   const handleOpenResolve = (dispute) => {
     setResolveModal({ open: true, dispute });
@@ -199,13 +201,25 @@ export default function AdminDisputesPage() {
         title="Disputes"
         subtitle="Review and resolve client–lawyer disputes"
       />
-      <PageTabFilters options={filterOptions} value={filter} onChange={setFilter} />
-      <Table
-        columns={columns}
-        data={fetchDisputes}
-        dependencies={[filter, refreshKey]}
-        emptyMessage="No disputes found"
-      />
+      <DataList
+        filters={
+          <PageFilters>
+            <PageTabFilters options={filterOptions} value={filter} onChange={setFilter} />
+          </PageFilters>
+        }
+        pagination={<Pagination meta={meta} onPageChange={setPage} />}
+      >
+        <DataTable
+          columns={columns}
+          data={items}
+          keyField="_id"
+          loading={loading}
+          error={error}
+          retry={retry}
+          emptyMessage="No disputes found"
+          emptyDescription="Try a different status filter."
+        />
+      </DataList>
 
       <Modal
         isOpen={resolveModal.open}
@@ -227,7 +241,7 @@ export default function AdminDisputesPage() {
       >
         {resolveModal.dispute && (
           <div className="space-y-4">
-            <div className="rounded-lg border border-border bg-surface/50 p-3 mb-2">
+            <div className="rounded-lg border border-border bg-surface p-3 mb-2">
               <p className="text-text-primary text-sm m-0">
                 <strong>Raised by:</strong> {resolveModal.dispute.raisedBy?.email || "N/A"}
               </p>

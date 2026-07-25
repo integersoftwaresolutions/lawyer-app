@@ -24,7 +24,7 @@ export function useCalendar({ api, timezone = DEFAULT_TIMEZONE, initialView = CA
     setError(null);
     try {
       const res = await api.listEvents(range);
-      setEvents(res.data || []);
+      setEvents(res.items || []);
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -37,7 +37,7 @@ export function useCalendar({ api, timezone = DEFAULT_TIMEZONE, initialView = CA
       if (!api?.getConflicts) return [];
       try {
         const res = await api.getConflicts({ startAt, endAt, excludeEventId });
-        const list = res.data || [];
+        const list = res.items || [];
         setConflicts(list);
         return list;
       } catch {

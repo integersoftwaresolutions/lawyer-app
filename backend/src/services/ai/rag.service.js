@@ -1,10 +1,13 @@
 import { ApiError } from "../../helpers/apiError.js";
-import { RAG_INGESTION_STATUS } from "../../config/constants.js";
+import { DOCUMENT_VISIBILITY, RAG_INGESTION_STATUS, WORKSPACE_AUDIT_ACTIONS } from "../../config/constants.js";
 import CaseLaw from "../../models/CaseLaw.js";
 import LegalDocument from "../../models/LegalDocument.js";
-import { getPagination, buildPaginationMeta } from "../../utils/pagination.js";
+import { listResult } from "../../utils/pagination.js";
+import { parseListQuery } from "../../utils/listQuery.js";
 import { extractText } from "./ingest/textExtractor.js";
 import * as ingestService from "./ingest/ingest.service.js";
+import { writeAudit } from "../workspace.service.js";
+import { PERMISSIONS, hasPermission } from "../../workspaces/permissions.catalog.js";
 
 // ---------------------------------------------------------------------------
 // Case law (admin-managed, shared corpus)
@@ -28,32 +31,29 @@ export async function ingestCaseLawFromFile(file, body, options = {}) {
 }
 
 export async function listCaseLaw(query = {}) {
-  const { page, limit, skip } = getPagination(query);
-  const filter = { isDeleted: false };
-
-  if (query.court) filter.court = query.court;
-  if (query.status) filter.status = query.status;
-  if (query.yearFrom || query.yearTo) {
-    filter.year = {};
-    if (query.yearFrom) filter.year.$gte = Number(query.yearFrom);
-    if (query.yearTo) filter.year.$lte = Number(query.yearTo);
-  }
-  if (query.q) {
-    const re = new RegExp(escapeRegExp(query.q), "i");
-    filter.$or = [{ title: re }, { caseReference: re }, { citation: re }, { subject: re }];
-  }
+  const { filter, sort, pagination } = parseListQuery(query, {
+    baseFilter: { isDeleted: false },
+    filters: [
+      { key: "court", path: "court", type: "eq" },
+      { key: "status", path: "status", type: "eq" },
+      { key: "yearFrom", path: "year", type: "gte" },
+      { key: "yearTo", path: "year", type: "lte" },
+      { key: "q", paths: ["title", "caseReference", "citation", "subject"], type: "regex" }
+    ],
+    sort: { default: { updatedAt: -1 } }
+  });
 
   const [total, items] = await Promise.all([
     CaseLaw.countDocuments(filter),
     CaseLaw.find(filter)
       .select("-rawText")
-      .sort({ updatedAt: -1 })
-      .skip(skip)
-      .limit(limit)
+      .sort(sort)
+      .skip(pagination.skip)
+      .limit(pagination.limit)
       .lean()
   ]);
 
-  return { items: items.map(formatCaseLaw), meta: buildPaginationMeta(total, { page, limit }) };
+  return listResult({ items: items.map(formatCaseLaw), total, pagination });
 }
 
 export async function getCaseLaw(caseLawId) {
@@ -67,14 +67,41 @@ export async function deleteCaseLaw(caseLawId) {
 }
 
 // ---------------------------------------------------------------------------
-// Lawyer documents (private, per-lawyer namespace)
+// Workspace documents
 // ---------------------------------------------------------------------------
 
-export async function ingestLegalDocumentFromText({ ownerUserId, body, options = {} }) {
+function canViewDocument(doc, { userId, isOwner, permissions }) {
+  if (!hasPermission(permissions, PERMISSIONS.DOCS_VIEW) && !isOwner) return false;
+  if (doc.visibility === DOCUMENT_VISIBILITY.PRIVATE) {
+    return isOwner || String(doc.uploadedByUserId) === String(userId);
+  }
+  return true;
+}
+
+function documentListFilter(workspaceId, { userId, isOwner }) {
+  const base = { workspaceId, isDeleted: false };
+  if (isOwner) return base;
+  return {
+    ...base,
+    $or: [
+      { visibility: { $in: [DOCUMENT_VISIBILITY.FIRM, DOCUMENT_VISIBILITY.PUBLIC] } },
+      { visibility: DOCUMENT_VISIBILITY.PRIVATE, uploadedByUserId: userId }
+    ]
+  };
+}
+
+export async function ingestLegalDocumentFromText({
+  workspaceId,
+  uploadedByUserId,
+  body,
+  options = {}
+}) {
   if (!body.text) throw new ApiError(400, "text is required when no file is uploaded");
   return ingestService.ingestLegalDocument(
     {
-      ownerUserId,
+      workspaceId,
+      uploadedByUserId,
+      visibility: body.visibility || DOCUMENT_VISIBILITY.PRIVATE,
       title: body.title,
       description: body.description,
       caseRef: body.caseRef,
@@ -85,11 +112,19 @@ export async function ingestLegalDocumentFromText({ ownerUserId, body, options =
   );
 }
 
-export async function ingestLegalDocumentFromFile({ ownerUserId, file, body, options = {} }) {
+export async function ingestLegalDocumentFromFile({
+  workspaceId,
+  uploadedByUserId,
+  file,
+  body,
+  options = {}
+}) {
   if (!file?.buffer) throw new ApiError(400, "File is required");
   return ingestService.ingestLegalDocument(
     {
-      ownerUserId,
+      workspaceId,
+      uploadedByUserId,
+      visibility: body.visibility || DOCUMENT_VISIBILITY.PRIVATE,
       title: body.title || file.originalname,
       description: body.description,
       caseRef: body.caseRef,
@@ -102,38 +137,116 @@ export async function ingestLegalDocumentFromFile({ ownerUserId, file, body, opt
   );
 }
 
-export async function listLegalDocuments(ownerUserId, query = {}) {
-  const { page, limit, skip } = getPagination(query);
-  const filter = { ownerUserId, isDeleted: false };
+export async function listLegalDocuments(ctx, query = {}) {
+  const { workspaceId, userId, isOwner, permissions } = ctx;
+  if (!hasPermission(permissions, PERMISSIONS.DOCS_VIEW) && !isOwner) {
+    throw new ApiError(403, "Missing permission: docs.view");
+  }
 
-  if (query.caseRef) filter.caseRef = query.caseRef;
-  if (query.status) filter.status = query.status;
+  const { filter, sort, pagination } = parseListQuery(query, {
+    baseFilter: documentListFilter(workspaceId, { userId, isOwner }),
+    filters: [
+      { key: "caseRef", path: "caseRef", type: "eq" },
+      { key: "status", path: "status", type: "eq" },
+      { key: "visibility", path: "visibility", type: "eq" }
+    ],
+    sort: { default: { updatedAt: -1 } }
+  });
+
+  // Keep q as $and so it does not overwrite visibility $or from baseFilter
   if (query.q) {
     const re = new RegExp(escapeRegExp(query.q), "i");
-    filter.$or = [{ title: re }, { description: re }, { caseRef: re }];
+    filter.$and = [
+      ...(filter.$and || []),
+      { $or: [{ title: re }, { description: re }, { caseRef: re }] }
+    ];
   }
 
   const [total, items] = await Promise.all([
     LegalDocument.countDocuments(filter),
     LegalDocument.find(filter)
       .select("-rawText")
-      .sort({ updatedAt: -1 })
-      .skip(skip)
-      .limit(limit)
+      .sort(sort)
+      .skip(pagination.skip)
+      .limit(pagination.limit)
       .lean()
   ]);
 
-  return { items: items.map(formatLegalDocument), meta: buildPaginationMeta(total, { page, limit }) };
+  return listResult({ items: items.map(formatLegalDocument), total, pagination });
 }
 
-export async function getLegalDocument(ownerUserId, documentId) {
-  const row = await LegalDocument.findOne({ _id: documentId, ownerUserId, isDeleted: false }).lean();
+export async function getLegalDocument(ctx, documentId) {
+  const { workspaceId, userId, isOwner, permissions } = ctx;
+  const row = await LegalDocument.findOne({
+    _id: documentId,
+    workspaceId,
+    isDeleted: false
+  }).lean();
   if (!row) throw new ApiError(404, "Document not found");
+  if (!canViewDocument(row, { userId, isOwner, permissions })) {
+    throw new ApiError(403, "You cannot view this document");
+  }
   return formatLegalDocument(row, { includeText: true });
 }
 
-export async function deleteLegalDocument(ownerUserId, documentId) {
-  return ingestService.deleteLegalDocument(documentId, ownerUserId);
+export async function deleteLegalDocument(ctx, documentId) {
+  const { workspaceId, userId, isOwner, permissions } = ctx;
+  const row = await LegalDocument.findOne({
+    _id: documentId,
+    workspaceId,
+    isDeleted: false
+  }).lean();
+  if (!row) throw new ApiError(404, "Document not found");
+
+  const canDelete =
+    isOwner ||
+    (hasPermission(permissions, PERMISSIONS.DOCS_DELETE) &&
+      (row.visibility !== DOCUMENT_VISIBILITY.PRIVATE ||
+        String(row.uploadedByUserId) === String(userId)));
+
+  if (!canDelete) throw new ApiError(403, "Missing permission to delete this document");
+
+  return ingestService.deleteLegalDocument(documentId, { workspaceId });
+}
+
+export async function updateDocumentVisibility(ctx, documentId, visibility) {
+  const { workspaceId, userId, isOwner, permissions } = ctx;
+  if (!Object.values(DOCUMENT_VISIBILITY).includes(visibility)) {
+    throw new ApiError(400, "Invalid visibility");
+  }
+  if (!hasPermission(permissions, PERMISSIONS.DOCS_MANAGE_VISIBILITY) && !isOwner) {
+    throw new ApiError(403, "Missing permission: docs.manage_visibility");
+  }
+
+  const row = await LegalDocument.findOne({
+    _id: documentId,
+    workspaceId,
+    isDeleted: false
+  });
+  if (!row) throw new ApiError(404, "Document not found");
+
+  if (
+    row.visibility === DOCUMENT_VISIBILITY.PRIVATE &&
+    !isOwner &&
+    String(row.uploadedByUserId) !== String(userId)
+  ) {
+    throw new ApiError(403, "Only the uploader or owner can change visibility of a private document");
+  }
+
+  const prev = row.visibility;
+  row.visibility = visibility;
+  await row.save();
+
+  await ingestService.reindexLegalDocumentVisibility(row._id);
+
+  await writeAudit({
+    workspaceId,
+    actorUserId: userId,
+    action: WORKSPACE_AUDIT_ACTIONS.DOC_VISIBILITY_CHANGED,
+    meta: { documentId, from: prev, to: visibility }
+  });
+
+  return formatLegalDocument(row.toObject());
 }
 
 // ---------------------------------------------------------------------------
@@ -173,7 +286,10 @@ function formatCaseLaw(row, { includeText = false } = {}) {
 function formatLegalDocument(row, { includeText = false } = {}) {
   return {
     id: row._id,
-    ownerUserId: row.ownerUserId,
+    workspaceId: row.workspaceId,
+    uploadedByUserId: row.uploadedByUserId,
+    visibility: row.visibility,
+    caseId: row.caseId,
     title: row.title,
     description: row.description,
     caseRef: row.caseRef,

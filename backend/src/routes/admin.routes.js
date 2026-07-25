@@ -12,6 +12,7 @@ r.use("/rag", adminRagRouter);
 
 r.use(authMiddleware, requireRoles("ADMIN"));
 
+r.get("/workspaces", adminCtrl.listWorkspaces);
 r.get("/analytics", adminCtrl.getAnalytics);
 r.get("/users", adminCtrl.getAllUsers);
 r.get("/bookings", adminCtrl.getAllBookings);

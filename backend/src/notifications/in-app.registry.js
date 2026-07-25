@@ -19,7 +19,8 @@ const PRODUCT_TYPES = [
   NOTIFICATION_TYPES.VERIFICATION_REJECTED,
   NOTIFICATION_TYPES.VERIFICATION_DOCUMENT_REJECTED,
   NOTIFICATION_TYPES.ADMIN_LAWYER_DOCUMENTS_UPLOADED,
-  NOTIFICATION_TYPES.ADMIN_LAWYER_PENDING_VERIFICATION
+  NOTIFICATION_TYPES.ADMIN_LAWYER_PENDING_VERIFICATION,
+  NOTIFICATION_TYPES.WORKSPACE_INVITE
 ];
 
 for (const type of PRODUCT_TYPES) {
@@ -82,6 +83,11 @@ export const IN_APP_CONTENT_MAP = {
     title: () => "Lawyer pending verification",
     body: (v) => `${v.lawyerName || "A lawyer"} has submitted required documents and is awaiting your approval.`,
     link: (v) => v.adminVerificationUrl || "/admin/verification"
+  },
+  [NOTIFICATION_TYPES.WORKSPACE_INVITE]: {
+    title: () => "Firm invitation",
+    body: (v) => `${v.inviterEmail || "A colleague"} invited you to join ${v.workspaceName || "a firm"}.`,
+    link: (v) => v.acceptUrl || "/lawyer/workspace"
   },
   [NOTIFICATION_TYPES.EMAIL_VERIFIED]: {
     title: () => "Email verified",

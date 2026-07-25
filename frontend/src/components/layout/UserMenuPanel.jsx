@@ -39,7 +39,7 @@ export default function UserMenuPanel({ onNavigate }) {
           Dashboard
         </Link>
         <Link to={getProfilePath(user.role)} onClick={close} className={linkClass}>
-          Settings
+          Account settings
         </Link>
         <button type="button" onClick={handleLogout} className={logoutClass}>
           Logout

@@ -4,12 +4,22 @@
  */
 export function getErrorMessage(error) {
   if (!error) return "An unexpected error occurred";
-  
+
+  if (error.code === "SESSION_EXPIRED") {
+    return "Your session has expired. Please sign in again.";
+  }
+  if (error.code === "AUTH_UNAVAILABLE") {
+    return (
+      error.message ||
+      "Can't reach the server. Check your connection and try again."
+    );
+  }
+
   // Check for response data with message
   if (error.response?.data?.message) {
     return error.response.data.message;
   }
-  
+
   // Check for response data with errors object
   if (error.response?.data?.errors) {
     const errors = error.response.data.errors;
@@ -23,10 +33,10 @@ export function getErrorMessage(error) {
       return firstError;
     }
   }
-  
+
   // Check for error message
   if (error.message) return error.message;
-  
+
   // Default message based on status
   const status = error.response?.status;
   if (status === 401) return "Unauthorized. Please login again.";
@@ -35,7 +45,7 @@ export function getErrorMessage(error) {
   if (status === 409) return "Conflict. This resource already exists.";
   if (status === 422) return "Validation error. Please check your input.";
   if (status >= 500) return "Server error. Please try again later.";
-  
+
   return "An unexpected error occurred";
 }
 

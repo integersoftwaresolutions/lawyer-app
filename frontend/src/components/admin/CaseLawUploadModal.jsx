@@ -256,9 +256,9 @@ export default function CaseLawUploadModal({ isOpen, onClose, onSubmit, busy = f
           <Field label="File" required>
             <label
               htmlFor="case-law-upload"
-              className="flex items-center gap-3 rounded-lg border-2 border-dashed border-card-border bg-surface/40 p-4 cursor-pointer hover:border-primary/50 transition-colors"
+              className="flex items-center gap-3 rounded-lg border-2 border-dashed border-card-border bg-surface p-4 cursor-pointer hover:border-primary-border transition-colors"
             >
-              <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-primary-light text-primary flex items-center justify-center">
                 {file ? <FiFile className="w-5 h-5" /> : <FiUploadCloud className="w-5 h-5" />}
               </div>
               <div className="flex-1 min-w-0">

@@ -112,7 +112,7 @@ export function ErrorMessage({ message }) {
   if (!message) return null;
 
   return (
-    <div className="py-3 px-4 mb-4 rounded-md bg-danger/10 border border-danger/30 text-danger text-xs">
+    <div className="py-3 px-4 mb-4 rounded-md bg-danger-light border border-danger text-danger text-xs">
       {message}
     </div>
   );

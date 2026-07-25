@@ -25,7 +25,7 @@ export default function AdminOverviewPage() {
     ]);
     return {
       analytics: analyticsRes.data,
-      bookings: bookingsRes.data || []
+      bookings: bookingsRes.items || []
     };
   });
 

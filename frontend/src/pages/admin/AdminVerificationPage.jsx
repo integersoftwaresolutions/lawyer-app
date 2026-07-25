@@ -1,22 +1,27 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { adminApi } from "../../services/admin.api";
 import { getProfilePictureUrl } from "../../utils/profilePicture";
-import { Button, Badge, Modal, Textarea, Select, StateHandler, PageHeader, PageShell } from "../../components/ui";
+import {
+  Button,
+  Badge,
+  Modal,
+  Textarea,
+  Select,
+  DataList,
+  DataTable,
+  PageHeader,
+  PageShell,
+  Pagination
+} from "../../components/ui";
 import { useToast } from "../../hooks/useToast";
-import { useStateHandler } from "../../hooks/useStateHandler";
-import { 
-  FiCheckCircle, 
-  FiXCircle, 
-  FiClock, 
-  FiFile, 
+import { usePaginatedQuery } from "../../hooks/usePaginatedQuery";
+import {
+  FiCheckCircle,
+  FiXCircle,
+  FiClock,
+  FiFile,
   FiEye,
   FiShield,
-  FiUser,
-  FiMail,
-  FiMapPin,
-  FiBriefcase,
-  FiDollarSign,
-  FiCalendar,
   FiAlertCircle
 } from "react-icons/fi";
 
@@ -26,29 +31,28 @@ export default function AdminVerificationPage() {
   const [verifyData, setVerifyData] = useState({ status: "APPROVED", notes: "" });
   const [submitting, setSubmitting] = useState(false);
   const [loadingDocs, setLoadingDocs] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const toast = useToast();
 
-  const { loading, error, data, retry } = useStateHandler(
-    async () => {
-      const res = await adminApi.getPendingLawyers();
-      return res.data || [];
-    }
-  );
+  const fetchPendingLawyers = useCallback((params) => adminApi.getPendingLawyers(params), []);
 
-  const pendingLawyers = data || [];
+  const { items, meta, setPage, loading, error, retry } = usePaginatedQuery(fetchPendingLawyers, {
+    dependencies: [refreshKey],
+    defaultLimit: 20
+  });
 
   const loadLawyerDocuments = async (lawyerUserId) => {
     try {
       setLoadingDocs(true);
-      const res = await adminApi.getLawyerVerificationStatus(lawyerUserId);
-      setDocumentsModal({ 
-        open: true, 
-        lawyer: res.data.profile, 
-        documents: res.data.allDocuments || [] 
+      const res = await adminApi.getLawyerVerification(lawyerUserId);
+      setDocumentsModal({
+        open: true,
+        lawyer: res.data.profile,
+        documents: res.data.allDocuments || []
       });
-    } catch (error) {
-      console.error("Failed to load documents:", error);
-      toast.error(error.response?.data?.message || "Failed to load documents");
+    } catch (err) {
+      console.error("Failed to load documents:", err);
+      toast.error(err.response?.data?.message || "Failed to load documents");
     } finally {
       setLoadingDocs(false);
     }
@@ -56,7 +60,7 @@ export default function AdminVerificationPage() {
 
   const handleVerify = async () => {
     if (!verifyModal.lawyer) return;
-    
+
     try {
       setSubmitting(true);
       const lawyerUserId = verifyModal.lawyer.userId?._id || verifyModal.lawyer.userId;
@@ -64,10 +68,10 @@ export default function AdminVerificationPage() {
       toast.success(`Lawyer ${verifyData.status === "APPROVED" ? "approved" : "rejected"} successfully`);
       setVerifyModal({ open: false, lawyer: null });
       setVerifyData({ status: "APPROVED", notes: "" });
-      retry();
-    } catch (error) {
-      console.error("Failed to verify:", error);
-      toast.error(error.response?.data?.message || "Failed to update verification");
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      console.error("Failed to verify:", err);
+      toast.error(err.response?.data?.message || "Failed to update verification");
     } finally {
       setSubmitting(false);
     }
@@ -78,7 +82,7 @@ export default function AdminVerificationPage() {
     return new Date(date).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
-      day: "numeric",
+      day: "numeric"
     });
   };
 
@@ -98,138 +102,106 @@ export default function AdminVerificationPage() {
     );
   };
 
-  return (
-    <StateHandler loading={loading} error={error} retry={retry}>
-      <PageShell>
-        <PageHeader
-          icon={FiShield}
-          title="Pending Verifications"
-          subtitle="Review and approve lawyer verification requests. Verify documents before making a decision."
-        />
-
-      {pendingLawyers.length === 0 ? (
-        <div className="rounded-xl border border-card-border bg-card text-center py-16 px-6">
-          <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-success-light text-success flex items-center justify-center">
-            <FiCheckCircle className="w-7 h-7" />
-          </div>
-          <p className="text-lg font-medium text-text-primary mb-2">No pending verifications</p>
-          <p className="text-sm text-text-secondary m-0">
-            All lawyer verification requests have been processed.
+  const columns = [
+    {
+      key: "fullName",
+      label: "Name",
+      render: (_, lawyer) => (
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-text-primary m-0 truncate">
+            {lawyer.fullName || "N/A"}
           </p>
+          {lawyer.barCouncilNumber && (
+            <p className="text-xs text-text-muted m-0 mt-0.5">
+              Bar Council: {lawyer.barCouncilNumber}
+            </p>
+          )}
         </div>
-      ) : (
-        <ul className="flex flex-col gap-3 m-0 p-0 list-none">
-          {pendingLawyers.map((lawyer) => (
-            <li
-              key={lawyer._id}
-              className="rounded-xl border border-card-border bg-card p-4 sm:p-5"
-            >
-              <div className="flex flex-col lg:flex-row lg:items-start gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start gap-3 mb-4">
-                    <div className="w-11 h-11 rounded-xl bg-primary-light text-primary flex items-center justify-center shrink-0">
-                      <FiUser className="w-5 h-5" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <h3 className="text-base font-semibold text-text-primary m-0 truncate">
-                          {lawyer.fullName || "N/A"}
-                        </h3>
-                        <Badge variant="warning" size="sm">Pending</Badge>
-                      </div>
-                      {lawyer.barCouncilNumber && (
-                        <p className="text-sm text-text-secondary m-0">
-                          Bar Council: {lawyer.barCouncilNumber}
-                        </p>
-                      )}
-                    </div>
-                  </div>
+      )
+    },
+    {
+      key: "email",
+      label: "Email",
+      render: (_, lawyer) => lawyer.userId?.email || "N/A"
+    },
+    {
+      key: "documentCount",
+      label: "Docs",
+      hideOnMobile: true,
+      render: (value, lawyer) =>
+        value !== undefined ? `${value} (${lawyer.approvedDocuments || 0} approved)` : "—"
+    },
+    {
+      key: "createdAt",
+      label: "Joined",
+      hideOnMobile: true,
+      render: (value) => formatDate(value)
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      align: "right",
+      render: (_, lawyer) => (
+        <div className="flex items-center justify-end gap-1 flex-wrap">
+          <Button
+            variant="primary"
+            outline
+            size="sm"
+            icon={FiEye}
+            onClick={() => loadLawyerDocuments(lawyer.userId?._id || lawyer.userId)}
+            loading={loadingDocs}
+          >
+            View docs
+          </Button>
+          <Button
+            variant="success"
+            size="sm"
+            icon={FiCheckCircle}
+            onClick={() => {
+              setVerifyData({ status: "APPROVED", notes: "" });
+              setVerifyModal({ open: true, lawyer });
+            }}
+          >
+            Approve
+          </Button>
+          <Button
+            variant="danger"
+            size="sm"
+            icon={FiXCircle}
+            onClick={() => {
+              setVerifyData({ status: "REJECTED", notes: "" });
+              setVerifyModal({ open: true, lawyer });
+            }}
+          >
+            Reject
+          </Button>
+        </div>
+      )
+    }
+  ];
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
-                    <div className="flex items-center gap-2 text-sm min-w-0">
-                      <FiMail className="w-4 h-4 text-text-muted shrink-0" />
-                      <span className="text-text-secondary truncate">{lawyer.userId?.email || "N/A"}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <FiMapPin className="w-4 h-4 text-text-muted shrink-0" />
-                      <span className="text-text-secondary">{lawyer.city || "Not specified"}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <FiBriefcase className="w-4 h-4 text-text-muted shrink-0" />
-                      <span className="text-text-secondary">{lawyer.experienceYears || 0} years</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <FiDollarSign className="w-4 h-4 text-text-muted shrink-0" />
-                      <span className="text-text-secondary">${lawyer.hourlyRate || 0}/hr</span>
-                    </div>
-                  </div>
+  return (
+    <PageShell>
+      <PageHeader
+        icon={FiShield}
+        title="Pending Verifications"
+        subtitle="Review and approve lawyer verification requests. Verify documents before making a decision."
+      />
 
-                  {lawyer.specialization && lawyer.specialization.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {lawyer.specialization.map((spec) => (
-                        <Badge key={spec} size="sm" variant="secondary">{spec}</Badge>
-                      ))}
-                    </div>
-                  )}
+      <DataList pagination={<Pagination meta={meta} onPageChange={setPage} />}>
+        <DataTable
+          columns={columns}
+          data={items}
+          keyField="_id"
+          loading={loading}
+          error={error}
+          retry={retry}
+          emptyMessage="No pending verifications"
+          emptyDescription="All lawyer verification requests have been processed."
+          emptyIcon={<FiCheckCircle className="w-6 h-6" />}
+        />
+      </DataList>
 
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-muted">
-                    <FiCalendar className="w-3.5 h-3.5" />
-                    <span>Registered: {formatDate(lawyer.createdAt)}</span>
-                    {lawyer.documentCount !== undefined && (
-                      <>
-                        <span aria-hidden="true">·</span>
-                        <span>{lawyer.documentCount} document(s) uploaded</span>
-                        <span aria-hidden="true">·</span>
-                        <span>{lawyer.approvedDocuments || 0} approved</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex flex-row lg:flex-col gap-2 shrink-0 lg:w-40">
-                  <Button
-                    variant="primary"
-                    outline
-                    size="sm"
-                    icon={FiEye}
-                    onClick={() => loadLawyerDocuments(lawyer.userId?._id || lawyer.userId)}
-                    loading={loadingDocs}
-                    className="flex-1 lg:flex-none"
-                  >
-                    View Documents
-                  </Button>
-                  <Button
-                    variant="success"
-                    size="sm"
-                    icon={FiCheckCircle}
-                    onClick={() => {
-                      setVerifyData({ status: "APPROVED", notes: "" });
-                      setVerifyModal({ open: true, lawyer });
-                    }}
-                    className="flex-1 lg:flex-none"
-                  >
-                    Approve
-                  </Button>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    icon={FiXCircle}
-                    onClick={() => {
-                      setVerifyData({ status: "REJECTED", notes: "" });
-                      setVerifyModal({ open: true, lawyer });
-                    }}
-                    className="flex-1 lg:flex-none"
-                  >
-                    Reject
-                  </Button>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {/* Verification Modal */}
       <Modal
         isOpen={verifyModal.open}
         onClose={() => setVerifyModal({ open: false, lawyer: null })}
@@ -265,7 +237,7 @@ export default function AdminVerificationPage() {
             <div className="flex items-start gap-2">
               <FiAlertCircle className="w-5 h-5 text-warning mt-0.5 shrink-0" />
               <p className="text-sm text-text-secondary m-0">
-                {verifyData.status === "APPROVED" 
+                {verifyData.status === "APPROVED"
                   ? "This will approve the lawyer and allow them to receive bookings."
                   : "This will reject the verification. The lawyer will need to resubmit documents."}
               </p>
@@ -278,7 +250,7 @@ export default function AdminVerificationPage() {
             onChange={(e) => setVerifyData({ ...verifyData, status: e.target.value })}
             options={[
               { value: "APPROVED", label: "Approved" },
-              { value: "REJECTED", label: "Rejected" },
+              { value: "REJECTED", label: "Rejected" }
             ]}
           />
           <Textarea
@@ -291,7 +263,6 @@ export default function AdminVerificationPage() {
         </div>
       </Modal>
 
-      {/* Documents Modal */}
       <Modal
         isOpen={documentsModal.open}
         onClose={() => setDocumentsModal({ open: false, lawyer: null, documents: [] })}
@@ -352,7 +323,6 @@ export default function AdminVerificationPage() {
           </ul>
         )}
       </Modal>
-      </PageShell>
-    </StateHandler>
+    </PageShell>
   );
 }

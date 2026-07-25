@@ -1,36 +1,40 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
   FiTrash2,
   FiCreditCard,
   FiCalendar,
   FiZap,
-  FiShoppingCart,
   FiInfo,
-  FiClock,
+  FiClock
 } from "react-icons/fi";
 import { walletApi } from "../../services/wallet.api";
-import { Card, Button, Input, Modal, StateHandler, Table, Badge, PageHeader, PageShell } from "../../components/ui";
+import {
+  Card,
+  Button,
+  Modal,
+  StateHandler,
+  Badge,
+  PageHeader,
+  PageShell,
+  DataTable,
+  DataList,
+  Pagination
+} from "../../components/ui";
 import { useStateHandler } from "../../hooks/useStateHandler";
+import { usePaginatedQuery } from "../../hooks/usePaginatedQuery";
 import { useToast } from "../../hooks/useToast";
-
-const CREDIT_PACKAGES = [
-  { credits: 10, price: "$9.99", popular: false },
-  { credits: 25, price: "$19.99", popular: true },
-  { credits: 50, price: "$34.99", popular: false },
-  { credits: 100, price: "$59.99", popular: false },
-];
 
 const CREDIT_TIPS = [
   { icon: FiZap, text: "Credits are used to book consultations with lawyers" },
   { icon: FiCreditCard, text: "Each session costs credits based on the lawyer's hourly rate" },
   { icon: FiCalendar, text: "You receive free monthly credits based on your plan" },
-  { icon: FiClock, text: "Purchased credits never expire" },
+  { icon: FiClock, text: "Unused monthly credits refresh with your plan cycle" }
 ];
 
 function getTypeBadge(type) {
   const variants = {
     TOPUP: "success",
-    SPEND: "danger",
+    SPEND: "danger"
   };
   return (
     <Badge variant={variants[type] || "default"} size="table">
@@ -41,8 +45,6 @@ function getTypeBadge(type) {
 
 export default function ClientWalletPage() {
   const [deleteModal, setDeleteModal] = useState({ open: false, item: null });
-  const [topupModal, setTopupModal] = useState(false);
-  const [topupAmount, setTopupAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const toast = useToast();
@@ -52,10 +54,19 @@ export default function ClientWalletPage() {
     return res.data;
   });
 
-  const fetchLedger = async () => {
-    const res = await walletApi.ledger({ page: 1, limit: 20 });
-    return res.data || [];
-  };
+  const fetchLedger = useCallback((params) => walletApi.ledger(params), []);
+
+  const {
+    items: ledgerItems,
+    meta: ledgerMeta,
+    setPage: setLedgerPage,
+    loading: ledgerLoading,
+    error: ledgerError,
+    retry: retryLedger
+  } = usePaginatedQuery(fetchLedger, {
+    dependencies: [refreshKey],
+    defaultLimit: 20
+  });
 
   const wallet = data;
 
@@ -67,38 +78,10 @@ export default function ClientWalletPage() {
       setDeleteModal({ open: false, item: null });
       setRefreshKey((k) => k + 1);
     } catch (err) {
-      console.error("Failed to delete history:", err);
       toast.error(err.response?.data?.message || "Failed to delete history");
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handleTopup = async () => {
-    const amount = parseInt(topupAmount, 10);
-    if (!amount || amount <= 0) {
-      toast.error("Please enter a valid amount");
-      return;
-    }
-
-    try {
-      setSubmitting(true);
-      await walletApi.topup({ amount, note: "Credit topup" });
-      setTopupModal(false);
-      setTopupAmount("");
-      retryWallet();
-      setRefreshKey((k) => k + 1);
-    } catch (err) {
-      console.error("Failed to topup:", err);
-      toast.error(err.response?.data?.message || "Failed to topup");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const openTopup = (credits) => {
-    setTopupAmount(credits.toString());
-    setTopupModal(true);
   };
 
   const formatLedgerDate = (date) =>
@@ -107,7 +90,7 @@ export default function ClientWalletPage() {
       month: "short",
       day: "numeric",
       hour: "2-digit",
-      minute: "2-digit",
+      minute: "2-digit"
     });
 
   return (
@@ -116,16 +99,7 @@ export default function ClientWalletPage() {
         <PageHeader
           icon={FiCreditCard}
           title="Wallet & Credits"
-          subtitle="Top up credits, track your balance, and review purchase history for consultations"
-          actions={
-            <Button
-              size="sm"
-              icon={FiShoppingCart}
-              onClick={() => openTopup("")}
-            >
-              Custom amount
-            </Button>
-          }
+          subtitle="Track your balance and consultation spend history"
         />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -155,56 +129,6 @@ export default function ClientWalletPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-          {/* Credit packages */}
-          <Card
-            title="Purchase credits"
-            subtitle="Choose a package or enter a custom amount"
-            padding="p-4 sm:p-5"
-            className="lg:col-span-2"
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              {CREDIT_PACKAGES.map((pkg) => (
-                <div
-                  key={pkg.credits}
-                  className={`relative rounded-xl bg-background border p-4 sm:p-5 flex flex-col transition-colors ${
-                    pkg.popular
-                      ? "border-primary-border"
-                      : "border-card-border"
-                  }`}
-                >
-                  {pkg.popular && (
-                    <Badge variant="primary" size="sm" className="absolute -top-2.5 left-4">
-                      Popular
-                    </Badge>
-                  )}
-
-                  <div className="flex items-baseline gap-1.5 mb-1">
-                    <span className="text-3xl font-bold text-text-primary tabular-nums">
-                      {pkg.credits}
-                    </span>
-                    <span className="text-sm text-text-secondary">credits</span>
-                  </div>
-
-                  <p className="text-lg font-semibold text-text-primary m-0 mb-4 tabular-nums">
-                    {pkg.price}
-                  </p>
-
-                  <Button
-                    fullWidth
-                    variant={pkg.popular ? "primary" : "secondary"}
-                    size="sm"
-                    icon={FiShoppingCart}
-                    className="mt-auto"
-                    onClick={() => openTopup(pkg.credits)}
-                  >
-                    Purchase
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          {/* How credits work */}
           <Card
             title="How credits work"
             subtitle="Everything you need to know"
@@ -225,68 +149,78 @@ export default function ClientWalletPage() {
             <div className="mt-5 pt-4 border-t border-card-border flex items-start gap-2">
               <FiInfo className="w-4 h-4 text-text-muted shrink-0 mt-0.5" />
               <p className="text-xs text-text-muted m-0 leading-relaxed">
-                In production, purchases will connect to a secure payment gateway.
+                Self-serve purchases are disabled until payments go live. Admins can credit wallets when needed.
               </p>
             </div>
           </Card>
-        </div>
 
-        <Table
-          columns={[
-              {
-                key: "createdAt",
-                label: "Date",
-                render: (value) => (
-                  <span className="text-sm text-text-primary whitespace-nowrap">
-                    {formatLedgerDate(value)}
-                  </span>
-                ),
-              },
-              {
-                key: "type",
-                label: "Type",
-                render: (value) => getTypeBadge(value),
-              },
-              {
-                key: "amount",
-                label: "Amount",
-                render: (value) => (
-                  <span
-                    className={`text-sm font-semibold tabular-nums ${
-                      value >= 0 ? "text-success" : "text-danger"
-                    }`}
-                  >
-                    {value >= 0 ? `+${value}` : value}
-                  </span>
-                ),
-              },
-              {
-                key: "note",
-                label: "Note",
-                render: (value) => (
-                  <span className="text-sm text-text-secondary">{value || "—"}</span>
-                ),
-              },
-              {
-                key: "actions",
-                label: "Actions",
-                render: (_, row) => (
-                  <Button
-                    size="sm"
-                    variant="danger"
-                    outline
-                    icon={FiTrash2}
-                    onClick={() => setDeleteModal({ open: true, item: row })}
-                  >
-                    Delete
-                  </Button>
-                ),
-              },
-            ]}
-            data={fetchLedger}
-            dependencies={[refreshKey]}
-            emptyMessage="No transactions yet"
-          />
+          <div className="lg:col-span-2 space-y-3">
+            <h3 className="text-sm font-semibold text-text-primary m-0">Transaction history</h3>
+            <DataList pagination={<Pagination meta={ledgerMeta} onPageChange={setLedgerPage} />}>
+              <DataTable
+                columns={[
+                  {
+                    key: "createdAt",
+                    label: "Date",
+                    render: (value) => (
+                      <span className="text-sm text-text-primary whitespace-nowrap">
+                        {formatLedgerDate(value)}
+                      </span>
+                    )
+                  },
+                  {
+                    key: "type",
+                    label: "Type",
+                    render: (value) => getTypeBadge(value)
+                  },
+                  {
+                    key: "amount",
+                    label: "Amount",
+                    render: (value) => (
+                      <span
+                        className={`text-sm font-semibold tabular-nums ${
+                          value >= 0 ? "text-success" : "text-danger"
+                        }`}
+                      >
+                        {value >= 0 ? `+${value}` : value}
+                      </span>
+                    )
+                  },
+                  {
+                    key: "note",
+                    label: "Note",
+                    render: (value) => (
+                      <span className="text-sm text-text-secondary">{value || "—"}</span>
+                    )
+                  },
+                  {
+                    key: "actions",
+                    label: "Actions",
+                    align: "right",
+                    render: (_, row) => (
+                      <Button
+                        size="sm"
+                        variant="danger"
+                        outline
+                        icon={FiTrash2}
+                        onClick={() => setDeleteModal({ open: true, item: row })}
+                      >
+                        Delete
+                      </Button>
+                    )
+                  }
+                ]}
+                data={ledgerItems}
+                keyField="_id"
+                loading={ledgerLoading}
+                error={ledgerError}
+                retry={retryLedger}
+                emptyMessage="No transactions yet"
+                emptyDescription="Spends and credits will appear in this ledger."
+              />
+            </DataList>
+          </div>
+        </div>
 
         <Modal
           isOpen={deleteModal.open}
@@ -305,34 +239,6 @@ export default function ClientWalletPage() {
         >
           <p className="text-text-secondary mt-0 leading-relaxed">
             This removes the entry from your history. Your wallet balance will not change.
-          </p>
-        </Modal>
-
-        <Modal
-          isOpen={topupModal}
-          onClose={() => setTopupModal(false)}
-          title="Add credits"
-          footer={
-            <>
-              <Button variant="secondary" onClick={() => setTopupModal(false)}>
-                Cancel
-              </Button>
-              <Button icon={FiShoppingCart} onClick={handleTopup} loading={submitting}>
-                Confirm purchase
-              </Button>
-            </>
-          }
-        >
-          <Input
-            label="Number of credits"
-            type="number"
-            value={topupAmount}
-            onChange={(e) => setTopupAmount(e.target.value)}
-            placeholder="Enter amount"
-            containerClassName="mb-3"
-          />
-          <p className="text-text-muted text-sm m-0 leading-relaxed">
-            Credits are added to your balance immediately after confirmation.
           </p>
         </Modal>
       </PageShell>

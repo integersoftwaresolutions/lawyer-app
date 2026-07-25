@@ -191,7 +191,7 @@ export default function EventFormModal({
       }
     >
       {formError && (
-        <div className="mb-4 px-3 py-2 rounded-lg bg-danger/10 border border-danger/20 text-sm text-danger">
+        <div className="mb-4 px-3 py-2 rounded-lg bg-danger-light border border-danger-light text-sm text-danger">
           {formError}
         </div>
       )}
@@ -204,7 +204,7 @@ export default function EventFormModal({
       )}
 
       {showConflictConfirm && conflicts.length > 0 && (
-        <div className="mb-4 p-4 rounded-lg bg-warning/10 border border-warning/30">
+        <div className="mb-4 p-4 rounded-lg bg-warning-light border border-warning/30">
           <div className="flex gap-2 items-start">
             <FiAlertTriangle className="w-5 h-5 text-warning shrink-0" />
             <div className="flex-1 min-w-0">

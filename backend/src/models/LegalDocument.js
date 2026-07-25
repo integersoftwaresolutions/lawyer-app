@@ -1,22 +1,44 @@
 import mongoose from "mongoose";
-import { RAG_INGESTION_STATUS } from "../config/constants.js";
+import { DOCUMENT_VISIBILITY, RAG_INGESTION_STATUS } from "../config/constants.js";
 
 /**
- * A document uploaded by a lawyer (brief, contract, evidence, notes) that is
- * ingested into the RAG corpus under their private namespace.
- *
- * Stored chunks live in `RagChunk` (sourceType=LEGAL_DOCUMENT, sourceId=this._id).
- * Owned by a single lawyer — never shared across lawyers (Section 7.2).
+ * Workspace-scoped legal document (briefs, contracts, evidence).
+ * RAG chunks live in RagChunk; Pinecone namespace is per-workspace (or public).
+ * caseId reserved for Phase 2 matter attachment.
  */
 const LegalDocumentSchema = new mongoose.Schema(
   {
-    ownerUserId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    workspaceId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Workspace",
+      required: true,
+      index: true
+    },
+    uploadedByUserId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true
+    },
+    visibility: {
+      type: String,
+      enum: Object.values(DOCUMENT_VISIBILITY),
+      default: DOCUMENT_VISIBILITY.PRIVATE,
+      index: true
+    },
+    /** Phase 2: attach to a matter Case. */
+    caseId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Case",
+      default: null,
+      index: true
+    },
+
     title: { type: String, required: true, trim: true, maxlength: 300 },
     description: { type: String, default: "", trim: true, maxlength: 2000 },
     caseRef: { type: String, default: "", trim: true, maxlength: 200, index: true },
     tags: { type: [String], default: [] },
 
-    /** Optional pointer to the underlying file via the unified Media model. */
     mediaId: { type: mongoose.Schema.Types.ObjectId, ref: "Media", default: null },
 
     rawText: { type: String, default: "" },
@@ -34,11 +56,14 @@ const LegalDocumentSchema = new mongoose.Schema(
     statusMessage: { type: String, default: "" },
     indexedAt: { type: Date, default: null },
 
-    isDeleted: { type: Boolean, default: false, index: true }
+    isDeleted: { type: Boolean, default: false, index: true },
+    deletedAt: { type: Date, default: null }
   },
   { timestamps: true }
 );
 
-LegalDocumentSchema.index({ ownerUserId: 1, isDeleted: 1, updatedAt: -1 });
+LegalDocumentSchema.index({ workspaceId: 1, isDeleted: 1, updatedAt: -1 });
+LegalDocumentSchema.index({ workspaceId: 1, visibility: 1, isDeleted: 1 });
+LegalDocumentSchema.index({ uploadedByUserId: 1, isDeleted: 1 });
 
 export default mongoose.model("LegalDocument", LegalDocumentSchema);

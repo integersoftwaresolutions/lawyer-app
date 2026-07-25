@@ -71,7 +71,7 @@ export function WithFilterExample() {
     async () => {
       const params = filter ? { status: filter } : {};
       const res = await someApi.getItems(params);
-      return res.data || [];
+      return res.items || [];
     },
     { dependencies: [filter] } // Re-fetch when filter changes
   );
@@ -164,7 +164,7 @@ export function NestedStateHandlersExample() {
   const { loading: ledgerLoading, error: ledgerError, data: ledger, retry: retryLedger } = useStateHandler(
     async () => {
       const res = await someApi.getLedger();
-      return res.data || [];
+      return res.items || [];
     }
   );
 

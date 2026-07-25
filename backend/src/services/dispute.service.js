@@ -12,6 +12,7 @@ import {
   DISPUTE_RESOLUTION,
   LEDGER_TYPES
 } from "../config/constants.js";
+import { listResult } from "../utils/pagination.js";
 
 export async function raiseDispute({ bookingId, raisedById, reason, description }) {
   const booking = await Booking.findById(bookingId)
@@ -68,10 +69,7 @@ export async function getMyDisputes(userId, { page = 1, limit = 20, status } = {
     Dispute.countDocuments(filter)
   ]);
 
-  return {
-    items,
-    meta: { page, limit, total, pages: Math.ceil(total / limit) }
-  };
+  return listResult({ items, total, pagination: { page, limit } });
 }
 
 export async function getDisputesAdmin({ page = 1, limit = 20, status } = {}) {
@@ -92,10 +90,7 @@ export async function getDisputesAdmin({ page = 1, limit = 20, status } = {}) {
     Dispute.countDocuments(filter)
   ]);
 
-  return {
-    items,
-    meta: { page, limit, total, pages: Math.ceil(total / limit) }
-  };
+  return listResult({ items, total, pagination: { page, limit } });
 }
 
 export async function getDisputeById(disputeId) {

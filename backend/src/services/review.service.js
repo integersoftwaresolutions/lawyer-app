@@ -3,6 +3,7 @@ import Review from "../models/Review.js";
 import Booking from "../models/Booking.js";
 import LawyerProfile from "../models/LawyerProfile.js";
 import { BOOKING_STATUS } from "../config/constants.js";
+import { listResult } from "../utils/pagination.js";
 
 export async function createReview({ bookingId, clientId, rating, comment }) {
   const booking = await Booking.findById(bookingId);
@@ -61,10 +62,7 @@ export async function getReviewsByLawyer(lawyerUserId, { page = 1, limit = 10 })
     Review.countDocuments({ lawyerUserId })
   ]);
   
-  return {
-    items,
-    meta: { page, limit, total, pages: Math.ceil(total / limit) }
-  };
+  return listResult({ items, total, pagination: { page, limit } });
 }
 
 export async function getReviewsByClient(clientId, { page = 1, limit = 10 }) {
@@ -80,10 +78,7 @@ export async function getReviewsByClient(clientId, { page = 1, limit = 10 }) {
     Review.countDocuments({ clientId })
   ]);
   
-  return {
-    items,
-    meta: { page, limit, total, pages: Math.ceil(total / limit) }
-  };
+  return listResult({ items, total, pagination: { page, limit } });
 }
 
 export async function disputeReview({ reviewId, clientId, reason }) {

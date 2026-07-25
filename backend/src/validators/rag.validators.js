@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { PAKISTANI_COURTS, RAG_INGESTION_STATUS } from "../config/constants.js";
+import { PAKISTANI_COURTS, RAG_INGESTION_STATUS, DOCUMENT_VISIBILITY } from "../config/constants.js";
 
 export const ingestCaseLawSchema = Joi.object({
   body: Joi.object({
@@ -50,6 +50,9 @@ export const ingestLegalDocumentSchema = Joi.object({
     description: Joi.string().trim().max(2000).allow("").optional(),
     caseRef: Joi.string().trim().max(200).allow("").optional(),
     tags: Joi.array().items(Joi.string().trim().max(50)).max(20).optional(),
+    visibility: Joi.string()
+      .valid(...Object.values(DOCUMENT_VISIBILITY))
+      .optional(),
     text: Joi.string().min(20).max(2_000_000).optional()
   }).required()
 });
@@ -59,6 +62,9 @@ export const listLegalDocumentsSchema = Joi.object({
     page: Joi.number().integer().min(1).optional(),
     limit: Joi.number().integer().min(1).max(50).optional(),
     caseRef: Joi.string().trim().max(200).optional(),
+    visibility: Joi.string()
+      .valid(...Object.values(DOCUMENT_VISIBILITY))
+      .optional(),
     status: Joi.string()
       .valid(...Object.values(RAG_INGESTION_STATUS))
       .optional(),

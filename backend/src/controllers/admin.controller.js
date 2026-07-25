@@ -1,17 +1,23 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { sendSuccess } from "../helpers/response.helper.js";
+import { sendSuccess, sendListSuccess } from "../helpers/response.helper.js";
 import * as adminService from "../services/admin.service.js";
 import * as verificationService from "../services/verification.service.js";
 import * as disputeService from "../services/dispute.service.js";
+import * as workspaceService from "../services/workspace.service.js";
+
+export const listWorkspaces = asyncHandler(async (req, res) => {
+  const out = await workspaceService.adminListWorkspaces(req.query);
+  return sendListSuccess(res, { message: "Workspaces", ...out });
+});
 
 export const pendingLawyers = asyncHandler(async (req, res) => {
   const out = await verificationService.getPendingVerifications(req.query);
-  return sendSuccess(res, { message: "Pending verifications", data: out.items, meta: out.meta });
+  return sendListSuccess(res, { message: "Pending verifications", ...out });
 });
 
 export const allLawyers = asyncHandler(async (req, res) => {
   const out = await adminService.listAllLawyers(req.query);
-  return sendSuccess(res, { message: "All lawyers", data: out.items, meta: out.meta });
+  return sendListSuccess(res, { message: "All lawyers", ...out });
 });
 
 export const verifyLawyer = asyncHandler(async (req, res) => {
@@ -41,12 +47,12 @@ export const getAnalytics = asyncHandler(async (_req, res) => {
 
 export const getAllUsers = asyncHandler(async (req, res) => {
   const out = await adminService.getAllUsers(req.query);
-  return sendSuccess(res, { message: "Users", data: out.items, meta: out.meta });
+  return sendListSuccess(res, { message: "Users", ...out });
 });
 
 export const getAllBookings = asyncHandler(async (req, res) => {
   const out = await adminService.getAllBookings(req.query);
-  return sendSuccess(res, { message: "Bookings", data: out.items, meta: out.meta });
+  return sendListSuccess(res, { message: "Bookings", ...out });
 });
 
 export const getVerificationDocs = asyncHandler(async (req, res) => {
@@ -71,7 +77,7 @@ export const getLawyerVerificationStatus = asyncHandler(async (req, res) => {
 
 export const getDisputes = asyncHandler(async (req, res) => {
   const out = await disputeService.getDisputesAdmin(req.query);
-  return sendSuccess(res, { message: "Disputes", data: out.items, meta: out.meta });
+  return sendListSuccess(res, { message: "Disputes", ...out });
 });
 
 export const getDisputeById = asyncHandler(async (req, res) => {

@@ -1,5 +1,5 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { sendSuccess } from "../helpers/response.helper.js";
+import { sendSuccess, sendListSuccess } from "../helpers/response.helper.js";
 import * as clientService from "../services/client.service.js";
 import * as reviewService from "../services/review.service.js";
 import * as bookingService from "../services/booking.service.js";
@@ -17,7 +17,7 @@ export const updateMyProfile = asyncHandler(async (req, res) => {
 
 export const getMyBookings = asyncHandler(async (req, res) => {
   const out = await clientService.getClientBookings(req.user.id, req.query);
-  return sendSuccess(res, { message: "Bookings", data: out.items, meta: out.meta });
+  return sendListSuccess(res, { message: "Bookings", ...out });
 });
 
 export const rescheduleMyBooking = asyncHandler(async (req, res) => {
@@ -55,7 +55,7 @@ export const createReview = asyncHandler(async (req, res) => {
 
 export const getMyReviews = asyncHandler(async (req, res) => {
   const out = await reviewService.getReviewsByClient(req.user.id, req.query);
-  return sendSuccess(res, { message: "Reviews", data: out.items, meta: out.meta });
+  return sendListSuccess(res, { message: "Reviews", ...out });
 });
 
 export const raiseDispute = asyncHandler(async (req, res) => {
@@ -70,5 +70,5 @@ export const raiseDispute = asyncHandler(async (req, res) => {
 
 export const getMyDisputes = asyncHandler(async (req, res) => {
   const out = await disputeService.getMyDisputes(req.user.id, req.query);
-  return sendSuccess(res, { message: "Disputes", data: out.items, meta: out.meta });
+  return sendListSuccess(res, { message: "Disputes", ...out });
 });

@@ -1,9 +1,12 @@
 import api from "./apiClient";
+import { normalizeListResponse } from "../utils/listResponse";
+
+const asList = (promise) => promise.then((r) => normalizeListResponse(r.data));
 
 export const aiApi = {
   getConfig: () => api.get("/ai/config").then((r) => r.data),
 
-  listSessions: (params) => api.get("/ai/sessions", { params }).then((r) => r.data),
+  listSessions: (params) => asList(api.get("/ai/sessions", { params })),
   createSession: (body) => api.post("/ai/sessions", body).then((r) => r.data),
   getSession: (sessionId) => api.get(`/ai/sessions/${sessionId}`).then((r) => r.data),
   sendMessage: (sessionId, body) =>
@@ -12,7 +15,6 @@ export const aiApi = {
     api.patch(`/ai/sessions/${sessionId}`, body).then((r) => r.data),
   deleteSession: (sessionId) => api.delete(`/ai/sessions/${sessionId}`).then((r) => r.data),
 
-  // Cross-Examination Prep Report
   generatePrepReport: (sessionId) =>
     api.get(`/ai/sessions/${sessionId}/report`).then((r) => r.data),
   getPrepReportPdfUrl: (sessionId) =>
@@ -25,19 +27,20 @@ export const aiApi = {
   getUsageSummary: (period = "month") =>
     api.get("/ai/usage/summary", { params: { period } }).then((r) => r.data),
 
-  // Lawyer-private RAG documents
-  listDocuments: (params) => api.get("/ai/documents", { params }).then((r) => r.data),
+  listDocuments: (params) => asList(api.get("/ai/documents", { params })),
   getDocument: (documentId) => api.get(`/ai/documents/${documentId}`).then((r) => r.data),
   ingestDocumentJson: (body) => api.post("/ai/documents", body).then((r) => r.data),
   ingestDocumentForm: (formData) =>
     api
       .post("/ai/documents", formData, { headers: { "Content-Type": "multipart/form-data" } })
       .then((r) => r.data),
-  deleteDocument: (documentId) => api.delete(`/ai/documents/${documentId}`).then((r) => r.data)
+  deleteDocument: (documentId) => api.delete(`/ai/documents/${documentId}`).then((r) => r.data),
+  updateDocumentVisibility: (documentId, visibility) =>
+    api.patch(`/ai/documents/${documentId}/visibility`, { visibility }).then((r) => r.data)
 };
 
 export const adminRagApi = {
-  listCaseLaw: (params) => api.get("/admin/rag/case-law", { params }).then((r) => r.data),
+  listCaseLaw: (params) => asList(api.get("/admin/rag/case-law", { params })),
   getCaseLaw: (caseLawId) => api.get(`/admin/rag/case-law/${caseLawId}`).then((r) => r.data),
   ingestCaseLawJson: (body) => api.post("/admin/rag/case-law", body).then((r) => r.data),
   ingestCaseLawForm: (formData) =>

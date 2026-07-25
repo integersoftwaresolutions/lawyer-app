@@ -14,7 +14,7 @@ export function getDashboardPath(role) {
 export function getProfilePath(role) {
   switch (role) {
     case "ADMIN":
-      return "/admin/settings";
+      return "/admin/account/security";
     case "LAWYER":
       return "/lawyer/settings/profile";
     case "CLIENT":

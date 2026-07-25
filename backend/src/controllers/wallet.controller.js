@@ -1,5 +1,5 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { sendSuccess } from "../helpers/response.helper.js";
+import { sendSuccess, sendListSuccess } from "../helpers/response.helper.js";
 import * as walletService from "../services/wallet.service.js";
 
 export const getMine = asyncHandler(async (req, res) => {
@@ -14,7 +14,7 @@ export const topup = asyncHandler(async (req, res) => {
 
 export const ledger = asyncHandler(async (req, res) => {
   const out = await walletService.getLedger(req.user.id, req.query);
-  return sendSuccess(res, { message: "Ledger", data: out.items, meta: out.meta });
+  return sendListSuccess(res, { message: "Ledger", ...out });
 });
 
 export const hideLedgerEntry = asyncHandler(async (req, res) => {

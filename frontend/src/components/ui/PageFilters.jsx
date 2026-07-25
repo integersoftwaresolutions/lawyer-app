@@ -1,5 +1,9 @@
 import FilterTabs from "./FilterTabs";
 
+/**
+ * Filter strip above DataTable pages.
+ * Prefer: <PageFilters><PageTabFilters … /></PageFilters> or grid fields inside.
+ */
 export default function PageFilters({ children, className = "" }) {
   if (!children) return null;
 
@@ -13,7 +17,10 @@ export default function PageFilters({ children, className = "" }) {
 }
 
 export function PageTabFilters({ options, value, onChange, className = "" }) {
-  return (<FilterTabs options={options} value={value} onChange={onChange} />
+  return (
+    <div className={className}>
+      <FilterTabs options={options} value={value} onChange={onChange} />
+    </div>
   );
 }
 

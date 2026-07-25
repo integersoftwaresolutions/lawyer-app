@@ -35,6 +35,7 @@ export const researchStrategy = {
     const result = await retrievalService.retrieveContext({
       query: userMessage,
       lawyerId: session.lawyerId,
+      workspaceId: session.workspaceId,
       filters,
       includeLawyerDocuments: options?.includeLawyerDocuments !== false
     });

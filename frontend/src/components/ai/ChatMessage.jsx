@@ -95,7 +95,7 @@ function AssistantText({ content, citationCount }) {
             <a
               key={i}
               href={`#citation-${idx}`}
-              className="inline-flex items-center justify-center min-w-[20px] h-[18px] px-1 mx-0.5 align-baseline text-[10px] font-semibold rounded bg-primary/15 text-primary hover:bg-primary/25 no-underline"
+              className="inline-flex items-center justify-center min-w-[20px] h-[18px] px-1 mx-0.5 align-baseline text-[10px] font-semibold rounded bg-primary-light text-primary hover:bg-primary-light no-underline"
               title={`Source ${idx}`}
             >
               {idx}
@@ -133,7 +133,7 @@ function CitationList({ citations, expanded, onToggle }) {
             <li
               key={`${c.index}-${c.chunkId || c.sourceId}`}
               id={`citation-${c.index}`}
-              className="text-xs text-text-secondary border-l-2 border-primary/40 pl-3 py-1"
+              className="text-xs text-text-secondary border-l-2 border-primary-border pl-3 py-1"
             >
               <CitationHeader citation={c} />
               {c.excerpt && (
@@ -158,7 +158,7 @@ function CitationHeader({ citation }) {
 
   return (
     <div className="flex items-start gap-1.5 flex-wrap">
-      <span className="inline-flex items-center justify-center min-w-[20px] h-[18px] text-[10px] font-semibold rounded bg-primary/15 text-primary">
+      <span className="inline-flex items-center justify-center min-w-[20px] h-[18px] text-[10px] font-semibold rounded bg-primary-light text-primary">
         {citation.index}
       </span>
       <Icon className="w-3.5 h-3.5 mt-0.5 text-text-muted shrink-0" />

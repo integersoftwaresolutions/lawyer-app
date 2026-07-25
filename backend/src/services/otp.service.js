@@ -39,13 +39,10 @@ async function sendOtpEmail(email, code, purpose) {
  * Send OTP to email
  */
 export async function sendOtp(email, purpose = "EMAIL_VERIFICATION") {
-  console.log(`\n📧 Sending OTP to ${email} (purpose: ${purpose})`);
-
   await Otp.deleteMany({ email: email.toLowerCase(), purpose });
 
   const code = generateOtpCode();
   const expiresAt = new Date(Date.now() + env.otpExpiryMinutes * 60 * 1000);
-  console.log(`   Generated OTP: ${code} (expires in ${env.otpExpiryMinutes} minutes)`);
 
   await Otp.create({
     email: email.toLowerCase(),
@@ -56,9 +53,8 @@ export async function sendOtp(email, purpose = "EMAIL_VERIFICATION") {
 
   try {
     await sendOtpEmail(email, code, purpose);
-    console.log(`   ✅ OTP email dispatched to ${email}`);
   } catch (error) {
-    console.error(`   ❌ Failed to send OTP email to ${email}:`, error.message);
+    console.error(`Failed to send OTP email to ${email}:`, error.message);
   }
 
   return { success: true };

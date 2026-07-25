@@ -164,7 +164,7 @@ export default function LawyerProfile() {
     try {
       setSlotsLoading(true);
       const res = await lawyerApi.getAvailableSlots(id, availabilityDate);
-      setAvailableSlots(res.data || []);
+      setAvailableSlots(res.items || []);
     } catch (error) {
       console.error("Failed to load slots:", error);
       toast.error(error.response?.data?.message || "Failed to load available slots");
@@ -223,7 +223,7 @@ export default function LawyerProfile() {
     async () => {
       if (!id) return [];
       const res = await lawyerApi.getLawyerReviews(id, { limit: 20 });
-      return res.data || [];
+      return res.items || [];
     },
     { dependencies: [id] }
   );
@@ -381,7 +381,7 @@ export default function LawyerProfile() {
             )}
             {contactDetails.whatsapp && (
               <a
-                href={`https://wa.me/${contactDetails.whatsapp.replace(/\D/g, "")}`}
+                href={`https://wa.me/${String(contactDetails.whatsapp).replace(/\D/g, "")}`}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-3 rounded-xl border border-card-border bg-surface px-3 py-2.5 text-sm transition-colors hover:bg-surface-hover"

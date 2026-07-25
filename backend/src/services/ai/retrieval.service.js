@@ -1,21 +1,16 @@
-import { ragConfig, getLawyerNamespace, isPineconeConfigured } from "../../config/rag.config.js";
+import { ragConfig, getWorkspaceNamespace, getPublicDocumentsNamespace, isPineconeConfigured } from "../../config/rag.config.js";
 import { RAG_SOURCE_TYPES } from "../../config/constants.js";
 import RagChunk from "../../models/RagChunk.js";
 import * as embeddingService from "./embedding.service.js";
 import * as vectorStore from "./vectorStore/index.js";
 
 /**
- * Run a semantic search across the case-law corpus and (optionally) the
- * lawyer's private documents. Returns a normalised list of "context blocks"
- * ready to be injected into the LLM prompt, plus citation metadata for
- * surfacing in the UI.
- *
- * The lookup is best-effort: if the vector store is not configured we return
- * an empty result so the chat path keeps working without RAG.
+ * Semantic search across case-law, public lawyer docs, and active workspace docs.
  */
 export async function retrieveContext({
   query,
   lawyerId,
+  workspaceId,
   topK,
   minScore,
   filters = {},
@@ -25,21 +20,25 @@ export async function retrieveContext({
   if (!trimmed) return emptyResult();
 
   const effectiveTopK = topK ?? ragConfig.topK;
-  const lawyerNamespace = includeLawyerDocuments && lawyerId
-    ? getLawyerNamespace(lawyerId)
-    : null;
+  const workspaceNamespace =
+    includeLawyerDocuments && workspaceId ? getWorkspaceNamespace(workspaceId) : null;
 
   const namespaces = [
     {
       name: ragConfig.pinecone.caseLawNamespace,
       filter: buildCaseLawFilter(filters),
       minScore: minScore ?? ragConfig.minScore
+    },
+    {
+      name: getPublicDocumentsNamespace(),
+      filter: {},
+      minScore: minScore ?? ragConfig.privateDocumentMinScore
     }
   ];
 
-  if (lawyerNamespace) {
+  if (workspaceNamespace) {
     namespaces.push({
-      name: lawyerNamespace,
+      name: workspaceNamespace,
       filter: buildLawyerDocFilter(filters),
       minScore: minScore ?? ragConfig.privateDocumentMinScore
     });
@@ -60,13 +59,10 @@ export async function retrieveContext({
     (match) => typeof match.score === "number" && match.score >= match.minScore
   );
 
-  // Semantic similarity is often weak for short factual questions against
-  // long legal prose. Exact-term retrieval prevents obvious facts such as
-  // names, dates and recorded speeds from being discarded.
-  const lexicalMatches = lawyerNamespace
+  const lexicalMatches = workspaceNamespace
     ? await retrievePrivateDocumentLexicalMatches({
         query: trimmed,
-        namespace: lawyerNamespace,
+        namespace: workspaceNamespace,
         filters,
         topK: effectiveTopK
       })
@@ -78,8 +74,10 @@ export async function retrieveContext({
 
   if (candidates.length === 0) {
     return emptyResult({
+      rawMatchCount: semanticMatches.length,
       topScore: rawTopScore,
-      rawMatchCount: semanticMatches.length
+      semanticMatchCount: acceptedSemantic.length,
+      lexicalMatchCount: lexicalMatches.length
     });
   }
 

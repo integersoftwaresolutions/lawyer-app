@@ -2,30 +2,27 @@ import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./slices/authSlice";
 import profileReducer from "./slices/profileSlice";
 import notificationsReducer from "./slices/notificationsSlice";
+import workspaceReducer from "./slices/workspaceSlice";
+import { bindSessionStore } from "../auth/session";
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     profile: profileReducer,
-    notifications: notificationsReducer
+    notifications: notificationsReducer,
+    workspace: workspaceReducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        // Ignore these action types
         ignoredActions: [
-          "auth/login/fulfilled", 
+          "auth/login/fulfilled",
           "auth/refreshUser/fulfilled",
           "auth/bootstrap/fulfilled"
         ],
-        // Ignore these paths in state
-        ignoredPaths: ["auth.user", "profile.profile"],
-      },
-    }),
+        ignoredPaths: ["auth.user", "profile.profile"]
+      }
+    })
 });
 
-// Type exports removed - this is a JavaScript project
-// If migrating to TypeScript, uncomment and convert file to .ts:
-// export type RootState = ReturnType<typeof store.getState>;
-// export type AppDispatch = typeof store.dispatch;
-
+bindSessionStore(store);

@@ -1,10 +1,15 @@
 import { Router } from "express";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
 import { requireRoles } from "../middlewares/rbac.middleware.js";
-import { requireVerifiedLawyer } from "../middlewares/lawyerVerification.middleware.js";
+import {
+  requireEmailVerified,
+  resolveActiveWorkspace,
+  requirePermission
+} from "../middlewares/workspace.middleware.js";
 import { validate } from "../middlewares/validate.middleware.js";
 import { uploadSingle } from "../middlewares/upload.middleware.js";
 import * as ragCtrl from "../controllers/rag.controller.js";
+import { PERMISSIONS } from "../workspaces/permissions.catalog.js";
 import {
   ingestCaseLawSchema,
   listCaseLawSchema,
@@ -35,7 +40,6 @@ adminRagRouter.get(
   ragCtrl.adminGetCaseLaw
 );
 
-// `multipart/form-data` body parsing happens in upload middleware before validation.
 adminRagRouter.post(
   "/case-law",
   ...adminGuards,
@@ -52,15 +56,21 @@ adminRagRouter.delete(
 );
 
 // ---------------------------------------------------------------------------
-// Lawyer: private RAG document management. Mounted at /ai/documents
+// Lawyer: workspace RAG documents. Mounted at /ai/documents
 // ---------------------------------------------------------------------------
 export const lawyerRagRouter = Router();
 
-const lawyerGuards = [authMiddleware, requireRoles("LAWYER"), requireVerifiedLawyer];
+const lawyerGuards = [
+  authMiddleware,
+  requireRoles("LAWYER"),
+  requireEmailVerified,
+  resolveActiveWorkspace
+];
 
 lawyerRagRouter.get(
   "/",
   ...lawyerGuards,
+  requirePermission(PERMISSIONS.DOCS_VIEW),
   validate(listLegalDocumentsSchema),
   ragCtrl.lawyerListDocuments
 );
@@ -68,6 +78,7 @@ lawyerRagRouter.get(
 lawyerRagRouter.get(
   "/:documentId",
   ...lawyerGuards,
+  requirePermission(PERMISSIONS.DOCS_VIEW),
   validate(legalDocumentIdParamSchema),
   ragCtrl.lawyerGetDocument
 );
@@ -75,14 +86,24 @@ lawyerRagRouter.get(
 lawyerRagRouter.post(
   "/",
   ...lawyerGuards,
+  requirePermission(PERMISSIONS.DOCS_UPLOAD),
   uploadSingle,
   validate(ingestLegalDocumentSchema),
   ragCtrl.lawyerIngestDocument
 );
 
+lawyerRagRouter.patch(
+  "/:documentId/visibility",
+  ...lawyerGuards,
+  requirePermission(PERMISSIONS.DOCS_MANAGE_VISIBILITY),
+  validate(legalDocumentIdParamSchema),
+  ragCtrl.lawyerUpdateDocumentVisibility
+);
+
 lawyerRagRouter.delete(
   "/:documentId",
   ...lawyerGuards,
+  requirePermission(PERMISSIONS.DOCS_DELETE),
   validate(legalDocumentIdParamSchema),
   ragCtrl.lawyerDeleteDocument
 );

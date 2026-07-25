@@ -101,7 +101,7 @@ export default function CalendarShell({
       <CalendarLegend className="shrink-0 hidden sm:flex" />
 
       {cal.error && (
-        <div className="shrink-0 px-3 py-2 rounded-lg bg-danger/10 border border-danger/20 text-sm text-danger">
+        <div className="shrink-0 px-3 py-2 rounded-lg bg-danger-light border border-danger-light text-sm text-danger">
           {cal.error}
         </div>
       )}

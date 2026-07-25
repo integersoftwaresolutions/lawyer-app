@@ -117,13 +117,13 @@ export const changePassword = asyncHandler(async (req, res) => {
 // Profile picture management
 export const uploadProfilePicture = asyncHandler(async (req, res) => {
   if (!req.file) {
-    return sendSuccess(res, { statusCode: 400, message: "No file uploaded", data: null });
+    throw new ApiError(400, "No file uploaded");
   }
 
   const { mediaService } = await import("../services/media.service.js");
   const user = await User.findById(req.user.id);
   if (!user) {
-    return sendSuccess(res, { statusCode: 404, message: "User not found", data: null });
+    throw new ApiError(404, "User not found");
   }
 
   // Delete old profile picture if exists
@@ -179,11 +179,11 @@ export const deleteProfilePicture = asyncHandler(async (req, res) => {
   const { mediaService } = await import("../services/media.service.js");
   const user = await User.findById(req.user.id);
   if (!user) {
-    return sendSuccess(res, { statusCode: 404, message: "User not found", data: null });
+    throw new ApiError(404, "User not found");
   }
 
   if (!user.profileImageMediaId) {
-    return sendSuccess(res, { statusCode: 400, message: "No profile picture to delete", data: null });
+    throw new ApiError(400, "No profile picture to delete");
   }
 
   // Delete media

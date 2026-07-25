@@ -167,3 +167,60 @@ export const CITIES = [
   "Sukkur",
   "Larkana"
 ];
+
+// ---------------------------------------------------------------------------
+// Workspaces (Phase 1)
+// ---------------------------------------------------------------------------
+
+export const WORKSPACE_TYPES = {
+  PERSONAL: "PERSONAL",
+  FIRM: "FIRM"
+};
+
+export const MEMBERSHIP_STATUS = {
+  ACTIVE: "ACTIVE",
+  LEFT: "LEFT",
+  REMOVED: "REMOVED"
+};
+
+export const WORKSPACE_INVITE_STATUS = {
+  PENDING: "PENDING",
+  ACCEPTED: "ACCEPTED",
+  REVOKED: "REVOKED",
+  EXPIRED: "EXPIRED"
+};
+
+export const DOCUMENT_VISIBILITY = {
+  PRIVATE: "PRIVATE",
+  FIRM: "FIRM",
+  PUBLIC: "PUBLIC"
+};
+
+export const BUILTIN_ROLE_KEYS = {
+  ADMIN: "ADMIN",
+  LAWYER: "LAWYER",
+  PARALEGAL: "PARALEGAL"
+};
+
+/** Soft caps until Phase 3 plan gating. */
+export const WORKSPACE_LIMITS = {
+  MAX_OWNED_FIRMS: 3,
+  MAX_JOINED_FIRMS: 10
+};
+
+export const WORKSPACE_AUDIT_ACTIONS = {
+  FIRM_CREATED: "firm.created",
+  FIRM_UPDATED: "firm.updated",
+  FIRM_DISSOLVED: "firm.dissolved",
+  OWNERSHIP_TRANSFERRED: "ownership.transferred",
+  MEMBER_INVITED: "member.invited",
+  MEMBER_JOINED: "member.joined",
+  MEMBER_REMOVED: "member.removed",
+  MEMBER_LEFT: "member.left",
+  MEMBER_ROLE_CHANGED: "member.role_changed",
+  ROLE_CREATED: "role.created",
+  ROLE_UPDATED: "role.updated",
+  ROLE_DELETED: "role.deleted",
+  INVITE_REVOKED: "invite.revoked",
+  DOC_VISIBILITY_CHANGED: "doc.visibility_changed"
+};

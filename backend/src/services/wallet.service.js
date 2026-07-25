@@ -2,6 +2,8 @@ import { ApiError } from "../helpers/apiError.js";
 import Wallet from "../models/Wallet.js";
 import LedgerEntry from "../models/LedgerEntry.js";
 import { LEDGER_TYPES } from "../config/constants.js";
+import { listResult } from "../utils/pagination.js";
+import { parseListQuery } from "../utils/listQuery.js";
 
 async function getWalletOrThrow(userId) {
   const wallet = await Wallet.findOne({ userId });
@@ -14,20 +16,20 @@ export async function getWallet(userId) {
   return wallet.toObject();
 }
 
-export async function getLedger(userId, { type, page = 1, limit = 20 } = {}) {
-  const p = Number(page) || 1;
-  const l = Math.min(100, Number(limit) || 20);
-  const skip = (p - 1) * l;
-
-  const filter = { userId, isHidden: { $ne: true } };
-  if (type) filter.type = type;
+export async function getLedger(userId, query = {}) {
+  const { filter, sort, pagination } = parseListQuery(query, {
+    defaults: { limit: 20, maxLimit: 100 },
+    baseFilter: { userId, isHidden: { $ne: true } },
+    filters: [{ key: "type", path: "type", type: "eq" }],
+    sort: { default: { createdAt: -1 } }
+  });
 
   const [items, total] = await Promise.all([
-    LedgerEntry.find(filter).sort({ createdAt: -1 }).skip(skip).limit(l).lean(),
+    LedgerEntry.find(filter).sort(sort).skip(pagination.skip).limit(pagination.limit).lean(),
     LedgerEntry.countDocuments(filter)
   ]);
 
-  return { items, meta: { page: p, limit: l, total, pages: Math.ceil(total / l) } };
+  return listResult({ items, total, pagination });
 }
 
 export async function hideLedgerEntry(userId, entryId) {

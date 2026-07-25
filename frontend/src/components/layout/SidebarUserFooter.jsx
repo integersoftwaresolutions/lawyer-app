@@ -29,7 +29,7 @@ export default function SidebarUserFooter({ onNavigate }) {
           onClick={handleLogout}
           aria-label="Log out"
           title="Log out"
-          className="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg text-danger hover:bg-danger/10 transition-colors"
+          className="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg text-danger hover:bg-danger-light transition-colors"
         >
           <FiLogOut size={18} />
         </button>

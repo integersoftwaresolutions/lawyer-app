@@ -32,7 +32,7 @@ export default function HeroAiSearch({ autoFocus = true }) {
     (async () => {
       try {
         const res = await aiApi.listSessions({ mode: "research", limit: 3 });
-        if (!cancelled) setSessions(res.data || []);
+        if (!cancelled) setSessions(res.items || []);
       } catch {
         if (!cancelled) setSessions([]);
       } finally {

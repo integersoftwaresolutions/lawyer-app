@@ -12,7 +12,14 @@ const UserSchema = new mongoose.Schema(
     // Profile picture - reference to Media model
     profileImageMediaId: { type: mongoose.Schema.Types.ObjectId, ref: "Media", default: null },
     // Legacy field for backward compatibility (will be populated from Media)
-    profileImage: { type: String, default: "" }
+    profileImage: { type: String, default: "" },
+    /** Lawyer active workspace for API context when header omitted. */
+    activeWorkspaceId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Workspace",
+      default: null,
+      index: true
+    }
   },
   { timestamps: true }
 );

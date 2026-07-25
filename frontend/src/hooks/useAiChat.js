@@ -27,7 +27,7 @@ export function useAiChat({ mode = "research", autoSelectLatest = true } = {}) {
     setError(null);
     try {
       const res = await aiApi.listSessions({ mode, limit: 50 });
-      setSessions(res.data || []);
+      setSessions(res.items || []);
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {

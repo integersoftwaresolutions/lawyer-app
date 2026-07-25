@@ -16,7 +16,6 @@ r.get("/me/profile", authMiddleware, requireRoles("LAWYER"), lawyerCtrl.getMyPro
 r.put("/me/profile", authMiddleware, requireRoles("LAWYER"), lawyerCtrl.updateMyProfile);
 // Verification routes (no verification required)
 r.get("/me/verification/status", authMiddleware, requireRoles("LAWYER"), lawyerCtrl.getVerificationStatus);
-r.post("/me/verification/fee", authMiddleware, requireRoles("LAWYER"), lawyerCtrl.payVerificationFee);
 r.post("/me/verification/documents", authMiddleware, requireRoles("LAWYER"), uploadSingle, lawyerCtrl.uploadVerificationDocument);
 
 // Profile boost (featured listing) - requires verified lawyer

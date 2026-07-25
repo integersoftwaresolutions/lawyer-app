@@ -21,7 +21,7 @@ export default function StickySaveBar({
     <div
       className={`sticky bottom-0 z-10 mt-6 -mx-1 px-1 pt-4 pb-1 bg-gradient-to-t from-background from-60% to-transparent ${className}`}
     >
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3 rounded-xl border border-border bg-card/95 backdrop-blur-md shadow-lg">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3 rounded-xl border border-border bg-card shadow-lg">
         <div className="min-w-0">
           {dirty ? (
             <p className="text-sm font-medium text-warning m-0">{dirtyMessage}</p>

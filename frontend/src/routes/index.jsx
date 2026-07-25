@@ -6,7 +6,7 @@ import Login from "../pages/auth/Login.jsx";
 import Register from "../pages/auth/Register.jsx";
 import VerifyEmail from "../pages/auth/VerifyEmail.jsx";
 import ForgotPassword from "../pages/auth/ForgotPassword.jsx";
-import { AccountSettingsLayout } from "../components/layout";
+import { AccountSettingsLayout, WorkspaceSettingsLayout } from "../components/layout";
 import SecuritySettingsPage from "../pages/settings/SecuritySettingsPage.jsx";
 import NotificationSettingsPage from "../pages/settings/NotificationSettingsPage.jsx";
 
@@ -29,6 +29,14 @@ import LawyerAiAssistantPage from "../pages/lawyer/LawyerAiAssistantPage.jsx";
 import LawyerCrossExamPage from "../pages/lawyer/LawyerCrossExamPage.jsx";
 import LawyerDocumentsPage from "../pages/lawyer/LawyerDocumentsPage.jsx";
 import LawyerPlannerPage from "../pages/lawyer/LawyerPlannerPage.jsx";
+import WorkspaceOverviewPage from "../pages/lawyer/workspace/WorkspaceOverviewPage.jsx";
+import WorkspaceMembersPage from "../pages/lawyer/workspace/WorkspaceMembersPage.jsx";
+import WorkspaceRolesPage from "../pages/lawyer/workspace/WorkspaceRolesPage.jsx";
+import WorkspaceInvitesPage from "../pages/lawyer/workspace/WorkspaceInvitesPage.jsx";
+import WorkspaceProfilePage from "../pages/lawyer/workspace/WorkspaceProfilePage.jsx";
+import RequirePermission from "../components/workspace/RequirePermission.jsx";
+import { PERMISSIONS } from "../workspaces/permissions.js";
+import AdminWorkspacesPage from "../pages/admin/AdminWorkspacesPage.jsx";
 
 import AdminDashboardLayout from "../pages/admin/AdminDashboardLayout.jsx";
 import AdminOverviewPage from "../pages/admin/AdminOverviewPage.jsx";
@@ -113,9 +121,30 @@ export default function RoutesRoot() {
       >
         <Route index element={<Navigate to="overview" replace />} />
         <Route path="overview" element={<LawyerOverviewPage />} />
-        <Route path="ai" element={<LawyerAiAssistantPage />} />
-        <Route path="cross-exam" element={<LawyerCrossExamPage />} />
-        <Route path="documents" element={<LawyerDocumentsPage />} />
+        <Route
+          path="ai"
+          element={
+            <RequirePermission permissions={[PERMISSIONS.AI_USE]} redirectTo="/lawyer/overview">
+              <LawyerAiAssistantPage />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="cross-exam"
+          element={
+            <RequirePermission permissions={[PERMISSIONS.AI_USE]} redirectTo="/lawyer/overview">
+              <LawyerCrossExamPage />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="documents"
+          element={
+            <RequirePermission permissions={[PERMISSIONS.DOCS_VIEW]} redirectTo="/lawyer/overview">
+              <LawyerDocumentsPage />
+            </RequirePermission>
+          }
+        />
         <Route path="planner" element={<LawyerPlannerPage />} />
         <Route path="profile" element={<Navigate to="/lawyer/settings/profile" replace />} />
         <Route path="availability" element={<LawyerAvailabilityPage />} />
@@ -125,6 +154,51 @@ export default function RoutesRoot() {
         <Route path="reviews" element={<LawyerReviewsPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="dashboard" element={<Navigate to="/lawyer/overview" replace />} />
+      </Route>
+
+      <Route
+        path="/lawyer/workspace"
+        element={
+          <ProtectedRoute roles={["LAWYER"]}>
+            <WorkspaceSettingsLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Navigate to="overview" replace />} />
+        <Route path="overview" element={<WorkspaceOverviewPage />} />
+        <Route
+          path="members"
+          element={
+            <RequirePermission requireFirm permissions={[PERMISSIONS.MEMBERS_VIEW]}>
+              <WorkspaceMembersPage />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="roles"
+          element={
+            <RequirePermission requireFirm permissions={[PERMISSIONS.ROLES_MANAGE]}>
+              <WorkspaceRolesPage />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="invites"
+          element={
+            <RequirePermission requireFirm permissions={[PERMISSIONS.MEMBERS_INVITE]}>
+              <WorkspaceInvitesPage />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="profile"
+          element={
+            <RequirePermission requireFirm permissions={[PERMISSIONS.WORKSPACE_SETTINGS]}>
+              <WorkspaceProfilePage />
+            </RequirePermission>
+          }
+        />
+        <Route path="settings" element={<Navigate to="../profile" replace />} />
       </Route>
 
       <Route
@@ -152,6 +226,7 @@ export default function RoutesRoot() {
       >
         <Route index element={<Navigate to="overview" replace />} />
         <Route path="overview" element={<AdminOverviewPage />} />
+        <Route path="workspaces" element={<AdminWorkspacesPage />} />
         <Route path="lawyers" element={<AdminLawyersPage />} />
         <Route path="users" element={<AdminUsersPage />} />
         <Route path="bookings" element={<AdminBookingsPage />} />
@@ -161,6 +236,20 @@ export default function RoutesRoot() {
         <Route path="settings" element={<AdminSettingsPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="dashboard" element={<Navigate to="/admin/overview" replace />} />
+        <Route path="account" element={<Navigate to="/admin/account/security" replace />} />
+      </Route>
+
+      <Route
+        path="/admin/account"
+        element={
+          <ProtectedRoute roles={["ADMIN"]}>
+            <AccountSettingsLayout basePath="/admin/account" />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Navigate to="security" replace />} />
+        <Route path="security" element={<SecuritySettingsPage />} />
+        <Route path="notifications" element={<NotificationSettingsPage />} />
       </Route>
       
       {/* Public Lawyer Search/Profile */}

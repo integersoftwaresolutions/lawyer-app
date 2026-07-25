@@ -14,6 +14,7 @@ export default function DocumentUploadModal({ isOpen, onClose, onSubmit, busy = 
   const [caseRef, setCaseRef] = useState("");
   const [file, setFile] = useState(null);
   const [text, setText] = useState("");
+  const [visibility, setVisibility] = useState("PRIVATE");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -24,6 +25,7 @@ export default function DocumentUploadModal({ isOpen, onClose, onSubmit, busy = 
       setCaseRef("");
       setFile(null);
       setText("");
+      setVisibility("PRIVATE");
       setError("");
     }
   }, [isOpen]);
@@ -61,6 +63,7 @@ export default function DocumentUploadModal({ isOpen, onClose, onSubmit, busy = 
       fd.append("title", title.trim());
       if (description.trim()) fd.append("description", description.trim());
       if (caseRef.trim()) fd.append("caseRef", caseRef.trim());
+      fd.append("visibility", visibility);
       fd.append("file", file);
       onSubmit({ kind: "file", payload: fd });
     } else {
@@ -70,6 +73,7 @@ export default function DocumentUploadModal({ isOpen, onClose, onSubmit, busy = 
           title: title.trim(),
           description: description.trim() || undefined,
           caseRef: caseRef.trim() || undefined,
+          visibility,
           text: text.trim()
         }
       });
@@ -146,13 +150,25 @@ export default function DocumentUploadModal({ isOpen, onClose, onSubmit, busy = 
           />
         </Field>
 
+        <Field label="Visibility">
+          <select
+            className="w-full h-10 px-2 rounded-md border border-input-border bg-input-background text-sm"
+            value={visibility}
+            onChange={(e) => setVisibility(e.target.value)}
+          >
+            <option value="PRIVATE">Private (only you + owner)</option>
+            <option value="FIRM">Firm (workspace members)</option>
+            <option value="PUBLIC">Public (platform RAG corpus)</option>
+          </select>
+        </Field>
+
         {tab === TAB_FILE ? (
           <Field label="File">
             <label
               htmlFor="lawyer-doc-upload"
-              className="flex items-center gap-3 rounded-lg border-2 border-dashed border-card-border bg-surface/40 p-4 cursor-pointer hover:border-primary/50 transition-colors"
+              className="flex items-center gap-3 rounded-lg border-2 border-dashed border-card-border bg-surface p-4 cursor-pointer hover:border-primary-border transition-colors"
             >
-              <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-primary-light text-primary flex items-center justify-center">
                 {file ? <FiFile className="w-5 h-5" /> : <FiUploadCloud className="w-5 h-5" />}
               </div>
               <div className="flex-1 min-w-0">

@@ -6,6 +6,7 @@ import Booking from "../models/Booking.js";
 import Review from "../models/Review.js";
 import VerificationDocument from "../models/VerificationDocument.js";
 import { BOOKING_STATUS, VERIFICATION_STATUS } from "../config/constants.js";
+import { listResult } from "../utils/pagination.js";
 
 export async function listPendingLawyers() {
   return LawyerProfile.find({ verificationStatus: "PENDING" })
@@ -31,10 +32,7 @@ export async function listAllLawyers({ status, page = 1, limit = 10 }) {
     LawyerProfile.countDocuments(filter)
   ]);
   
-  return {
-    items,
-    meta: { page, limit, total, pages: Math.ceil(total / limit) }
-  };
+  return listResult({ items, total, pagination: { page, limit } });
 }
 
 export async function setLawyerVerification({ lawyerUserId, status, notes, adminId }) {
@@ -148,10 +146,7 @@ export async function getAllUsers({ role, page = 1, limit = 10 }) {
     User.countDocuments(filter)
   ]);
   
-  return {
-    items,
-    meta: { page, limit, total, pages: Math.ceil(total / limit) }
-  };
+  return listResult({ items, total, pagination: { page, limit } });
 }
 
 export async function getAllBookings({ status, page = 1, limit = 10 }) {
@@ -173,10 +168,7 @@ export async function getAllBookings({ status, page = 1, limit = 10 }) {
     Booking.countDocuments(filter)
   ]);
   
-  return {
-    items,
-    meta: { page, limit, total, pages: Math.ceil(total / limit) }
-  };
+  return listResult({ items, total, pagination: { page, limit } });
 }
 
 export async function getVerificationDocuments(lawyerUserId) {

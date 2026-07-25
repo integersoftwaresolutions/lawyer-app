@@ -18,7 +18,7 @@ function HourGutter() {
       {HOURS.map((h) => (
         <div
           key={h}
-          className="relative box-border border-b border-border/60"
+          className="relative box-border border-b border-border"
           style={{ height: HOUR_HEIGHT }}
         >
           <span className="absolute top-0 left-0 right-2 -translate-y-1/2 text-[10px] text-text-muted text-right leading-none pointer-events-none">
@@ -74,7 +74,7 @@ function DayColumn({ dateKey, events, timezone, onSelectEvent, onSlotClick, comp
       {HOURS.map((h) => (
         <div
           key={h}
-          className="box-border border-b border-border/60 hover:bg-primary/5 cursor-pointer"
+          className="box-border border-b border-border hover:bg-primary-light cursor-pointer"
           style={{ height: HOUR_HEIGHT }}
           onClick={() => {
             const start = dateAtHour(dateKey, h, timezone);

@@ -41,7 +41,7 @@ export default function MarketingPage() {
         >
           <div className="py-24 px-6 text-center max-w-[1200px] mx-auto">
             <div className="mb-6">
-              <span className="inline-block px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
+              <span className="inline-block px-4 py-2 rounded-full bg-primary-light text-primary text-sm font-medium mb-6">
                 Trusted by 10,000+ users
               </span>
             </div>
@@ -70,7 +70,7 @@ export default function MarketingPage() {
                 to="/register?role=CLIENT"
                 className="group flex items-center gap-4 rounded-xl border-2 border-border bg-card px-6 py-5 text-left text-text-primary no-underline shadow-sm transition-all hover:border-primary hover:shadow-lg"
               >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-light text-primary">
                   <FiUser className="h-5 w-5" />
                 </span>
                 <span className="min-w-0 flex-1">
@@ -110,7 +110,7 @@ export default function MarketingPage() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="border border-border rounded-xl bg-card p-8 text-left hover:shadow-lg transition-all hover:border-primary">
-            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 text-primary">
+            <div className="w-12 h-12 rounded-lg bg-primary-light flex items-center justify-center mb-4 text-primary">
               <FiShield className="w-6 h-6" />
             </div>
             <h3 className="text-lg font-bold mb-3 text-text-primary">
@@ -121,7 +121,7 @@ export default function MarketingPage() {
             </p>
           </div>
           <div className="border border-border rounded-xl bg-card p-8 text-left hover:shadow-lg transition-all hover:border-primary">
-            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 text-primary">
+            <div className="w-12 h-12 rounded-lg bg-primary-light flex items-center justify-center mb-4 text-primary">
               <FiClock className="w-6 h-6" />
             </div>
             <h3 className="text-lg font-bold mb-3 text-text-primary">
@@ -132,7 +132,7 @@ export default function MarketingPage() {
             </p>
           </div>
           <div className="border border-border rounded-xl bg-card p-8 text-left hover:shadow-lg transition-all hover:border-primary">
-            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 text-primary">
+            <div className="w-12 h-12 rounded-lg bg-primary-light flex items-center justify-center mb-4 text-primary">
               <FiMessageCircle className="w-6 h-6" />
             </div>
             <h3 className="text-lg font-bold mb-3 text-text-primary">
@@ -143,7 +143,7 @@ export default function MarketingPage() {
             </p>
           </div>
           <div className="border border-border rounded-xl bg-card p-8 text-left hover:shadow-lg transition-all hover:border-primary">
-            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 text-primary">
+            <div className="w-12 h-12 rounded-lg bg-primary-light flex items-center justify-center mb-4 text-primary">
               <FiDollarSign className="w-6 h-6" />
             </div>
             <h3 className="text-lg font-bold mb-3 text-text-primary">
@@ -300,7 +300,7 @@ export default function MarketingPage() {
               The platform is intuitive and the lawyers are highly qualified. I couldn't be happier with the service."
             </p>
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+              <div className="w-12 h-12 rounded-full bg-primary-light flex items-center justify-center text-primary font-bold">
                 SJ
               </div>
               <div>
@@ -321,7 +321,7 @@ export default function MarketingPage() {
               It's streamlined my entire client acquisition process and increased my bookings significantly."
             </p>
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+              <div className="w-12 h-12 rounded-full bg-primary-light flex items-center justify-center text-primary font-bold">
                 MC
               </div>
               <div>
@@ -342,7 +342,7 @@ export default function MarketingPage() {
               I found the perfect legal counsel for my business needs in just a few clicks."
             </p>
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+              <div className="w-12 h-12 rounded-full bg-primary-light flex items-center justify-center text-primary font-bold">
                 ER
               </div>
               <div>

@@ -50,17 +50,37 @@ export const bootstrapAuth = createAsyncThunk(
       }
       const res = await authApi.me();
       const user = res.data;
-      
-      // Fetch and merge profile data
+
       const userWithProfile = await fetchUserWithProfile(user);
-      
-      return { user: userWithProfile, accessToken: token };
+
+      return { user: userWithProfile, accessToken: storage.getAccessToken() || token };
     } catch (error) {
+      const { isSessionExpiredError, isAuthUnavailableError, SESSION_ERROR } =
+        await import("../../auth/sessionErrors");
+      const { isLoggingOut } = await import("../../auth/session");
+
+      if (isSessionExpiredError(error) || isLoggingOut()) {
+        return { user: null, accessToken: null };
+      }
+
+      if (isAuthUnavailableError(error)) {
+        return rejectWithValue({
+          code: SESSION_ERROR.AUTH_UNAVAILABLE,
+          message: error.message,
+          accessToken: storage.getAccessToken()
+        });
+      }
+
       const status = error.response?.status;
       if (status === 401) {
-        storage.clear();
+        // Interceptor should have handled refresh; treat as soft empty session
+        return { user: null, accessToken: null };
       }
-      return rejectWithValue(error.response?.data?.message || "Failed to load user");
+
+      return rejectWithValue({
+        code: "BOOTSTRAP_FAILED",
+        message: error.response?.data?.message || error.message || "Failed to load user"
+      });
     }
   }
 );
@@ -73,10 +93,13 @@ export const loginUser = createAsyncThunk(
       storage.setAccessToken(res.data.accessToken);
       const me = await authApi.me();
       const user = me.data;
-      
-      // Fetch and merge profile data
+
       const userWithProfile = await fetchUserWithProfile(user);
-      
+
+      const { scheduleProactiveRefresh } = await import("../../auth/session");
+      const { refreshAccessToken } = await import("../../services/apiClient");
+      scheduleProactiveRefresh(() => refreshAccessToken({ proactive: true }));
+
       return { user: userWithProfile, accessToken: res.data.accessToken };
     } catch (error) {
       return rejectWithValue({
@@ -104,19 +127,11 @@ export const registerUser = createAsyncThunk(
   }
 );
 
-export const logoutUser = createAsyncThunk(
-  "auth/logout",
-  async (_, { rejectWithValue }) => {
-    try {
-      await authApi.logout();
-      storage.clear();
-      return null;
-    } catch (error) {
-      storage.clear(); // Clear storage even if API call fails
-      return rejectWithValue(error.response?.data?.message || "Logout failed");
-    }
-  }
-);
+export const logoutUser = createAsyncThunk("auth/logout", async () => {
+  const { forceLogout } = await import("../../auth/session");
+  await forceLogout({ reason: "user", redirect: true, clearServerSession: true });
+  return null;
+});
 
 export const refreshUser = createAsyncThunk(
   "auth/refreshUser",
@@ -124,15 +139,19 @@ export const refreshUser = createAsyncThunk(
     try {
       const res = await authApi.me();
       const user = res.data;
-      
-      // Fetch and merge profile data
+
       const userWithProfile = await fetchUserWithProfile(user);
-      
+
       return userWithProfile;
     } catch (error) {
-      const status = error.response?.status;
-      if (status === 401) {
-        storage.clear();
+      const { isSessionExpiredError, isAuthUnavailableError } = await import(
+        "../../auth/sessionErrors"
+      );
+      if (isSessionExpiredError(error)) {
+        return rejectWithValue("Session expired");
+      }
+      if (isAuthUnavailableError(error)) {
+        return rejectWithValue(error.message);
       }
       return rejectWithValue(error.response?.data?.message || "Failed to refresh user");
     }
@@ -223,13 +242,22 @@ const authSlice = createSlice({
         state.user = action.payload.user;
         state.accessToken = action.payload.accessToken;
         state.isAuthenticated = !!action.payload.user;
+        state.error = null;
       })
       .addCase(bootstrapAuth.rejected, (state, action) => {
         state.loading = false;
+        const payload = action.payload;
+        if (payload && typeof payload === "object" && payload.code === "AUTH_UNAVAILABLE") {
+          state.accessToken = payload.accessToken || storage.getAccessToken();
+          state.user = null;
+          state.isAuthenticated = false;
+          state.error = payload;
+          return;
+        }
         state.user = null;
         state.accessToken = null;
         state.isAuthenticated = false;
-        state.error = action.payload;
+        state.error = payload;
       });
 
     // Login

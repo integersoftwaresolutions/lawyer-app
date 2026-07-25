@@ -24,7 +24,7 @@ export default function WeekView({
 
   return (
     <div className="flex flex-col min-h-0 flex-1 border border-border rounded-xl overflow-hidden bg-card">
-      <div className="grid grid-cols-[52px_repeat(7,1fr)] border-b border-border bg-surface/50 shrink-0">
+      <div className="grid grid-cols-[52px_repeat(7,1fr)] border-b border-border bg-surface shrink-0">
         <div />
         {dateKeys.map((key) => {
           const today = isToday(parseDateKey(key), timezone);
@@ -33,7 +33,7 @@ export default function WeekView({
               key={key}
               type="button"
               onClick={() => onSelectDay?.(key)}
-              className="py-2 text-center border-l border-border hover:bg-surface-hover/80 transition-colors cursor-pointer"
+              className="py-2 text-center border-l border-border hover:bg-surface-hover transition-colors cursor-pointer"
             >
               <div className="text-[10px] uppercase text-text-muted font-medium">
                 {getWeekdayLabel(key)}

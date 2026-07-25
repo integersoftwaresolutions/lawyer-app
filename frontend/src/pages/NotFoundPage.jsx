@@ -10,7 +10,7 @@ export default function NotFoundPage() {
       <div className="flex items-center justify-center min-h-[calc(100vh-80px)] px-6">
         <div className="text-center max-w-[600px]">
           <div className="mb-8">
-            <h1 className="text-[120px] font-bold text-primary/20 leading-none mb-4">404</h1>
+            <h1 className="text-[120px] font-bold text-primary-light leading-none mb-4">404</h1>
             <h2 className="text-4xl font-bold mb-4 text-text-primary">
               Page Not Found
             </h2>

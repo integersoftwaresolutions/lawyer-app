@@ -19,7 +19,7 @@ export const fetchNotifications = createAsyncThunk(
   async ({ page = 1, limit = 20, unreadOnly = false } = {}, { rejectWithValue }) => {
     try {
       const res = await notificationsApi.list({ page, limit, unreadOnly });
-      return res.data;
+      return res;
     } catch (error) {
       return rejectWithValue(getErrorMessage(error));
     }
@@ -31,7 +31,7 @@ export const fetchRecentNotifications = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const res = await notificationsApi.list({ page: 1, limit: 8, unreadOnly: false });
-      return res.data;
+      return res;
     } catch (error) {
       return rejectWithValue(getErrorMessage(error));
     }

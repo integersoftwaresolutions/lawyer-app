@@ -14,7 +14,11 @@ function isChatPagePath(pathname) {
 export default function DashboardLayout({
   children,
   menuItems = [],
-  basePath = ""
+  basePath = "",
+  sidebarHeader = null,
+  navbarStart = null,
+  hideBrand = false,
+  hideMarketingLinks = false
 }) {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -29,6 +33,9 @@ export default function DashboardLayout({
       <Navbar
         onSidebarToggle={() => setMobileOpen((v) => !v)}
         showSidebarToggle
+        startSlot={navbarStart}
+        hideBrand={hideBrand || Boolean(navbarStart)}
+        hideMarketingLinks={hideMarketingLinks}
       />
 
       <div className="flex flex-1 min-h-0 overflow-hidden">
@@ -39,6 +46,7 @@ export default function DashboardLayout({
           contentClassName="p-2 md:p-3"
           footer={<SidebarUserFooter onNavigate={() => setMobileOpen(false)} />}
         >
+          {sidebarHeader}
           <DashboardNav
             items={menuItems}
             basePath={basePath}

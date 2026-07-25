@@ -3,7 +3,8 @@ import AiSession from "../../models/AiSession.js";
 import AiMessage from "../../models/AiMessage.js";
 import { AI_MODES } from "../../config/constants.js";
 import { getModeStrategy } from "./modes/index.js";
-import { getPagination, buildPaginationMeta } from "../../utils/pagination.js";
+import { listResult } from "../../utils/pagination.js";
+import { parseListQuery } from "../../utils/listQuery.js";
 
 export function deriveTitle(text) {
   const cleaned = String(text).replace(/\s+/g, " ").trim();
@@ -11,11 +12,20 @@ export function deriveTitle(text) {
   return cleaned.length > 60 ? `${cleaned.slice(0, 57)}...` : cleaned;
 }
 
-export async function createSession({ lawyerId, mode = AI_MODES.RESEARCH, title, caseRef = "", metadata = {} }) {
+export async function createSession({
+  lawyerId,
+  workspaceId,
+  mode = AI_MODES.RESEARCH,
+  title,
+  caseRef = "",
+  metadata = {}
+}) {
+  if (!workspaceId) throw new ApiError(400, "workspaceId is required");
   const strategy = getModeStrategy(mode);
 
   const session = await AiSession.create({
     lawyerId,
+    workspaceId,
     mode: strategy.mode,
     title: title?.trim() || "New conversation",
     caseRef: caseRef?.trim() || "",
@@ -25,24 +35,32 @@ export async function createSession({ lawyerId, mode = AI_MODES.RESEARCH, title,
   return formatSession(session);
 }
 
-export async function getOwnedSession(sessionId, lawyerId) {
+export async function getOwnedSession(sessionId, lawyerId, workspaceId = null) {
   const session = await AiSession.findOne({ _id: sessionId, isDeleted: false });
   if (!session) throw new ApiError(404, "Session not found");
   if (String(session.lawyerId) !== String(lawyerId)) {
     throw new ApiError(403, "You do not have access to this session");
   }
+  if (workspaceId && String(session.workspaceId) !== String(workspaceId)) {
+    throw new ApiError(403, "Session belongs to a different workspace");
+  }
   return session;
 }
 
-export async function listSessions(lawyerId, query = {}) {
-  const { page, limit, skip } = getPagination(query);
-  const filter = { lawyerId, isDeleted: false };
-
-  if (query.mode) filter.mode = query.mode;
+export async function listSessions(lawyerId, query = {}, workspaceId = null) {
+  const { filter, sort, pagination } = parseListQuery(query, {
+    baseFilter: {
+      lawyerId,
+      isDeleted: false,
+      ...(workspaceId ? { workspaceId } : {})
+    },
+    filters: [{ key: "mode", path: "mode", type: "eq" }],
+    sort: { default: { updatedAt: -1 } }
+  });
 
   const [total, sessions] = await Promise.all([
     AiSession.countDocuments(filter),
-    AiSession.find(filter).sort({ updatedAt: -1 }).skip(skip).limit(limit).lean()
+    AiSession.find(filter).sort(sort).skip(pagination.skip).limit(pagination.limit).lean()
   ]);
 
   const sessionIds = sessions.map((s) => s._id);
@@ -55,24 +73,25 @@ export async function listSessions(lawyerId, query = {}) {
 
   const countMap = new Map(counts.map((c) => [String(c._id), c.messageCount]));
 
-  return {
+  return listResult({
     items: sessions.map((s) => ({
       ...formatSession(s),
       messageCount: countMap.get(String(s._id)) || 0
     })),
-    meta: buildPaginationMeta(total, { page, limit })
-  };
+    total,
+    pagination
+  });
 }
 
-export async function deleteSession(sessionId, lawyerId) {
-  const session = await getOwnedSession(sessionId, lawyerId);
+export async function deleteSession(sessionId, lawyerId, workspaceId = null) {
+  const session = await getOwnedSession(sessionId, lawyerId, workspaceId);
   session.isDeleted = true;
   await session.save();
   return { id: session._id };
 }
 
-export async function updateSessionMetadata(sessionId, lawyerId, updates = {}) {
-  const session = await getOwnedSession(sessionId, lawyerId);
+export async function updateSessionMetadata(sessionId, lawyerId, updates = {}, workspaceId = null) {
+  const session = await getOwnedSession(sessionId, lawyerId, workspaceId);
 
   if (typeof updates.title === "string" && updates.title.trim()) {
     session.title = updates.title.trim().slice(0, 200);
@@ -104,6 +123,7 @@ function formatSession(session) {
   return {
     id: doc._id,
     lawyerId: doc.lawyerId,
+    workspaceId: doc.workspaceId,
     title: doc.title,
     mode: doc.mode,
     caseRef: doc.caseRef,

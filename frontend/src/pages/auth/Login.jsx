@@ -14,10 +14,17 @@ export default function Login() {
   const { login } = useAuth();
   const toast = useToast();
   const fromVerify = searchParams.get("from") === "verify";
+  const sessionReason = searchParams.get("reason");
   const requestedRole = searchParams.get("role")?.toUpperCase();
   const selectedRole = ["CLIENT", "LAWYER"].includes(requestedRole) ? requestedRole : "";
   const roleLabel = selectedRole === "LAWYER" ? "Lawyer" : "Client";
-  
+
+  const sessionNotice =
+    sessionReason === "session_expired"
+      ? "Your session expired. Please sign in again."
+      : sessionReason === "unauthenticated"
+        ? "Please sign in to continue."
+        : null; 
   const { formData, errors, loading, setLoading, handleChange, setError, setErrors, clearErrors } = useAuthForm({
     email: "",
     password: ""
@@ -145,6 +152,12 @@ export default function Login() {
         />
 
       <AuthDivider text="or continue with email" />
+
+      {sessionNotice ? (
+        <div className="mb-4 rounded-lg border border-warning bg-warning-light px-3 py-2 text-sm text-text-primary">
+          {sessionNotice}
+        </div>
+      ) : null}
 
       <form onSubmit={handleSubmit}>
         <ErrorMessage message={errors.submit} />

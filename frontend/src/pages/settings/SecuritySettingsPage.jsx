@@ -64,7 +64,7 @@ export default function SecuritySettingsPage() {
       });
       toast.success("Password changed successfully. Please sign in again.");
       await logout();
-      navigate("/login", { replace: true });
+      // forceLogout redirects to /login
     } catch (error) {
       const message = error.response?.data?.message || "Failed to change password";
       if (message.toLowerCase().includes("current password")) {

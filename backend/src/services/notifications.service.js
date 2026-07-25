@@ -1,5 +1,6 @@
 import Notification from "../models/Notification.js";
 import { ApiError } from "../helpers/apiError.js";
+import { listResult } from "../utils/pagination.js";
 
 export async function listNotifications({ userId, page = 1, limit = 20, unreadOnly = false }) {
   const skip = (page - 1) * limit;
@@ -12,11 +13,12 @@ export async function listNotifications({ userId, page = 1, limit = 20, unreadOn
     Notification.countDocuments({ userId, readAt: null })
   ]);
 
-  return {
+  return listResult({
     items: items.map(formatNotification),
-    unreadCount,
-    meta: { page, limit, total, pages: Math.ceil(total / limit) }
-  };
+    total,
+    pagination: { page, limit },
+    extras: { unreadCount }
+  });
 }
 
 export async function getUnreadCount(userId) {

@@ -1,7 +1,8 @@
 import crypto from "crypto";
 import { ApiError } from "../../../helpers/apiError.js";
 import { RAG_INGESTION_STATUS, RAG_SOURCE_TYPES } from "../../../config/constants.js";
-import { ragConfig, getLawyerNamespace } from "../../../config/rag.config.js";
+import { ragConfig, getWorkspaceNamespace, getPublicDocumentsNamespace } from "../../../config/rag.config.js";
+import { DOCUMENT_VISIBILITY } from "../../../config/constants.js";
 import CaseLaw from "../../../models/CaseLaw.js";
 import LegalDocument from "../../../models/LegalDocument.js";
 import RagChunk from "../../../models/RagChunk.js";
@@ -109,12 +110,19 @@ export async function ingestCaseLaw(input, options = {}) {
 }
 
 /**
- * Ingest a lawyer-uploaded document into their private namespace.
+ * Ingest a workspace document into the appropriate Pinecone namespace.
+ * PRIVATE/FIRM → workspace:<id>; PUBLIC → public-documents.
  */
 export async function ingestLegalDocument(input, options = {}) {
-  if (!input.ownerUserId) throw new ApiError(400, "ownerUserId is required");
+  if (!input.workspaceId) throw new ApiError(400, "workspaceId is required");
+  if (!input.uploadedByUserId) throw new ApiError(400, "uploadedByUserId is required");
   if (!input.title) throw new ApiError(400, "title is required");
   if (!input.text && !input.buffer) throw new ApiError(400, "text or buffer is required");
+
+  const visibility = input.visibility || DOCUMENT_VISIBILITY.PRIVATE;
+  if (!Object.values(DOCUMENT_VISIBILITY).includes(visibility)) {
+    throw new ApiError(400, "Invalid visibility");
+  }
 
   let text = input.text || "";
   if (!text && input.buffer) {
@@ -131,46 +139,60 @@ export async function ingestLegalDocument(input, options = {}) {
 
   const filter = input._id
     ? { _id: input._id }
-    : { ownerUserId: input.ownerUserId, title: input.title };
+    : { workspaceId: input.workspaceId, title: input.title, uploadedByUserId: input.uploadedByUserId };
 
   let doc = await LegalDocument.findOneAndUpdate(
     filter,
     {
       $set: {
-        ownerUserId: input.ownerUserId,
+        workspaceId: input.workspaceId,
+        uploadedByUserId: input.uploadedByUserId,
+        visibility,
         title: input.title,
         description: input.description || "",
         caseRef: input.caseRef || "",
         tags: input.tags || [],
         mediaId: input.mediaId || null,
+        caseId: input.caseId || null,
         rawText: text,
         rawTextChars: text.length,
         status: RAG_INGESTION_STATUS.PROCESSING,
         statusMessage: "",
-        isDeleted: false
+        isDeleted: false,
+        deletedAt: null
       }
     },
     { new: true, upsert: true, setDefaultsOnInsert: true }
   );
 
   try {
-    const namespace = getLawyerNamespace(input.ownerUserId);
+    const namespace =
+      visibility === DOCUMENT_VISIBILITY.PUBLIC
+        ? getPublicDocumentsNamespace()
+        : getWorkspaceNamespace(input.workspaceId);
     const chunks = chunkText(text, {
       chunkSizeTokens: ragConfig.privateDocumentChunkSizeTokens,
       chunkOverlapTokens: ragConfig.privateDocumentChunkOverlapTokens
     });
     if (chunks.length === 0) throw new ApiError(400, "No chunks produced from document");
 
-    await deleteExistingChunks(RAG_SOURCE_TYPES.LEGAL_DOCUMENT, doc._id, namespace);
+    // Clear from both namespaces in case visibility changed
+    await deleteExistingChunks(RAG_SOURCE_TYPES.LEGAL_DOCUMENT, doc._id, getWorkspaceNamespace(input.workspaceId));
+    await deleteExistingChunks(RAG_SOURCE_TYPES.LEGAL_DOCUMENT, doc._id, getPublicDocumentsNamespace());
 
     const baseMetadata = {
       title: doc.title,
       caseRef: doc.caseRef,
-      ownerUserId: doc.ownerUserId,
+      workspaceId: String(doc.workspaceId),
+      uploadedByUserId: String(doc.uploadedByUserId),
+      visibility: doc.visibility,
       tags: doc.tags
     };
 
-    const embedded = await embedChunks(chunks, { ...options, userId: options.userId || doc.ownerUserId });
+    const embedded = await embedChunks(chunks, {
+      ...options,
+      userId: options.userId || doc.uploadedByUserId
+    });
 
     const persisted = await persistChunks({
       sourceType: RAG_SOURCE_TYPES.LEGAL_DOCUMENT,
@@ -192,7 +214,8 @@ export async function ingestLegalDocument(input, options = {}) {
       documentId: doc._id,
       chunkCount: persisted.length,
       embeddingModel: embedded.model,
-      namespace
+      namespace,
+      visibility: doc.visibility
     };
   } catch (err) {
     doc.status = RAG_INGESTION_STATUS.FAILED;
@@ -215,16 +238,54 @@ export async function deleteCaseLaw(caseLawId) {
 }
 
 /** Soft-delete a legal document and remove its vectors. */
-export async function deleteLegalDocument(documentId, ownerUserId) {
-  const row = await LegalDocument.findOne({ _id: documentId, ownerUserId, isDeleted: false });
+export async function deleteLegalDocument(documentId, { workspaceId }) {
+  const row = await LegalDocument.findOne({
+    _id: documentId,
+    workspaceId,
+    isDeleted: false
+  });
   if (!row) throw new ApiError(404, "Document not found");
 
-  const namespace = getLawyerNamespace(row.ownerUserId);
-  await deleteExistingChunks(RAG_SOURCE_TYPES.LEGAL_DOCUMENT, row._id, namespace);
+  await deleteExistingChunks(
+    RAG_SOURCE_TYPES.LEGAL_DOCUMENT,
+    row._id,
+    getWorkspaceNamespace(row.workspaceId)
+  );
+  await deleteExistingChunks(
+    RAG_SOURCE_TYPES.LEGAL_DOCUMENT,
+    row._id,
+    getPublicDocumentsNamespace()
+  );
   row.isDeleted = true;
+  row.deletedAt = new Date();
   row.chunkCount = 0;
   await row.save();
   return { documentId: row._id };
+}
+
+/**
+ * Re-index after visibility change (move vectors between namespaces).
+ */
+export async function reindexLegalDocumentVisibility(documentId) {
+  const doc = await LegalDocument.findOne({ _id: documentId, isDeleted: false });
+  if (!doc || !doc.rawText) return null;
+
+  return ingestLegalDocument(
+    {
+      _id: doc._id,
+      workspaceId: doc.workspaceId,
+      uploadedByUserId: doc.uploadedByUserId,
+      visibility: doc.visibility,
+      title: doc.title,
+      description: doc.description,
+      caseRef: doc.caseRef,
+      tags: doc.tags,
+      mediaId: doc.mediaId,
+      caseId: doc.caseId,
+      text: doc.rawText
+    },
+    { userId: doc.uploadedByUserId }
+  );
 }
 
 // ---------------------------------------------------------------------------

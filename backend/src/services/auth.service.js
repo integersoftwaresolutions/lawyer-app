@@ -7,6 +7,8 @@ import AdminSetting from "../models/AdminSetting.js";
 import { signAccessToken, signRefreshToken, verifyRefreshToken, hashToken, compareToken } from "./token.service.js";
 import * as otpService from "./otp.service.js";
 import { notifyEmailVerified, notifyPasswordChanged } from "../notifications/triggers/auth.notifications.js";
+import { bootstrapPersonalWorkspace } from "./workspace.service.js";
+import { ROLES } from "../config/constants.js";
 
 async function ensureAdminSetting() {
   const existing = await AdminSetting.findOne();
@@ -51,13 +53,17 @@ export async function register({ role, email, password, fullName }) {
   });
 
   // Create basic profile (empty, to be completed later)
-  if (role === "LAWYER") {
+  if (role === ROLES.LAWYER || role === "LAWYER") {
     await LawyerProfile.create({
       userId: user._id,
       fullName: fullName || "",
       verificationStatus: "PENDING"
     });
-  } else if (role === "CLIENT") {
+    await bootstrapPersonalWorkspace(user._id, {
+      fullName: fullName || "",
+      email: user.email
+    });
+  } else if (role === ROLES.CLIENT || role === "CLIENT") {
     await ClientProfile.create({
       userId: user._id,
       fullName: fullName || ""

@@ -1,10 +1,15 @@
 import { Router } from "express";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
 import { requireRoles } from "../middlewares/rbac.middleware.js";
-import { requireVerifiedLawyer } from "../middlewares/lawyerVerification.middleware.js";
+import {
+  requireEmailVerified,
+  resolveActiveWorkspace,
+  requirePermission
+} from "../middlewares/workspace.middleware.js";
 import { validate } from "../middlewares/validate.middleware.js";
 import * as aiCtrl from "../controllers/ai.controller.js";
 import { lawyerRagRouter } from "./rag.routes.js";
+import { PERMISSIONS } from "../workspaces/permissions.catalog.js";
 import {
   createSessionSchema,
   listSessionsSchema,
@@ -16,7 +21,13 @@ import {
 
 const r = Router();
 
-const lawyerAi = [authMiddleware, requireRoles("LAWYER"), requireVerifiedLawyer];
+const lawyerAi = [
+  authMiddleware,
+  requireRoles("LAWYER"),
+  requireEmailVerified,
+  resolveActiveWorkspace,
+  requirePermission(PERMISSIONS.AI_USE)
+];
 
 r.get("/health", ...lawyerAi, aiCtrl.health);
 r.get("/config", ...lawyerAi, aiCtrl.config);
@@ -29,7 +40,6 @@ r.post("/sessions/:sessionId/messages", ...lawyerAi, validate(sendMessageSchema)
 r.patch("/sessions/:sessionId", ...lawyerAi, validate(updateSessionMetadataSchema), aiCtrl.updateSession);
 r.delete("/sessions/:sessionId", ...lawyerAi, validate(sessionIdParamSchema), aiCtrl.deleteSession);
 
-// Cross-Examination prep report
 r.get(
   "/sessions/:sessionId/report",
   ...lawyerAi,
@@ -43,7 +53,6 @@ r.get(
   aiCtrl.downloadPrepReport
 );
 
-// Lawyer-private RAG documents
 r.use("/documents", lawyerRagRouter);
 
 export default r;

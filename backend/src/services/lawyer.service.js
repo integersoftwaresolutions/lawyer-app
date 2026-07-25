@@ -6,8 +6,8 @@ import Booking from "../models/Booking.js";
 import Dispute from "../models/Dispute.js";
 import Wallet from "../models/Wallet.js";
 import LedgerEntry from "../models/LedgerEntry.js";
-import AdminSetting from "../models/AdminSetting.js";
-import { getPagination, buildPaginationMeta } from "../utils/pagination.js";
+import { getPagination, listResult } from "../utils/pagination.js";
+import { parseListQuery } from "../utils/listQuery.js";
 import { BOOKING_STATUS, LEDGER_TYPES } from "../config/constants.js";
 import { LAWYER_PROFILE_FIELDS } from "../utils/userProfileFields.js";
 
@@ -15,13 +15,9 @@ export async function searchLawyers(query) {
   const { page, limit, skip } = getPagination(query);
 
   const filter = {};
-
-  const settings = await AdminSetting.findOne();
-  const verificationFee = settings?.verificationFee || 0;
   const now = new Date();
 
   // Expire featured status automatically so clients never see outdated boosts.
-  // (We update in DB so query sorting by `isFeatured` stays correct.)
   await LawyerProfile.updateMany(
     { isFeatured: true, featuredUntil: { $ne: null, $lt: now } },
     { $set: { isFeatured: false, featuredUntil: null } }
@@ -109,23 +105,9 @@ export async function searchLawyers(query) {
     delete item.phone;
     delete item.whatsapp;
     delete item.officeAddress;
-
-    // Treat verification as expired when the annual/cycle fee isn't fresh.
-    if (
-      verificationFee > 0 &&
-      item.verificationStatus === "APPROVED" &&
-      (!item.verificationFeePaidAt ||
-        now.getTime() - new Date(item.verificationFeePaidAt).getTime() > 365 * 24 * 60 * 60 * 1000)
-    ) {
-      item.verificationStatus = "PENDING";
-      item.verifiedAt = null;
-    }
   });
 
-  return {
-    items,
-    meta: { page, limit, total, pages: Math.ceil(total / limit) }
-  };
+  return listResult({ items, total, pagination: { page, limit } });
 }
 
 export async function getLawyerProfile(lawyerUserId) {
@@ -299,20 +281,18 @@ export async function updateLawyerProfile(userId, data) {
 }
 
 export async function getLawyerBookings(lawyerUserId, query = {}) {
-  const { status } = query;
-  const { page, limit, skip } = getPagination(query);
-  const filter = { lawyerUserId, deletedByLawyer: { $ne: true }, deletedByClient: { $ne: true } };
-
-  if (status) {
-    filter.status = status;
-  }
+  const { filter, sort, pagination } = parseListQuery(query, {
+    baseFilter: { lawyerUserId, deletedByLawyer: { $ne: true }, deletedByClient: { $ne: true } },
+    filters: [{ key: "status", path: "status", type: "eq" }],
+    sort: { default: { startAt: -1 } }
+  });
 
   const [items, total] = await Promise.all([
     Booking.find(filter)
       .populate({ path: "clientId", select: "email" })
-      .sort({ startAt: -1 })
-      .skip(skip)
-      .limit(limit)
+      .sort(sort)
+      .skip(pagination.skip)
+      .limit(pagination.limit)
       .lean(),
     Booking.countDocuments(filter)
   ]);
@@ -341,10 +321,7 @@ export async function getLawyerBookings(lawyerUserId, query = {}) {
     dispute: disputeByBooking[b._id.toString()] || null
   }));
 
-  return {
-    items: itemsWithDispute,
-    meta: buildPaginationMeta(total, { page, limit })
-  };
+  return listResult({ items: itemsWithDispute, total, pagination });
 }
 
 export async function getLawyerStats(lawyerUserId) {
@@ -402,13 +379,16 @@ export async function getLawyerEarnings(lawyerUserId, { page = 1, limit = 10 }) 
 
   const wallet = await Wallet.findOne({ userId: uid }).lean();
 
-  return {
+  return listResult({
     items,
-    meta: { page, limit, total, pages: Math.ceil(total / limit) },
-    summary: {
-      balance: wallet?.balanceCredits || 0,
-      totalEarnings: summary.find(s => s._id === LEDGER_TYPES.EARNING)?.total || 0,
-      totalPayouts: Math.abs(summary.find(s => s._id === LEDGER_TYPES.PAYOUT)?.total || 0)
+    total,
+    pagination: { page, limit },
+    extras: {
+      summary: {
+        balance: wallet?.balanceCredits || 0,
+        totalEarnings: summary.find(s => s._id === LEDGER_TYPES.EARNING)?.total || 0,
+        totalPayouts: Math.abs(summary.find(s => s._id === LEDGER_TYPES.PAYOUT)?.total || 0)
+      }
     }
-  };
+  });
 }

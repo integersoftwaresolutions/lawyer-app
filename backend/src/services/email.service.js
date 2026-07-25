@@ -104,21 +104,10 @@ export async function sendEmail({ to, subject, template, variables = {}, html, t
     console.log("=".repeat(70));
     console.log("To:", to);
     console.log("Subject:", subject);
-    console.log("\n--- Plain Text Version ---");
-    console.log(text?.substring(0, 500) || "N/A");
-    if (text && text.length > 500) console.log("... (truncated)");
-    console.log("\n--- 🔑 OTP CODE (Look for this!) ---");
-    const otpMatch = text?.match(/\d{6}/) || html?.match(/\d{6}/);
-    if (otpMatch) {
-      console.log(`   VERIFICATION CODE: ${otpMatch[0]}`);
-    } else {
-      console.log("   (OTP code not found in email content)");
-    }
-    console.log("\n--- Full HTML (first 300 chars) ---");
-    console.log(html?.substring(0, 300) || "N/A");
-    if (html && html.length > 300) console.log("... (truncated)");
+    console.log("\n--- Plain Text Version (redacted) ---");
+    console.log((text || "N/A").replace(/\b\d{4,8}\b/g, "******").substring(0, 500));
     console.log("=".repeat(70));
-    console.log("💡 To actually send emails, configure EMAIL_USER, EMAIL_PASSWORD, EMAIL_HOST in .env");
+    console.log("💡 Configure EMAIL_USER, EMAIL_PASSWORD, EMAIL_HOST in .env to send real emails.");
     console.log("=".repeat(70) + "\n");
     return { success: true, messageId: "dev-mode", sent: false };
   }

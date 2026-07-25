@@ -30,8 +30,8 @@ export default function ClientOverviewPage() {
       return {
         stats: statsRes.data,
         wallet: walletRes.data,
-        bookings: bookingsRes.data || [],
-        ledger: ledgerRes.data || []
+        bookings: bookingsRes.items || [],
+        ledger: ledgerRes.items || []
       };
     }
   );

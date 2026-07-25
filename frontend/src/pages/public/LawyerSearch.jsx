@@ -12,7 +12,8 @@ import {
   Badge, 
   Select,
   Checkbox,
-  Sidebar
+  Sidebar,
+  Pagination
 } from "../../components/ui";
 import { useStateHandler } from "../../hooks/useStateHandler";
 import { 
@@ -44,6 +45,7 @@ export default function LawyerSearch() {
     sort: "rating"
   });
   const [appliedFilters, setAppliedFilters] = useState(filters);
+  const [page, setPage] = useState(1);
 
   const { loading: constantsLoading, data: constantsData } = useStateHandler(
     async () => {
@@ -71,11 +73,11 @@ export default function LawyerSearch() {
       
       const res = await lawyerApi.search({ 
         ...params,
-        page: 1, 
+        page, 
         limit: 20 
       });
       return {
-        items: res.data || [],
+        items: res.items || [],
         meta: res.meta || null,
       };
     },
@@ -90,7 +92,8 @@ export default function LawyerSearch() {
         appliedFilters.minRate,
         appliedFilters.maxRate,
         appliedFilters.minRating,
-        appliedFilters.sort
+        appliedFilters.sort,
+        page
       ],
       autoFetch: true 
     }
@@ -104,11 +107,13 @@ export default function LawyerSearch() {
   };
 
   const applyFilters = () => {
+    setPage(1);
     setAppliedFilters(filters);
     setSidebarOpen(false); // Close sidebar on mobile after applying
   };
 
   const clearFilters = () => {
+    setPage(1);
     const clearedFilters = {
       q: "",
       city: "",
@@ -396,7 +401,7 @@ export default function LawyerSearch() {
                     {items.map((lawyer) => (
                       <Card
                         key={lawyer._id}
-                        className="group hover:shadow-lg transition-all duration-300 border-border hover:border-primary/20 overflow-hidden"
+                        className="group hover:shadow-lg transition-all duration-300 border-border hover:border-primary-border overflow-hidden"
                       >
                         <Link to={`/lawyers/${lawyer.userId}`} className="block">
                           <div className="flex flex-col">
@@ -489,6 +494,13 @@ export default function LawyerSearch() {
                     ))}
                   </div>
                 )}
+                {meta ? (
+                  <Pagination
+                    className="mt-6"
+                    meta={meta}
+                    onPageChange={setPage}
+                  />
+                ) : null}
               </StateHandler>
             </div>
         </div>

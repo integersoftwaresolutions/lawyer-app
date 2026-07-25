@@ -41,12 +41,12 @@ export async function listMessages(sessionId) {
   return rows.map(formatMessage);
 }
 
-export async function sendMessage({ sessionId, lawyerId, content, options = {} }) {
+export async function sendMessage({ sessionId, lawyerId, workspaceId = null, content, options = {} }) {
   if (!isEncryptionConfigured()) {
     throw new ApiError(500, "Message encryption is not configured. Set ENCRYPTION_KEY.");
   }
 
-  const session = await sessionService.getOwnedSession(sessionId, lawyerId);
+  const session = await sessionService.getOwnedSession(sessionId, lawyerId, workspaceId);
 
   const dailyLimit = await usageService.getDailyLimit();
   const todayCount = await usageService.countTodayRequests(lawyerId);

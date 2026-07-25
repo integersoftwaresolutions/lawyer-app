@@ -1,7 +1,8 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { sendSuccess } from "../helpers/response.helper.js";
+import { sendSuccess, sendListSuccess } from "../helpers/response.helper.js";
 import * as calendarService from "../services/planner/calendar.service.js";
 import { resolveCalendarOwner } from "../services/planner/calendar.context.js";
+import { listResultFromArray } from "../utils/pagination.js";
 
 export const health = asyncHandler(async (req, res) => {
   return sendSuccess(res, {
@@ -19,22 +20,21 @@ export const createEvent = asyncHandler(async (req, res) => {
 export const listEvents = asyncHandler(async (req, res) => {
   const owner = resolveCalendarOwner(req);
   const data = await calendarService.listEvents(owner, req.query);
-  return sendSuccess(res, { message: "Events", data, meta: { count: data.length } });
+  return sendListSuccess(res, { message: "Events", ...listResultFromArray(data) });
 });
 
 export const getTodayEvents = asyncHandler(async (req, res) => {
   const owner = resolveCalendarOwner(req);
   const data = await calendarService.getTodayEvents(owner, req.query.timezone);
-  return sendSuccess(res, { message: "Today's events", data, meta: { count: data.length } });
+  return sendListSuccess(res, { message: "Today's events", ...listResultFromArray(data) });
 });
 
 export const getConflicts = asyncHandler(async (req, res) => {
   const owner = resolveCalendarOwner(req);
   const data = await calendarService.findConflicts(owner, req.query);
-  return sendSuccess(res, {
+  return sendListSuccess(res, {
     message: "Conflicts",
-    data,
-    meta: { count: data.length, hasConflict: data.length > 0 }
+    ...listResultFromArray(data, { hasConflict: data.length > 0 })
   });
 });
 

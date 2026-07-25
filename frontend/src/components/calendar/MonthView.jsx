@@ -28,7 +28,7 @@ export default function MonthView({
 
   return (
     <div className="flex flex-col min-h-0 flex-1 border border-border rounded-xl overflow-hidden bg-card">
-      <div className="grid grid-cols-7 border-b border-border bg-surface/50 shrink-0">
+      <div className="grid grid-cols-7 border-b border-border bg-surface shrink-0">
         {WEEK_HEADERS.map((h) => (
           <div
             key={h}
@@ -63,8 +63,8 @@ export default function MonthView({
                   tabIndex={0}
                   onClick={() => onSelectDay?.(dateKey)}
                   onKeyDown={(e) => e.key === "Enter" && onSelectDay?.(dateKey)}
-                  className={`group h-full min-h-0 min-w-0 overflow-hidden p-1.5 sm:p-2 flex gap-1.5 sm:gap-2 cursor-pointer hover:bg-surface-hover/80 transition-colors ${
-                    !inMonth ? "bg-surface/30" : ""
+                  className={`group h-full min-h-0 min-w-0 overflow-hidden p-1.5 sm:p-2 flex gap-1.5 sm:gap-2 cursor-pointer hover:bg-surface-hover transition-colors ${
+                    !inMonth ? "bg-surface" : ""
                   }`}
                 >
                   <div className="shrink-0 flex flex-col items-center gap-1 pt-0.5 self-stretch">

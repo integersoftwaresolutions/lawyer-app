@@ -38,7 +38,7 @@ export default function SessionList({
   compact = false
 }) {
   return (
-    <div className={`flex flex-col h-full min-h-0 bg-surface/50 ${compact ? "" : ""}`}>
+    <div className={`flex flex-col h-full min-h-0 bg-surface ${compact ? "" : ""}`}>
       <div className="shrink-0 p-3 border-b border-card-border">
         <button
           type="button"
@@ -102,7 +102,7 @@ export default function SessionList({
                           e.stopPropagation();
                           onDelete(session.id);
                         }}
-                        className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-text-muted opacity-0 group-hover:opacity-100 hover:text-danger hover:bg-danger/10 transition-all"
+                        className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-text-muted opacity-0 group-hover:opacity-100 hover:text-danger hover:bg-danger-light transition-all"
                         aria-label="Delete conversation"
                       >
                         <FiTrash2 className="w-3.5 h-3.5" />

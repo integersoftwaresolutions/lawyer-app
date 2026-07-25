@@ -35,7 +35,7 @@ export default function ChatInput({ onSend, disabled = false, placeholder }) {
   return (
     <div className="shrink-0 border-t border-card-border bg-card px-4 py-3 md:px-6">
       <form onSubmit={handleSubmit}>
-        <div className="relative flex items-end gap-2 rounded-2xl border border-input-border bg-input-background shadow-sm focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+        <div className="relative flex items-end gap-2 rounded-2xl border border-input-border bg-input-background shadow-sm focus-within:border-primary-border focus-within:ring-2 focus-within:ring-primary-light transition-all">
           <textarea
             ref={textareaRef}
             value={text}

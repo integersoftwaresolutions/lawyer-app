@@ -1,5 +1,6 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { sendSuccess } from "../helpers/response.helper.js";
+import { sendSuccess, sendListSuccess } from "../helpers/response.helper.js";
+import { ApiError } from "../helpers/apiError.js";
 import * as lawyerService from "../services/lawyer.service.js";
 import * as disputeService from "../services/dispute.service.js";
 import * as availabilityService from "../services/availability.service.js";
@@ -7,10 +8,11 @@ import * as reviewService from "../services/review.service.js";
 import * as bookingService from "../services/booking.service.js";
 import * as verificationService from "../services/verification.service.js";
 import * as profileBoostService from "../services/profileBoost.service.js";
+import { listResultFromArray } from "../utils/pagination.js";
 
 export const search = asyncHandler(async (req, res) => {
   const out = await lawyerService.searchLawyers(req.query);
-  return sendSuccess(res, { message: "Lawyers", data: out.items, meta: out.meta });
+  return sendListSuccess(res, { message: "Lawyers", ...out });
 });
 
 export const profile = asyncHandler(async (req, res) => {
@@ -35,7 +37,7 @@ export const updateMyProfile = asyncHandler(async (req, res) => {
 
 export const getMyBookings = asyncHandler(async (req, res) => {
   const out = await lawyerService.getLawyerBookings(req.user.id, req.query);
-  return sendSuccess(res, { message: "Bookings", data: out.items, meta: out.meta });
+  return sendListSuccess(res, { message: "Bookings", ...out });
 });
 
 export const rescheduleMyBooking = asyncHandler(async (req, res) => {
@@ -63,7 +65,7 @@ export const getMyStats = asyncHandler(async (req, res) => {
 
 export const getMyEarnings = asyncHandler(async (req, res) => {
   const out = await lawyerService.getLawyerEarnings(req.user.id, req.query);
-  return sendSuccess(res, { message: "Earnings", data: out.items, meta: out.meta, summary: out.summary });
+  return sendListSuccess(res, { message: "Earnings", ...out });
 });
 
 export const getMyAvailability = asyncHandler(async (req, res) => {
@@ -78,12 +80,15 @@ export const updateMyAvailability = asyncHandler(async (req, res) => {
 
 export const getAvailableSlots = asyncHandler(async (req, res) => {
   const out = await availabilityService.getAvailableSlots(req.params.lawyerUserId, req.query.date);
-  return sendSuccess(res, { message: "Available slots", data: out });
+  return sendListSuccess(res, {
+    message: "Available slots",
+    ...listResultFromArray(Array.isArray(out) ? out : [])
+  });
 });
 
 export const getMyReviews = asyncHandler(async (req, res) => {
   const out = await reviewService.getReviewsByLawyer(req.user.id, req.query);
-  return sendSuccess(res, { message: "Reviews", data: out.items, meta: out.meta });
+  return sendListSuccess(res, { message: "Reviews", ...out });
 });
 
 export const raiseDispute = asyncHandler(async (req, res) => {
@@ -98,25 +103,24 @@ export const raiseDispute = asyncHandler(async (req, res) => {
 
 export const getMyDisputes = asyncHandler(async (req, res) => {
   const out = await disputeService.getMyDisputes(req.user.id, req.query);
-  return sendSuccess(res, { message: "Disputes", data: out.items, meta: out.meta });
+  return sendListSuccess(res, { message: "Disputes", ...out });
 });
 
 export const getLawyerReviews = asyncHandler(async (req, res) => {
   const out = await reviewService.getReviewsByLawyer(req.params.lawyerUserId, req.query);
-  return sendSuccess(res, { message: "Reviews", data: out.items, meta: out.meta });
+  return sendListSuccess(res, { message: "Reviews", ...out });
 });
 
 export const uploadVerificationDocument = asyncHandler(async (req, res) => {
   if (!req.file) {
-    return sendSuccess(res, { statusCode: 400, message: "No file uploaded", data: null });
+    throw new ApiError(400, "No file uploaded");
   }
 
   const documentType = req.body.documentType;
   if (!documentType) {
-    return sendSuccess(res, { statusCode: 400, message: "documentType is required", data: null });
+    throw new ApiError(400, "documentType is required");
   }
 
-  // Use MediaService through verification service
   const doc = await verificationService.uploadVerificationDocument({
     file: req.file,
     lawyerUserId: req.user.id,
@@ -124,11 +128,6 @@ export const uploadVerificationDocument = asyncHandler(async (req, res) => {
   });
 
   return sendSuccess(res, { statusCode: 201, message: "Document uploaded successfully", data: doc });
-});
-
-export const payVerificationFee = asyncHandler(async (_req, res) => {
-  const out = await verificationService.payVerificationFee({ lawyerUserId: _req.user.id });
-  return sendSuccess(res, { statusCode: 200, message: "Verification fee paid", data: out });
 });
 
 export const getVerificationStatus = asyncHandler(async (req, res) => {

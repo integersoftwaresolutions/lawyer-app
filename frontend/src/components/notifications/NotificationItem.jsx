@@ -20,7 +20,7 @@ export default function NotificationItem({ notification, onClick, compact = fals
       type="button"
       onClick={() => onClick?.(notification)}
       className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors hover:bg-surface-hover ${
-        isUnread ? "bg-primary/5" : ""
+        isUnread ? "bg-primary-light" : ""
       } ${compact ? "" : "border border-transparent hover:border-border"}`}
     >
       <div className="flex items-start gap-2.5 min-w-0">

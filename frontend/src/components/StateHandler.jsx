@@ -63,7 +63,7 @@ function DefaultLoader({ className = "", size = "md", ...props }) {
     <div className={`flex items-center justify-center ${sizeClasses[size]} ${className}`} {...props}>
       <div className="flex flex-col items-center gap-3">
         <div className="relative w-8 h-8">
-          <div className="absolute inset-0 border-2 border-primary/20 rounded-full"></div>
+          <div className="absolute inset-0 border-2 border-primary-light rounded-full"></div>
           <div className="absolute inset-0 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
         </div>
         <p className="text-sm text-text-secondary">Loading...</p>

@@ -1,11 +1,12 @@
 import { Router } from "express";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { sendSuccess } from "../helpers/response.helper.js";
+import { sendSuccess, sendListSuccess } from "../helpers/response.helper.js";
 import { ApiError } from "../helpers/apiError.js";
 import * as notificationsService from "../services/notifications.service.js";
 import * as notificationPreferencesService from "../services/notificationPreferences.service.js";
 import { NOTIFICATION_CHANNELS } from "../config/notification.constants.js";
+import { getPagination } from "../utils/pagination.js";
 
 const r = Router();
 
@@ -50,8 +51,7 @@ r.post("/preferences/bulk", asyncHandler(async (req, res) => {
 }));
 
 r.get("/", asyncHandler(async (req, res) => {
-  const page = Number(req.query.page) || 1;
-  const limit = Math.min(Number(req.query.limit) || 20, 50);
+  const { page, limit } = getPagination(req.query, { limit: 20, maxLimit: 50 });
   const unreadOnly = req.query.unreadOnly === "true";
 
   const out = await notificationsService.listNotifications({
@@ -61,7 +61,7 @@ r.get("/", asyncHandler(async (req, res) => {
     unreadOnly
   });
 
-  return sendSuccess(res, { message: "Notifications", data: out });
+  return sendListSuccess(res, { message: "Notifications", ...out });
 }));
 
 r.get("/unread-count", asyncHandler(async (req, res) => {

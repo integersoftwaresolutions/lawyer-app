@@ -3,12 +3,14 @@ import { ThemeProvider } from "./context/ThemeContext";
 import { LogoutConfirmProvider } from "./context/LogoutConfirmContext.jsx";
 import NotificationSocketProvider from "./context/NotificationSocketProvider.jsx";
 import Gateway from "./components/Gateway";
+import SessionBanner from "./components/SessionBanner";
 
 export default function App() {
   return (
     <ThemeProvider>
       <LogoutConfirmProvider>
         <NotificationSocketProvider>
+          <SessionBanner />
           <Gateway>
             <RoutesRoot />
           </Gateway>

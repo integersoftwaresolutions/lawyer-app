@@ -3,7 +3,8 @@ import ClientProfile from "../models/ClientProfile.js";
 import Booking from "../models/Booking.js";
 import Dispute from "../models/Dispute.js";
 import { BOOKING_STATUS } from "../config/constants.js";
-import { getPagination, buildPaginationMeta } from "../utils/pagination.js";
+import { listResult } from "../utils/pagination.js";
+import { parseListQuery } from "../utils/listQuery.js";
 import { CLIENT_PROFILE_FIELDS } from "../utils/userProfileFields.js";
 
 export async function getClientProfile(userId) {
@@ -35,23 +36,21 @@ export async function updateClientProfile(userId, data) {
 }
 
 export async function getClientBookings(clientId, query = {}) {
-  const { status } = query;
-  const { page, limit, skip } = getPagination(query);
-  const filter = { clientId, deletedByClient: { $ne: true }, deletedByLawyer: { $ne: true } };
-  
-  if (status) {
-    filter.status = status;
-  }
-  
+  const { filter, sort, pagination } = parseListQuery(query, {
+    baseFilter: { clientId, deletedByClient: { $ne: true }, deletedByLawyer: { $ne: true } },
+    filters: [{ key: "status", path: "status", type: "eq" }],
+    sort: { default: { startAt: -1 } }
+  });
+
   const [items, total] = await Promise.all([
     Booking.find(filter)
       .populate({
         path: "lawyerUserId",
         select: "email"
       })
-      .sort({ startAt: -1 })
-      .skip(skip)
-      .limit(limit)
+      .sort(sort)
+      .skip(pagination.skip)
+      .limit(pagination.limit)
       .lean(),
     Booking.countDocuments(filter)
   ]);
@@ -80,10 +79,7 @@ export async function getClientBookings(clientId, query = {}) {
     dispute: disputeByBooking[b._id.toString()] || null
   }));
 
-  return {
-    items: itemsWithDispute,
-    meta: buildPaginationMeta(total, { page, limit })
-  };
+  return listResult({ items: itemsWithDispute, total, pagination });
 }
 
 export async function getClientStats(clientId) {

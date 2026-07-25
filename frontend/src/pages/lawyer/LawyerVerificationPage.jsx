@@ -21,7 +21,7 @@ const STATUS_META = {
   APPROVED: {
     icon: FiCheckCircle,
     color: "text-success",
-    iconBg: "bg-success/10",
+    iconBg: "bg-success-light",
     badge: "success",
     title: "Verified Lawyer",
     description:
@@ -30,7 +30,7 @@ const STATUS_META = {
   REJECTED: {
     icon: FiXCircle,
     color: "text-danger",
-    iconBg: "bg-danger/10",
+    iconBg: "bg-danger-light",
     badge: "danger",
     title: "Verification Rejected",
     description:
@@ -39,7 +39,7 @@ const STATUS_META = {
   PENDING: {
     icon: FiClock,
     color: "text-warning",
-    iconBg: "bg-warning/10",
+    iconBg: "bg-warning-light",
     badge: "warning",
     title: "Verification Pending",
     description:
@@ -89,7 +89,6 @@ export default function LawyerVerificationPage() {
   const [viewingDoc, setViewingDoc] = useState(null);
   const fileInputRef = useRef(null);
   const pendingDocTypeRef = useRef(null);
-  const [payingFee, setPayingFee] = useState(false);
   const toast = useToast();
 
   const { loading, error, data, retry } = useStateHandler(async () => {
@@ -138,8 +137,8 @@ export default function LawyerVerificationPage() {
   };
 
   const status = verificationData?.profile?.verificationStatus || "PENDING";
-  const verificationFeeAmount = verificationData?.profile?.verificationFee?.amount || 0;
-  const isVerificationFeeRequired = verificationData?.profile?.verificationFee?.isRequired || false;
+  const verificationFeeAmount = 0;
+  const isVerificationFeeRequired = false;
 
   const documentsByType = verificationData?.documents || {};
   const requiredDocTypes = (verificationData?.requiredDocuments || [])
@@ -166,21 +165,6 @@ export default function LawyerVerificationPage() {
   }, [status, hasAnyUploadedDocs]);
 
   const StatusIcon = statusMeta.icon;
-
-  const handlePayVerificationFee = async () => {
-    if (!verificationFeeAmount || verificationFeeAmount <= 0) return;
-    try {
-      setPayingFee(true);
-      await lawyerApi.payVerificationFee();
-      toast.success("Verification fee paid successfully. You can now upload documents.");
-      retry();
-    } catch (payError) {
-      console.error("Failed to pay verification fee:", payError);
-      toast.error(payError.response?.data?.message || "Failed to pay verification fee");
-    } finally {
-      setPayingFee(false);
-    }
-  };
 
   const getDocumentStatus = (docType) => {
     const docs = verificationData?.documents?.[docType] || [];
@@ -228,12 +212,12 @@ export default function LawyerVerificationPage() {
           <div
             className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
               docStatus.status === "APPROVED"
-                ? "bg-success/10 text-success"
+                ? "bg-success-light text-success"
                 : docStatus.status === "REJECTED"
-                  ? "bg-danger/10 text-danger"
+                  ? "bg-danger-light text-danger"
                   : docStatus.status === "PENDING"
-                    ? "bg-warning/10 text-warning"
-                    : "bg-primary/10 text-primary"
+                    ? "bg-warning-light text-warning"
+                    : "bg-primary-light text-primary"
             }`}
           >
             <FiFileText className="w-5 h-5" />
@@ -266,7 +250,7 @@ export default function LawyerVerificationPage() {
             </p>
 
             {docStatus.doc?.adminNotes && (
-              <div className="mt-2 flex items-start gap-2 rounded-lg border border-warning/20 bg-warning/5 px-3 py-2">
+              <div className="mt-2 flex items-start gap-2 rounded-lg border border-warning-light bg-warning-light px-3 py-2">
                 <FiAlertCircle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
                 <p className="text-xs text-text-secondary m-0">{docStatus.doc.adminNotes}</p>
               </div>
@@ -332,7 +316,7 @@ export default function LawyerVerificationPage() {
           </Card>
 
           <Card padding="p-4" className="flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-accent/10 text-accent">
+            <div className="p-2.5 rounded-lg bg-accent-light text-accent">
               <FiFile className="w-5 h-5" />
             </div>
             <div className="min-w-0">
@@ -347,10 +331,10 @@ export default function LawyerVerificationPage() {
             <div
               className={`p-2.5 rounded-lg ${
                 verificationFeeAmount <= 0
-                  ? "bg-success/10 text-success"
+                  ? "bg-success-light text-success"
                   : isVerificationFeeRequired
-                    ? "bg-warning/10 text-warning"
-                    : "bg-success/10 text-success"
+                    ? "bg-warning-light text-warning"
+                    : "bg-success-light text-success"
               }`}
             >
               <FiDollarSign className="w-5 h-5" />
@@ -373,10 +357,10 @@ export default function LawyerVerificationPage() {
           padding="p-4 sm:p-5"
           className={`mb-5 sm:mb-6 ${
             status === "APPROVED"
-              ? "border-success/25"
+              ? "border-success-light"
               : status === "REJECTED"
                 ? "border-danger/25"
-                : "border-warning/25"
+                : "border-warning-light"
           }`}
         >
           <div className="flex items-start gap-3">
@@ -390,8 +374,8 @@ export default function LawyerVerificationPage() {
                 <div
                   className={`mt-3 flex items-start gap-2 rounded-lg border px-3 py-2.5 ${
                     status === "REJECTED"
-                      ? "border-danger/20 bg-danger/5"
-                      : "border-warning/20 bg-warning/5"
+                      ? "border-danger-light bg-danger-light"
+                      : "border-warning-light bg-warning-light"
                   }`}
                 >
                   <FiAlertCircle
@@ -421,21 +405,6 @@ export default function LawyerVerificationPage() {
             </div>
           </div>
         </Card>
-
-        {/* Verification fee */}
-        {verificationFeeAmount > 0 && isVerificationFeeRequired && (
-          <Card
-            padding="p-4 sm:p-5"
-            className="mb-5 sm:mb-6 border-warning/25 bg-warning/5"
-            title="Verification fee required"
-            subtitle="Pay once to unlock document uploads and start the review process"
-            headerAction={
-              <Button variant="primary" size="sm" loading={payingFee} onClick={handlePayVerificationFee}>
-                Pay ${verificationFeeAmount}
-              </Button>
-            }
-          />
-        )}
 
         {/* Documents */}
         <Card
@@ -488,7 +457,7 @@ export default function LawyerVerificationPage() {
 
         {/* Benefits */}
         {status === "APPROVED" && (
-          <Card padding="p-4 sm:p-5" className="border-success/25 bg-success/5">
+          <Card padding="p-4 sm:p-5" className="border-success-light bg-success-light">
             <h3 className="text-base font-semibold text-text-primary mb-3 flex items-center gap-2 m-0">
               <FiCheckCircle className="w-5 h-5 text-success" />
               Verification benefits

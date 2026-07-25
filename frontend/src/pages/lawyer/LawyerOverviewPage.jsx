@@ -27,8 +27,8 @@ export default function LawyerOverviewPage() {
       return {
         stats: statsRes.data,
         profile: profileRes.data,
-        bookings: bookingsRes.data || [],
-        earnings: earningsRes.data || []
+        bookings: bookingsRes.items || [],
+        earnings: earningsRes.items || []
       };
     }
   );

@@ -1,5 +1,5 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { sendSuccess } from "../helpers/response.helper.js";
+import { sendSuccess, sendListSuccess } from "../helpers/response.helper.js";
 import * as aiService from "../services/ai/ai.service.js";
 import * as sessionService from "../services/ai/session.service.js";
 import * as messageService from "../services/ai/message.service.js";
@@ -37,6 +37,7 @@ export const createSession = asyncHandler(async (req, res) => {
   const { mode, title, caseRef, metadata } = req.body;
   const data = await sessionService.createSession({
     lawyerId: req.user.id,
+    workspaceId: req.workspace._id,
     mode,
     title,
     caseRef,
@@ -46,12 +47,16 @@ export const createSession = asyncHandler(async (req, res) => {
 });
 
 export const listSessions = asyncHandler(async (req, res) => {
-  const out = await sessionService.listSessions(req.user.id, req.query);
-  return sendSuccess(res, { message: "Sessions", data: out.items, meta: out.meta });
+  const out = await sessionService.listSessions(req.user.id, req.query, req.workspace._id);
+  return sendListSuccess(res, { message: "Sessions", ...out });
 });
 
 export const getSession = asyncHandler(async (req, res) => {
-  const session = await sessionService.getOwnedSession(req.params.sessionId, req.user.id);
+  const session = await sessionService.getOwnedSession(
+    req.params.sessionId,
+    req.user.id,
+    req.workspace._id
+  );
   const messages = await messageService.listMessages(req.params.sessionId);
   return sendSuccess(res, {
     message: "Session",
@@ -59,6 +64,7 @@ export const getSession = asyncHandler(async (req, res) => {
       session: {
         id: session._id,
         lawyerId: session.lawyerId,
+        workspaceId: session.workspaceId,
         title: session.title,
         mode: session.mode,
         caseRef: session.caseRef,
@@ -75,6 +81,7 @@ export const sendMessage = asyncHandler(async (req, res) => {
   const data = await messageService.sendMessage({
     sessionId: req.params.sessionId,
     lawyerId: req.user.id,
+    workspaceId: req.workspace._id,
     content: req.body.content,
     options: req.body.options
   });
@@ -82,7 +89,11 @@ export const sendMessage = asyncHandler(async (req, res) => {
 });
 
 export const deleteSession = asyncHandler(async (req, res) => {
-  const data = await sessionService.deleteSession(req.params.sessionId, req.user.id);
+  const data = await sessionService.deleteSession(
+    req.params.sessionId,
+    req.user.id,
+    req.workspace._id
+  );
   return sendSuccess(res, { message: "Session deleted", data });
 });
 
@@ -90,19 +101,28 @@ export const updateSession = asyncHandler(async (req, res) => {
   const data = await sessionService.updateSessionMetadata(
     req.params.sessionId,
     req.user.id,
-    req.body
+    req.body,
+    req.workspace._id
   );
   return sendSuccess(res, { message: "Session updated", data });
 });
 
 export const generatePrepReport = asyncHandler(async (req, res) => {
-  const session = await sessionService.getOwnedSession(req.params.sessionId, req.user.id);
+  const session = await sessionService.getOwnedSession(
+    req.params.sessionId,
+    req.user.id,
+    req.workspace._id
+  );
   const data = await reportService.generateReportData({ session, lawyerId: req.user.id });
   return sendSuccess(res, { message: "Prep report generated", data });
 });
 
 export const downloadPrepReport = asyncHandler(async (req, res) => {
-  const session = await sessionService.getOwnedSession(req.params.sessionId, req.user.id);
+  const session = await sessionService.getOwnedSession(
+    req.params.sessionId,
+    req.user.id,
+    req.workspace._id
+  );
   const data = await reportService.generateReportData({ session, lawyerId: req.user.id });
   const buffer = await reportService.renderReportPdf(data);
 

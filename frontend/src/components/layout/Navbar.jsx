@@ -13,7 +13,10 @@ import { FiMenu, FiX, FiMoreVertical } from "react-icons/fi";
 
 export default function Navbar({
   onSidebarToggle,
-  showSidebarToggle = false
+  showSidebarToggle = false,
+  startSlot = null,
+  hideBrand = false,
+  hideMarketingLinks = false
 }) {
   const { user } = useAuth();
   const { requestLogout } = useLogoutConfirm();
@@ -35,11 +38,13 @@ export default function Navbar({
     };
   }, [mobileMenuOpen]);
 
-  const navLinks = [
-    { to: user ? "/lawyers" : "/login", label: "Find Lawyers" },
-    { to: "/pricing#pricing", label: "Pricing" },
-    { to: "/pricing#testimonials", label: "Testimonials" },
-  ];
+  const navLinks = hideMarketingLinks
+    ? []
+    : [
+        { to: user ? "/lawyers" : "/login", label: "Find Lawyers" },
+        { to: "/pricing#pricing", label: "Pricing" },
+        { to: "/pricing#testimonials", label: "Testimonials" }
+      ];
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
@@ -51,7 +56,7 @@ export default function Navbar({
   return (
     <>
       <nav className="flex justify-between items-center gap-2 sm:gap-3 h-14 min-h-[56px] px-3 sm:px-4 md:px-5 border-b border-border bg-card sticky top-0 z-[100]">
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-2 min-w-0 flex-1 md:flex-none">
           {showSidebarToggle && (
             <button
               type="button"
@@ -62,12 +67,16 @@ export default function Navbar({
               <FiMenu size={20} />
             </button>
           )}
-          <Link
-            to="/"
-            className="font-bold text-text-primary no-underline truncate text-lg md:text-xl"
-          >
-            Lawyer Marketplace
-          </Link>
+          {startSlot ? (
+            <div className="min-w-0 flex-1 md:flex-none">{startSlot}</div>
+          ) : !hideBrand ? (
+            <Link
+              to="/"
+              className="font-bold text-text-primary no-underline truncate text-lg md:text-xl"
+            >
+              Lawyer Marketplace
+            </Link>
+          ) : null}
         </div>
 
         <div className="hidden md:flex items-center flex-1 justify-end gap-6">

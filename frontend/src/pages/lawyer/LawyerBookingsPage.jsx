@@ -19,10 +19,13 @@ import {
   Input,
   Select,
   Textarea,
-  Table,
   PageHeader,
   PageShell,
+  PageFilters,
   PageTabFilters,
+  DataTable,
+  DataList,
+  Pagination,
   ActionMenu,
   IconButton
 } from "../../components/ui";
@@ -153,7 +156,7 @@ export default function LawyerBookingsPage() {
       setEditSlotsLoading(true);
       const lawyerId = editModal.booking.lawyerUserId?._id || editModal.booking.lawyerUserId;
       const res = await lawyerApi.getAvailableSlots(lawyerId, editData.date);
-      setEditSlots(res.data || []);
+      setEditSlots(res.items || []);
     } catch (error) {
       console.error("Failed to load slots:", error);
       toast.error(error.response?.data?.message || "Failed to load available slots");
@@ -311,7 +314,7 @@ export default function LawyerBookingsPage() {
             <button
               type="button"
               onClick={() => setDisputeViewModal({ open: true, booking: row })}
-              className="inline-flex items-center gap-2 rounded-lg border border-card-border bg-surface/50 px-2.5 py-1.5 text-left transition-colors hover:bg-surface-hover hover:border-primary/30"
+              className="inline-flex items-center gap-2 rounded-lg border border-card-border bg-surface px-2.5 py-1.5 text-left transition-colors hover:bg-surface-hover hover:border-primary-border"
             >
               <Badge variant={row.dispute.status === "RESOLVED" ? "success" : "info"} size="table">
                 {row.dispute.status.replace(/_/g, " ")}
@@ -411,23 +414,26 @@ export default function LawyerBookingsPage() {
         title="Bookings"
         subtitle="Manage upcoming sessions and consultation history"
       />
-      <PageTabFilters options={filterOptions} value={filter} onChange={setFilter} />
-      <Table
-        columns={columns}
-        data={items}
-        loading={loading}
-        error={error}
-        retry={retry}
-        density="comfortable"
-        emptyMessage="No bookings found"
-        pagination={{
-          currentPage: meta.page,
-          totalPages: meta.pages,
-          totalItems: meta.total,
-          itemsPerPage: meta.limit,
-          onPageChange: setPage
-        }}
-      />
+      <DataList
+        filters={
+          <PageFilters>
+            <PageTabFilters options={filterOptions} value={filter} onChange={setFilter} />
+          </PageFilters>
+        }
+        pagination={<Pagination meta={meta} onPageChange={setPage} />}
+      >
+        <DataTable
+          columns={columns}
+          data={items}
+          keyField="_id"
+          loading={loading}
+          error={error}
+          retry={retry}
+          density="comfortable"
+          emptyMessage="No bookings found"
+          emptyDescription="New consultations will appear here."
+        />
+      </DataList>
 
       <Modal
         isOpen={viewModal.open}

@@ -8,11 +8,13 @@ import adminRoutes from "./admin.routes.js";
 import aiRoutes from "./ai.routes.js";
 import plannerRoutes from "./planner.routes.js";
 import notificationsRoutes from "./notifications.routes.js";
+import workspaceRoutes from "./workspace.routes.js";
 import { SPECIALIZATIONS, CITIES } from "../config/constants.js";
 
 const router = Router();
 
 router.use("/auth", authRoutes);
+router.use("/workspaces", workspaceRoutes);
 router.use("/lawyers", lawyerRoutes);
 router.use("/clients", clientRoutes);
 router.use("/bookings", bookingRoutes);

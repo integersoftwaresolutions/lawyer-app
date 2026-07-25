@@ -1,5 +1,4 @@
 import { createContext, useCallback, useContext, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import ConfirmModal from "../components/ui/ConfirmModal";
 
@@ -7,7 +6,6 @@ const LogoutConfirmContext = createContext(null);
 
 export function LogoutConfirmProvider({ children }) {
   const { logout } = useAuth();
-  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -17,13 +15,13 @@ export function LogoutConfirmProvider({ children }) {
   const confirmLogout = useCallback(async () => {
     try {
       setLoading(true);
+      // forceLogout clears session and redirects to /login
       await logout();
       setIsOpen(false);
-      navigate("/", { replace: true });
     } finally {
       setLoading(false);
     }
-  }, [logout, navigate]);
+  }, [logout]);
 
   return (
     <LogoutConfirmContext.Provider value={{ requestLogout }}>

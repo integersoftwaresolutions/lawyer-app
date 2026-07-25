@@ -26,7 +26,7 @@ export default function DayView({
       <button
         type="button"
         onClick={() => onSelectDay?.(dateKey)}
-        className="w-full text-left px-4 py-3 border-b border-border bg-surface/50 shrink-0 hover:bg-surface-hover/80 transition-colors"
+        className="w-full text-left px-4 py-3 border-b border-border bg-surface shrink-0 hover:bg-surface-hover transition-colors"
       >
         <p className="text-sm font-semibold text-text-primary">{formatDayTitle(anchorDate, timezone)}</p>
         <p className="text-xs text-text-muted mt-0.5">

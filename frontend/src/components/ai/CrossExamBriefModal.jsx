@@ -138,7 +138,7 @@ export default function CrossExamBriefModal({
         <Field label="Witnesses" hint="Add the witnesses you may need to defend or attack.">
           <div className="space-y-3">
             {(form.witnesses || []).map((w, idx) => (
-              <div key={idx} className="rounded-lg border border-card-border bg-surface/50 p-3 space-y-2">
+              <div key={idx} className="rounded-lg border border-card-border bg-surface p-3 space-y-2">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-medium text-text-muted">Witness #{idx + 1}</span>
                   <button
