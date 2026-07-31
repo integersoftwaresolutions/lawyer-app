@@ -74,14 +74,16 @@ export const lawyerIngestDocument = asyncHandler(async (req, res) => {
       uploadedByUserId: req.user.id,
       file: req.file,
       body: req.body,
-      options: { userId: req.user.id }
+      options: { userId: req.user.id },
+      ctx: docCtx(req)
     });
   } else {
     out = await ragService.ingestLegalDocumentFromText({
       workspaceId: req.workspace._id,
       uploadedByUserId: req.user.id,
       body: req.body,
-      options: { userId: req.user.id }
+      options: { userId: req.user.id },
+      ctx: docCtx(req)
     });
   }
   return sendSuccess(res, { statusCode: 201, message: "Document ingested", data: out });

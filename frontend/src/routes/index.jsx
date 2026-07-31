@@ -28,6 +28,8 @@ import LawyerReviewsPage from "../pages/lawyer/LawyerReviewsPage.jsx";
 import LawyerAiAssistantPage from "../pages/lawyer/LawyerAiAssistantPage.jsx";
 import LawyerCrossExamPage from "../pages/lawyer/LawyerCrossExamPage.jsx";
 import LawyerDocumentsPage from "../pages/lawyer/LawyerDocumentsPage.jsx";
+import LawyerCasesPage from "../pages/lawyer/LawyerCasesPage.jsx";
+import LawyerCaseDetailPage from "../pages/lawyer/LawyerCaseDetailPage.jsx";
 import LawyerPlannerPage from "../pages/lawyer/LawyerPlannerPage.jsx";
 import WorkspaceOverviewPage from "../pages/lawyer/workspace/WorkspaceOverviewPage.jsx";
 import WorkspaceMembersPage from "../pages/lawyer/workspace/WorkspaceMembersPage.jsx";
@@ -142,6 +144,22 @@ export default function RoutesRoot() {
           element={
             <RequirePermission permissions={[PERMISSIONS.DOCS_VIEW]} redirectTo="/lawyer/overview">
               <LawyerDocumentsPage />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="cases"
+          element={
+            <RequirePermission permissions={[PERMISSIONS.CASES_VIEW]} redirectTo="/lawyer/overview">
+              <LawyerCasesPage />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="cases/:caseId"
+          element={
+            <RequirePermission permissions={[PERMISSIONS.CASES_VIEW]} redirectTo="/lawyer/overview">
+              <LawyerCaseDetailPage />
             </RequirePermission>
           }
         />

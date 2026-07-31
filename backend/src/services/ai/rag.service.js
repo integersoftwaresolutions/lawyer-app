@@ -2,12 +2,15 @@ import { ApiError } from "../../helpers/apiError.js";
 import { DOCUMENT_VISIBILITY, RAG_INGESTION_STATUS, WORKSPACE_AUDIT_ACTIONS } from "../../config/constants.js";
 import CaseLaw from "../../models/CaseLaw.js";
 import LegalDocument from "../../models/LegalDocument.js";
+import "../../models/Case.js"; // ensure Case is registered for populate
 import { listResult } from "../../utils/pagination.js";
 import { parseListQuery } from "../../utils/listQuery.js";
 import { extractText } from "./ingest/textExtractor.js";
 import * as ingestService from "./ingest/ingest.service.js";
 import { writeAudit } from "../workspace.service.js";
 import { PERMISSIONS, hasPermission } from "../../workspaces/permissions.catalog.js";
+import { assertCanAttachToCase } from "../case.service.js";
+import mongoose from "mongoose";
 
 // ---------------------------------------------------------------------------
 // Case law (admin-managed, shared corpus)
@@ -94,9 +97,12 @@ export async function ingestLegalDocumentFromText({
   workspaceId,
   uploadedByUserId,
   body,
-  options = {}
+  options = {},
+  ctx = null
 }) {
   if (!body.text) throw new ApiError(400, "text is required when no file is uploaded");
+  const caseId = body.caseId || null;
+  if (caseId && ctx) await assertCanAttachToCase(ctx, caseId);
   return ingestService.ingestLegalDocument(
     {
       workspaceId,
@@ -105,6 +111,7 @@ export async function ingestLegalDocumentFromText({
       title: body.title,
       description: body.description,
       caseRef: body.caseRef,
+      caseId: caseId || null,
       tags: body.tags,
       text: body.text
     },
@@ -117,9 +124,12 @@ export async function ingestLegalDocumentFromFile({
   uploadedByUserId,
   file,
   body,
-  options = {}
+  options = {},
+  ctx = null
 }) {
   if (!file?.buffer) throw new ApiError(400, "File is required");
+  const caseId = body.caseId || null;
+  if (caseId && ctx) await assertCanAttachToCase(ctx, caseId);
   return ingestService.ingestLegalDocument(
     {
       workspaceId,
@@ -128,6 +138,7 @@ export async function ingestLegalDocumentFromFile({
       title: body.title || file.originalname,
       description: body.description,
       caseRef: body.caseRef,
+      caseId: caseId || null,
       tags: body.tags,
       buffer: file.buffer,
       mimeType: file.mimetype,
@@ -153,6 +164,15 @@ export async function listLegalDocuments(ctx, query = {}) {
     sort: { default: { updatedAt: -1 } }
   });
 
+  if (query.caseId) {
+    filter.caseId = new mongoose.Types.ObjectId(String(query.caseId));
+  } else if (query.unlinked === true || query.unlinked === "true" || query.unlinked === "1") {
+    filter.$and = [
+      ...(filter.$and || []),
+      { $or: [{ caseId: null }, { caseId: { $exists: false } }] }
+    ];
+  }
+
   // Keep q as $and so it does not overwrite visibility $or from baseFilter
   if (query.q) {
     const re = new RegExp(escapeRegExp(query.q), "i");
@@ -166,6 +186,7 @@ export async function listLegalDocuments(ctx, query = {}) {
     LegalDocument.countDocuments(filter),
     LegalDocument.find(filter)
       .select("-rawText")
+      .populate({ path: "caseId", select: "name", model: "Case" })
       .sort(sort)
       .skip(pagination.skip)
       .limit(pagination.limit)
@@ -284,12 +305,22 @@ function formatCaseLaw(row, { includeText = false } = {}) {
 }
 
 function formatLegalDocument(row, { includeText = false } = {}) {
+  const linkedCase =
+    row.caseId && typeof row.caseId === "object" && row.caseId._id
+      ? { id: row.caseId._id, name: row.caseId.name }
+      : null;
+  const caseIdValue =
+    row.caseId && typeof row.caseId === "object" && row.caseId._id
+      ? row.caseId._id
+      : row.caseId || null;
+
   return {
     id: row._id,
     workspaceId: row.workspaceId,
     uploadedByUserId: row.uploadedByUserId,
     visibility: row.visibility,
-    caseId: row.caseId,
+    caseId: caseIdValue,
+    case: linkedCase,
     title: row.title,
     description: row.description,
     caseRef: row.caseRef,

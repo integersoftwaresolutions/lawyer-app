@@ -196,6 +196,44 @@ export const DOCUMENT_VISIBILITY = {
   PUBLIC: "PUBLIC"
 };
 
+/** Workspace matter lifecycle (distinct from CaseLaw corpus). */
+export const CASE_STATUS = {
+  INTAKE: "INTAKE",
+  ACTIVE: "ACTIVE",
+  ON_HOLD: "ON_HOLD",
+  CLOSED: "CLOSED",
+  ARCHIVED: "ARCHIVED"
+};
+
+export const CASE_PRIORITY = {
+  LOW: "LOW",
+  MEDIUM: "MEDIUM",
+  HIGH: "HIGH",
+  URGENT: "URGENT"
+};
+
+export const CASE_TYPES = {
+  CIVIL: "CIVIL",
+  CRIMINAL: "CRIMINAL",
+  FAMILY: "FAMILY",
+  CORPORATE: "CORPORATE",
+  TAX: "TAX",
+  LABOR: "LABOR",
+  OTHER: "OTHER"
+};
+
+export const CASE_VISIBILITY = {
+  PRIVATE: "PRIVATE",
+  FIRM: "FIRM",
+  RESTRICTED: "RESTRICTED"
+};
+
+export const CASE_LIST_SCOPES = {
+  MINE: "mine",
+  FIRM: "firm",
+  ALL: "all"
+};
+
 export const BUILTIN_ROLE_KEYS = {
   ADMIN: "ADMIN",
   LAWYER: "LAWYER",
@@ -222,5 +260,17 @@ export const WORKSPACE_AUDIT_ACTIONS = {
   ROLE_UPDATED: "role.updated",
   ROLE_DELETED: "role.deleted",
   INVITE_REVOKED: "invite.revoked",
-  DOC_VISIBILITY_CHANGED: "doc.visibility_changed"
+  DOC_VISIBILITY_CHANGED: "doc.visibility_changed",
+  CASE_CREATED: "case.created",
+  CASE_UPDATED: "case.updated",
+  CASE_STATUS_CHANGED: "case.status_changed",
+  CASE_ASSIGNED: "case.assigned",
+  CASE_VISIBILITY_CHANGED: "case.visibility_changed",
+  CASE_ARCHIVED: "case.archived",
+  CASE_RESTORED: "case.restored",
+  CASE_DELETED: "case.deleted",
+  CASE_NOTE_ADDED: "case.note_added",
+  CASE_DOC_ATTACHED: "case.doc_attached",
+  CASE_DOC_DETACHED: "case.doc_detached",
+  CASE_BOOKING_LINKED: "case.booking_linked"
 };

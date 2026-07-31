@@ -9,12 +9,22 @@ import aiRoutes from "./ai.routes.js";
 import plannerRoutes from "./planner.routes.js";
 import notificationsRoutes from "./notifications.routes.js";
 import workspaceRoutes from "./workspace.routes.js";
-import { SPECIALIZATIONS, CITIES } from "../config/constants.js";
+import caseRoutes from "./case.routes.js";
+import {
+  SPECIALIZATIONS,
+  CITIES,
+  CASE_STATUS,
+  CASE_PRIORITY,
+  CASE_TYPES,
+  CASE_VISIBILITY,
+  PAKISTANI_COURTS
+} from "../config/constants.js";
 
 const router = Router();
 
 router.use("/auth", authRoutes);
 router.use("/workspaces", workspaceRoutes);
+router.use("/cases", caseRoutes);
 router.use("/lawyers", lawyerRoutes);
 router.use("/clients", clientRoutes);
 router.use("/bookings", bookingRoutes);
@@ -29,7 +39,12 @@ router.get("/constants", (req, res) => {
     success: true,
     data: {
       specializations: SPECIALIZATIONS,
-      cities: CITIES
+      cities: CITIES,
+      caseStatuses: Object.values(CASE_STATUS),
+      casePriorities: Object.values(CASE_PRIORITY),
+      caseTypes: Object.values(CASE_TYPES),
+      caseVisibilities: Object.values(CASE_VISIBILITY),
+      courts: PAKISTANI_COURTS
     }
   });
 });

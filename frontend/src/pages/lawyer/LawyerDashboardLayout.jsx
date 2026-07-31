@@ -15,16 +15,19 @@ import {
   FiTarget,
   FiFolder,
   FiBriefcase,
-  FiSettings
+  FiSettings,
+  FiLayers
 } from "react-icons/fi";
 
 export default function LawyerDashboardLayout() {
   const canUseAi = usePermission(PERMISSIONS.AI_USE);
   const canViewDocs = usePermission(PERMISSIONS.DOCS_VIEW);
+  const canViewCases = usePermission(PERMISSIONS.CASES_VIEW);
 
   const menuItems = [
     { id: "overview", label: "Overview", icon: FiHome },
     { id: "workspace", label: "Workspace", icon: FiBriefcase },
+    ...(canViewCases ? [{ id: "cases", label: "Cases", icon: FiLayers }] : []),
     ...(canUseAi
       ? [
           { id: "ai", label: "AI Assistant", icon: FiCpu },

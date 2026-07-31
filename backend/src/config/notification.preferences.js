@@ -14,6 +14,7 @@ export const NOTIFICATION_CATEGORIES = {
   BOOKINGS: "bookings",
   REMINDERS: "reminders",
   VERIFICATION: "verification",
+  CASES: "cases",
   ACCOUNT: "account"
 };
 
@@ -72,6 +73,24 @@ const TYPE_META = {
     category: NOTIFICATION_CATEGORIES.VERIFICATION,
     roles: [ROLES.LAWYER]
   },
+  [NOTIFICATION_TYPES.CASE_ASSIGNED]: {
+    label: "Case assignment",
+    description: "When you are assigned to a case as primary or collaborator",
+    category: NOTIFICATION_CATEGORIES.CASES,
+    roles: [ROLES.LAWYER]
+  },
+  [NOTIFICATION_TYPES.CASE_STATUS_CHANGED]: {
+    label: "Case status changes",
+    description: "When a case you are on changes status",
+    category: NOTIFICATION_CATEGORIES.CASES,
+    roles: [ROLES.LAWYER]
+  },
+  [NOTIFICATION_TYPES.CASE_DOCUMENT_ATTACHED]: {
+    label: "Case documents",
+    description: "When a document is attached to a case you are on",
+    category: NOTIFICATION_CATEGORIES.CASES,
+    roles: [ROLES.LAWYER]
+  },
   [NOTIFICATION_TYPES.EMAIL_VERIFICATION]: {
     label: "Email verification code",
     description: "One-time code to verify your email address",
@@ -101,6 +120,7 @@ const TYPE_META = {
 const CATEGORY_ORDER = [
   NOTIFICATION_CATEGORIES.BOOKINGS,
   NOTIFICATION_CATEGORIES.REMINDERS,
+  NOTIFICATION_CATEGORIES.CASES,
   NOTIFICATION_CATEGORIES.VERIFICATION,
   NOTIFICATION_CATEGORIES.ACCOUNT
 ];
@@ -108,6 +128,7 @@ const CATEGORY_ORDER = [
 const CATEGORY_LABELS = {
   [NOTIFICATION_CATEGORIES.BOOKINGS]: "Bookings",
   [NOTIFICATION_CATEGORIES.REMINDERS]: "Reminders",
+  [NOTIFICATION_CATEGORIES.CASES]: "Cases",
   [NOTIFICATION_CATEGORIES.VERIFICATION]: "Verification",
   [NOTIFICATION_CATEGORIES.ACCOUNT]: "Account & security"
 };

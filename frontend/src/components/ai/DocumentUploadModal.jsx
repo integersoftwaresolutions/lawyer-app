@@ -7,11 +7,19 @@ const TAB_TEXT = "text";
 
 const ACCEPTED = ".pdf,.txt,.html,.htm,.md";
 
-export default function DocumentUploadModal({ isOpen, onClose, onSubmit, busy = false }) {
+export default function DocumentUploadModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  busy = false,
+  caseOptions = [],
+  initialCaseId = ""
+}) {
   const [tab, setTab] = useState(TAB_FILE);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [caseRef, setCaseRef] = useState("");
+  const [caseId, setCaseId] = useState("");
   const [file, setFile] = useState(null);
   const [text, setText] = useState("");
   const [visibility, setVisibility] = useState("PRIVATE");
@@ -23,12 +31,15 @@ export default function DocumentUploadModal({ isOpen, onClose, onSubmit, busy = 
       setTitle("");
       setDescription("");
       setCaseRef("");
+      setCaseId(initialCaseId || "");
       setFile(null);
       setText("");
       setVisibility("PRIVATE");
       setError("");
+    } else {
+      setCaseId(initialCaseId || "");
     }
-  }, [isOpen]);
+  }, [isOpen, initialCaseId]);
 
   function handleFile(e) {
     const f = e.target.files?.[0];
@@ -63,6 +74,7 @@ export default function DocumentUploadModal({ isOpen, onClose, onSubmit, busy = 
       fd.append("title", title.trim());
       if (description.trim()) fd.append("description", description.trim());
       if (caseRef.trim()) fd.append("caseRef", caseRef.trim());
+      if (caseId) fd.append("caseId", caseId);
       fd.append("visibility", visibility);
       fd.append("file", file);
       onSubmit({ kind: "file", payload: fd });
@@ -73,6 +85,7 @@ export default function DocumentUploadModal({ isOpen, onClose, onSubmit, busy = 
           title: title.trim(),
           description: description.trim() || undefined,
           caseRef: caseRef.trim() || undefined,
+          caseId: caseId || undefined,
           visibility,
           text: text.trim()
         }
@@ -146,9 +159,26 @@ export default function DocumentUploadModal({ isOpen, onClose, onSubmit, busy = 
           <Input
             value={caseRef}
             onChange={(e) => setCaseRef(e.target.value)}
-            placeholder="Optional case number / matter ID."
+            placeholder="Optional free-text case number / matter ID."
           />
         </Field>
+
+        {caseOptions.length > 0 && (
+          <Field label="Attach to case">
+            <select
+              className="w-full h-10 px-2 rounded-md border border-input-border bg-input-background text-sm"
+              value={caseId}
+              onChange={(e) => setCaseId(e.target.value)}
+            >
+              <option value="">None (library only)</option>
+              {caseOptions.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
 
         <Field label="Visibility">
           <select

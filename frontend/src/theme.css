@@ -108,112 +108,112 @@
   --color-chart-crosshair: #CBD5E1;
 }
 
-/* Dark Theme */
+/* Dark Theme — blackish canvas with clear elevation (brand hues unchanged) */
 .dark {
-  /* Base */
-  --color-background: #0A0A0A;
+  /* Base — near-black, soft enough for long sessions */
+  --color-background: #090909;
   --color-text: #E5E5E5;
-  --color-text-primary: #FFFFFF;
+  --color-text-primary: #F5F5F5;
   --color-text-secondary: #A3A3A3;
   --color-text-muted: #737373;
-  --color-border: #262626;
-  --color-surface: #171717;
-  --color-surface-hover: #262626;
-  --color-surface-border: #262626;
+  --color-border: #2E2E2E;
+  --color-surface: #121212;
+  --color-surface-hover: #1A1A1A;
+  --color-surface-border: #2E2E2E;
   --color-surface-text: #E5E5E5;
-  
-  /* Card */
-  --color-card: #171717;
-  --color-card-hover: #262626;
-  --color-card-border: #262626;
-  --color-card-shadow: rgba(0, 0, 0, 0.5);
+
+  /* Card — lifted above canvas; border reads against both */
+  --color-card: #141414;
+  --color-card-hover: #1C1C1C;
+  --color-card-border: #333333;
+  --color-card-shadow: rgba(0, 0, 0, 0.55);
   --color-card-text: #E5E5E5;
-  
-  /* Input */
-  --color-input: #171717;
-  --color-input-background: #171717;
-  --color-input-border: #262626;
+
+  /* Input — recessed vs card */
+  --color-input: #0C0C0C;
+  --color-input-background: #0C0C0C;
+  --color-input-border: #2E2E2E;
   --color-input-text: #E5E5E5;
   --color-input-placeholder: #737373;
-  --color-select-native-bg: #171717;
+  --color-select-native-bg: #0C0C0C;
   --color-select-native-text: #E5E5E5;
-  
-  /* Primary — seagreen */
+
+  /* Primary — seagreen (same brand) */
   --color-primary: #0A6B6E;
   --color-primary-hover: #085456;
   --color-primary-border: #0A6B6E;
-  --color-primary-shadow: rgba(10, 107, 110, 0.3);
+  --color-primary-shadow: rgba(10, 107, 110, 0.35);
   --color-primary-text: #FFFFFF;
-  --color-primary-light: #173739;
-  --color-primary-light-hover: #204C4F;
-  
-  /* Secondary — brown */
+  --color-primary-light: #1A3D40;
+  --color-primary-light-hover: #245054;
+
+  /* Secondary — brown (same brand) */
   --color-secondary: #5c4637;
   --color-secondary-hover: #463428;
   --color-secondary-border: #5A4536;
-  --color-secondary-shadow: rgba(90, 69, 54, 0.3);
+  --color-secondary-shadow: rgba(90, 69, 54, 0.35);
   --color-secondary-text: #FFFFFF;
-  --color-secondary-light: #271e17;
-  --color-secondary-light-hover: #413328;
-  
-  /* Accent — golden */
+  --color-secondary-light: #2E241C;
+  --color-secondary-light-hover: #3D3127;
+
+  /* Accent — golden (same brand) */
   --color-accent: #F5AB1A;
   --color-accent-hover: #ED9D06;
   --color-accent-border: #F5AB1A;
-  --color-accent-shadow: rgba(245, 171, 26, 0.3);
+  --color-accent-shadow: rgba(245, 171, 26, 0.35);
   --color-accent-text: #1F2937;
-  --color-accent-light: #3B2F12;
-  --color-accent-light-hover: #544116;
-  
+  --color-accent-light: #3F3214;
+  --color-accent-light-hover: #564418;
+
   /* Success */
   --color-success: #10B981;
   --color-success-hover: #059669;
   --color-success-border: #10B981;
-  --color-success-shadow: rgba(16, 185, 129, 0.3);
+  --color-success-shadow: rgba(16, 185, 129, 0.35);
   --color-success-text: #FFFFFF;
-  --color-success-light: #17372D;
-  --color-success-light-hover: #1E4D3D;
-  
+  --color-success-light: #1A3D32;
+  --color-success-light-hover: #245245;
+
   /* Warning */
   --color-warning: #F59E0B;
   --color-warning-hover: #D97706;
   --color-warning-border: #F59E0B;
-  --color-warning-shadow: rgba(245, 158, 11, 0.3);
+  --color-warning-shadow: rgba(245, 158, 11, 0.35);
   --color-warning-text: #FFFFFF;
-  --color-warning-light: #3B2E0C;
-  --color-warning-light-hover: #544112;
-  
+  --color-warning-light: #3F3210;
+  --color-warning-light-hover: #564416;
+
   /* Danger */
   --color-danger: #EF4444;
   --color-danger-hover: #DC2626;
   --color-danger-border: #EF4444;
-  --color-danger-shadow: rgba(239, 68, 68, 0.3);
+  --color-danger-shadow: rgba(239, 68, 68, 0.35);
   --color-danger-text: #FFFFFF;
-  --color-danger-light: #3A1818;
-  --color-danger-light-hover: #4C2525;
-  
+  --color-danger-light: #3F1C1C;
+  --color-danger-light-hover: #532828;
+
   /* Info */
   --color-info: #06B6D4;
   --color-info-hover: #0891B2;
   --color-info-border: #06B6D4;
-  --color-info-shadow: rgba(6, 182, 212, 0.3);
+  --color-info-shadow: rgba(6, 182, 212, 0.35);
   --color-info-text: #FFFFFF;
-  --color-info-light: #17333B;
-  --color-info-light-hover: #1E4B55;
-  
+  --color-info-light: #1A3840;
+  --color-info-light-hover: #244E59;
+
   /* Link */
   --color-link: #2DD4BF;
-  --color-link-hover: #0A6B6E;
+  --color-link-hover: #5EEAD4;
   --color-link-border: #2DD4BF;
-  --color-link-shadow: rgba(45, 212, 191, 0.25);
+  --color-link-shadow: rgba(45, 212, 191, 0.28);
   --color-link-text: #2DD4BF;
-  --color-link-light: #173739;
-  --color-link-light-hover: #204C4F;
+  --color-link-light: #1A3D40;
+  --color-link-light-hover: #245054;
 
   /* Charts */
-  --color-chart-grid: #262626;
-  --color-chart-axis: #262626;
-  --color-chart-cursor: #262626;
+  --color-chart-grid: #2E2E2E;
+  --color-chart-axis: #2E2E2E;
+  --color-chart-cursor: #1A1A1A;
   --color-chart-crosshair: #404040;
 }
 

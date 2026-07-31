@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import {
   FiAlertCircle,
@@ -15,16 +16,17 @@ import {
   ConfirmModal,
   DataList,
   DataTable,
-  PageFilterActions,
   PageFilterField,
   PageFilters,
   PageHeader,
   PageShell,
-  Pagination
+  Pagination,
+  Switch
 } from "../../components/ui";
 import DocumentUploadModal from "../../components/ai/DocumentUploadModal";
 import RagDocumentViewModal from "../../components/ai/RagDocumentViewModal";
 import { aiApi } from "../../services/ai.api";
+import { casesApi } from "../../services/cases.api";
 import { getErrorMessage } from "../../utils/errorHandler";
 import { usePermission } from "../../hooks/useWorkspaceAccess";
 import { usePaginatedQuery } from "../../hooks/usePaginatedQuery";
@@ -54,7 +56,10 @@ export default function LawyerDocumentsPage() {
   const canDelete = usePermission(PERMISSIONS.DOCS_DELETE);
 
   const [search, setSearch] = useState("");
-  const [appliedSearch, setAppliedSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [caseFilter, setCaseFilter] = useState("");
+  const [unlinkedOnly, setUnlinkedOnly] = useState(false);
+  const [caseOptions, setCaseOptions] = useState([]);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uploadBusy, setUploadBusy] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
@@ -63,22 +68,39 @@ export default function LawyerDocumentsPage() {
   const [actionError, setActionError] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const filtersActive = Boolean(search.trim() || caseFilter || unlinkedOnly);
+
   const fetchDocs = useCallback(
     (params) => {
       if (!activeWorkspaceId) return Promise.resolve({ items: [], meta: { page: 1, limit: 20, total: 0, pages: 1 } });
       return aiApi.listDocuments({
         ...params,
-        ...(appliedSearch ? { q: appliedSearch } : {})
+        ...(debouncedSearch ? { q: debouncedSearch } : {}),
+        ...(caseFilter ? { caseId: caseFilter } : {}),
+        ...(unlinkedOnly ? { unlinked: true } : {})
       });
     },
-    [activeWorkspaceId, appliedSearch]
+    [activeWorkspaceId, debouncedSearch, caseFilter, unlinkedOnly]
   );
 
   const { items, meta, setPage, loading, error, retry } = usePaginatedQuery(fetchDocs, {
-    dependencies: [activeWorkspaceId, appliedSearch, refreshKey],
+    dependencies: [activeWorkspaceId, debouncedSearch, caseFilter, unlinkedOnly, refreshKey],
     defaultLimit: 20,
     enabled: !!activeWorkspaceId
   });
+
+  useEffect(() => {
+    if (!activeWorkspaceId) return;
+    casesApi
+      .list({ scope: "all", limit: 50 })
+      .then((res) => setCaseOptions((res.items || []).map((c) => ({ id: c.id, name: c.name }))))
+      .catch(() => setCaseOptions([]));
+  }, [activeWorkspaceId, refreshKey]);
 
   const totalReady = useMemo(
     () => items.filter((d) => d.status === "INDEXED" || d.status === "ready").length,
@@ -89,9 +111,11 @@ export default function LawyerDocumentsPage() {
     [items]
   );
 
-  function handleSearchSubmit(e) {
-    e.preventDefault();
-    setAppliedSearch(search.trim());
+  function clearFilters() {
+    setSearch("");
+    setDebouncedSearch("");
+    setCaseFilter("");
+    setUnlinkedOnly(false);
   }
 
   async function handleUpload({ kind, payload }) {
@@ -174,6 +198,23 @@ export default function LawyerDocumentsPage() {
           <Badge variant={VISIBILITY_COLORS[value] || "default"} size="sm">
             {(value || "PRIVATE").toLowerCase()}
           </Badge>
+        )
+    },
+    {
+      key: "case",
+      label: "Case",
+      hideOnMobile: true,
+      render: (_, doc) =>
+        doc.case?.id ? (
+          <Link
+            to={`/lawyer/cases/${doc.case.id}`}
+            className="text-sm text-primary hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {doc.case.name}
+          </Link>
+        ) : (
+          <span className="text-xs text-text-muted">—</span>
         )
     },
     {
@@ -260,7 +301,7 @@ export default function LawyerDocumentsPage() {
       <DataList
         filters={
           <PageFilters>
-            <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row sm:items-end gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-end gap-3">
               <PageFilterField label="Search" className="flex-1 max-w-md">
                 <div className="relative">
                   <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
@@ -272,25 +313,45 @@ export default function LawyerDocumentsPage() {
                   />
                 </div>
               </PageFilterField>
-              <PageFilterActions>
-                <Button type="submit" variant="secondary" size="sm">
-                  Search
-                </Button>
-                {appliedSearch && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setSearch("");
-                      setAppliedSearch("");
+              <PageFilterField label="Linked case">
+                <select
+                  className="w-full h-9 rounded-md border border-input-border bg-input-background text-sm px-2 min-w-[10rem]"
+                  value={caseFilter}
+                  onChange={(e) => {
+                    setCaseFilter(e.target.value);
+                    if (e.target.value) setUnlinkedOnly(false);
+                  }}
+                >
+                  <option value="">All</option>
+                  {caseOptions.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </PageFilterField>
+              <PageFilterField label="Unlinked only">
+                <div className="flex h-9 items-center">
+                  <Switch
+                    checked={unlinkedOnly}
+                    onChange={(on) => {
+                      setUnlinkedOnly(on);
+                      if (on) setCaseFilter("");
                     }}
-                  >
-                    Clear
-                  </Button>
-                )}
-              </PageFilterActions>
-            </form>
+                    label="Unlinked only"
+                  />
+                </div>
+              </PageFilterField>
+              {filtersActive && (
+                <PageFilterField label={'\u00A0'} className="sm:w-auto">
+                  <div className="flex h-9 items-center">
+                    <Button type="button" variant="ghost" size="sm" onClick={clearFilters}>
+                      Clear filters
+                    </Button>
+                  </div>
+                </PageFilterField>
+              )}
+            </div>
           </PageFilters>
         }
         pagination={<Pagination meta={meta} onPageChange={setPage} />}
@@ -302,10 +363,10 @@ export default function LawyerDocumentsPage() {
           loading={loading}
           error={error}
           retry={retry}
-          emptyMessage={appliedSearch ? "No documents match your search" : "No documents yet"}
+          emptyMessage={filtersActive ? "No documents match your filters" : "No documents yet"}
           emptyDescription={
-            appliedSearch
-              ? "Try a different search term."
+            filtersActive
+              ? "Try clearing filters or a different search."
               : "Upload briefs, judgments, or notes for AI retrieval."
           }
           emptyIcon={<FiFolder className="w-6 h-6" />}
@@ -317,6 +378,7 @@ export default function LawyerDocumentsPage() {
         onClose={() => setUploadOpen(false)}
         onSubmit={handleUpload}
         busy={uploadBusy}
+        caseOptions={caseOptions}
       />
       <RagDocumentViewModal
         isOpen={!!viewDocId}

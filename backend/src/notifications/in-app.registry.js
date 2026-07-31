@@ -20,7 +20,10 @@ const PRODUCT_TYPES = [
   NOTIFICATION_TYPES.VERIFICATION_DOCUMENT_REJECTED,
   NOTIFICATION_TYPES.ADMIN_LAWYER_DOCUMENTS_UPLOADED,
   NOTIFICATION_TYPES.ADMIN_LAWYER_PENDING_VERIFICATION,
-  NOTIFICATION_TYPES.WORKSPACE_INVITE
+  NOTIFICATION_TYPES.WORKSPACE_INVITE,
+  NOTIFICATION_TYPES.CASE_ASSIGNED,
+  NOTIFICATION_TYPES.CASE_STATUS_CHANGED,
+  NOTIFICATION_TYPES.CASE_DOCUMENT_ATTACHED
 ];
 
 for (const type of PRODUCT_TYPES) {
@@ -88,6 +91,30 @@ export const IN_APP_CONTENT_MAP = {
     title: () => "Firm invitation",
     body: (v) => `${v.inviterEmail || "A colleague"} invited you to join ${v.workspaceName || "a firm"}.`,
     link: (v) => v.acceptUrl || "/lawyer/workspace"
+  },
+  [NOTIFICATION_TYPES.CASE_ASSIGNED]: {
+    title: () => "Case assignment",
+    body: (v) =>
+      `${v.actorName || "A colleague"} assigned you to ${v.caseName || "a case"}${
+        v.roleLabel ? ` as ${v.roleLabel}` : ""
+      }.`,
+    link: (v) => v.caseUrl || "/lawyer/cases"
+  },
+  [NOTIFICATION_TYPES.CASE_STATUS_CHANGED]: {
+    title: () => "Case status updated",
+    body: (v) =>
+      `${v.caseName || "A case"} moved to ${v.statusLabel || v.status || "a new status"}${
+        v.actorName ? ` by ${v.actorName}` : ""
+      }.`,
+    link: (v) => v.caseUrl || "/lawyer/cases"
+  },
+  [NOTIFICATION_TYPES.CASE_DOCUMENT_ATTACHED]: {
+    title: () => "Document added to case",
+    body: (v) =>
+      `${v.actorName || "Someone"} attached ${v.documentTitle || "a document"} to ${
+        v.caseName || "a case"
+      }.`,
+    link: (v) => v.caseUrl || "/lawyer/cases"
   },
   [NOTIFICATION_TYPES.EMAIL_VERIFIED]: {
     title: () => "Email verified",

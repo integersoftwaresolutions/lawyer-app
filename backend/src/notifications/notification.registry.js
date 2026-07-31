@@ -57,6 +57,18 @@ export const EMAIL_TEMPLATE_MAP = {
   [NOTIFICATION_TYPES.WORKSPACE_INVITE]: {
     template: "workspace-invite",
     subject: (v) => `Invitation to join ${v.workspaceName || "a firm"}`
+  },
+  [NOTIFICATION_TYPES.CASE_ASSIGNED]: {
+    template: "case-assigned",
+    subject: (v) => `Assigned to case: ${v.caseName || "a matter"}`
+  },
+  [NOTIFICATION_TYPES.CASE_STATUS_CHANGED]: {
+    template: "case-status-changed",
+    subject: (v) => `Case status updated: ${v.caseName || "a matter"}`
+  },
+  [NOTIFICATION_TYPES.CASE_DOCUMENT_ATTACHED]: {
+    template: "case-document-attached",
+    subject: (v) => `Document added to ${v.caseName || "a case"}`
   }
 };
 

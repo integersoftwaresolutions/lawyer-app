@@ -53,6 +53,7 @@ export const ingestLegalDocumentSchema = Joi.object({
     visibility: Joi.string()
       .valid(...Object.values(DOCUMENT_VISIBILITY))
       .optional(),
+    caseId: Joi.string().hex().length(24).allow(null, "").optional(),
     text: Joi.string().min(20).max(2_000_000).optional()
   }).required()
 });
@@ -62,6 +63,8 @@ export const listLegalDocumentsSchema = Joi.object({
     page: Joi.number().integer().min(1).optional(),
     limit: Joi.number().integer().min(1).max(50).optional(),
     caseRef: Joi.string().trim().max(200).optional(),
+    caseId: Joi.string().hex().length(24).optional(),
+    unlinked: Joi.alternatives().try(Joi.boolean(), Joi.string()).optional(),
     visibility: Joi.string()
       .valid(...Object.values(DOCUMENT_VISIBILITY))
       .optional(),

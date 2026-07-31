@@ -19,7 +19,7 @@ export default function StickySaveBar({
 
   return (
     <div
-      className={`sticky bottom-0 z-10 mt-6 -mx-1 px-1 pt-4 pb-1 bg-gradient-to-t from-background from-60% to-transparent ${className}`}
+      className={`sticky bottom-0 z-20 mt-6 -mx-1 px-1 pt-4 pb-2 bg-gradient-to-t from-background from-60% to-transparent ${className}`}
     >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3 rounded-xl border border-border bg-card shadow-lg">
         <div className="min-w-0">
