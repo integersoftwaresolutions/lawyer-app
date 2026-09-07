@@ -14,11 +14,13 @@ import { resolveMarketingCtas } from "./marketing/ctaHelpers";
 import {
   AI_FEATURES,
   CLIENT_STEPS,
+  CORE_PILLARS,
   FIRM_FEATURES,
   LAWYER_STEPS,
   MARKETPLACE_FEATURES,
   PLAN_TEASERS,
   PRACTICE_FEATURES,
+  ROADMAP_POINTS,
   TRUST_POINTS
 } from "./marketing/featureData";
 import { FeatureGrid, SectionHeader } from "./marketing/SectionBits";
@@ -58,7 +60,7 @@ export default function MarketingPage() {
     <div className="min-h-screen bg-background text-text-primary">
       <Navbar />
 
-      {/* Hero — overflow isolated so sticky nav stays reliable */}
+      {/* Hero */}
       <header className="relative border-b border-border overflow-x-clip">
         <div
           className={
@@ -73,20 +75,21 @@ export default function MarketingPage() {
             Adal AI
           </p>
           <h1 className="m-0 max-w-3xl text-[1.75rem] leading-tight sm:text-4xl md:text-5xl lg:text-6xl font-bold text-text-primary">
-            Legal marketplace and practice tools in one platform
+            Legal practice management, simplified
           </h1>
-          <p className="m-0 mt-4 sm:mt-5 max-w-xl text-base sm:text-lg text-text-secondary leading-relaxed">
-            Clients find verified lawyers and book consultations. Lawyers run cases, AI research,
-            documents, and firms—with Free, Pro, and Firm plans on each workspace.
+          <p className="m-0 mt-4 sm:mt-5 max-w-2xl text-base sm:text-lg text-text-secondary leading-relaxed">
+            Adal helps lawyers and law firms manage their work from one place—cases, documents,
+            teams, billing, and AI in one legal workspace. Clients can still find verified lawyers
+            and book consultations on the same platform.
           </p>
 
           <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row sm:flex-wrap gap-3">
-            <CtaLink href={ctas.clientPrimary.href}>
-              {ctas.clientPrimary.label}
+            <CtaLink href={ctas.lawyerPrimary.href}>
+              {ctas.lawyerPrimary.label}
               <FiArrowRight className="h-4 w-4 shrink-0" />
             </CtaLink>
-            <CtaLink href={ctas.lawyerPrimary.href} variant="outline">
-              {ctas.lawyerPrimary.label}
+            <CtaLink href="/request-demo" variant="outline">
+              Request a demo
             </CtaLink>
             <Link
               to="/pricing"
@@ -98,7 +101,7 @@ export default function MarketingPage() {
           </div>
 
           <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row sm:flex-wrap gap-x-5 gap-y-2 text-sm text-text-secondary">
-            {["Verified lawyers", "Workspace billing", "AI research & RAG"].map((chip) => (
+            {["Cases & documents", "Workspaces & roles", "AI & planner"].map((chip) => (
               <span key={chip} className="inline-flex items-center gap-2">
                 <FiCheck className="h-4 w-4 text-success shrink-0" />
                 {chip}
@@ -108,37 +111,30 @@ export default function MarketingPage() {
         </div>
       </header>
 
-      {/* Dual audience */}
+      {/* Core pillars — public commitment */}
       <section
         id="features"
         className="scroll-mt-20 border-b border-border py-12 sm:py-16 md:py-20 px-4 sm:px-6"
       >
         <div className="max-w-[1100px] mx-auto">
           <SectionHeader
+            eyebrow="What Adal includes"
+            title="Everything you need to run the practice"
+            subtitle="The product promise in one place—manage legal work without juggling disconnected tools."
+          />
+          <FeatureGrid items={CORE_PILLARS} />
+        </div>
+      </section>
+
+      {/* Dual audience */}
+      <section className="scroll-mt-20 border-b border-border bg-surface py-12 sm:py-16 md:py-20 px-4 sm:px-6">
+        <div className="max-w-[1100px] mx-auto">
+          <SectionHeader
             eyebrow="Who it is for"
-            title="Two products. One platform."
-            subtitle="Whether you need counsel or run a practice, everything stays in one account model—with clear paths for each side."
+            title="Built for lawyers. Open to clients."
+            subtitle="Practice management is the core. Marketplace bookings connect clients to the same lawyers who run their work in Adal."
           />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-            <div className="rounded-2xl border border-border bg-card p-5 sm:p-7 md:p-8 flex flex-col">
-              <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-primary-light text-primary mb-4">
-                <FiUser className="h-5 w-5" />
-              </span>
-              <h3 className="m-0 text-lg sm:text-xl font-bold text-text-primary">For clients</h3>
-              <p className="m-0 mt-2 text-sm text-text-secondary leading-relaxed flex-1">
-                Search verified lawyers, book CHAT or VIDEO sessions, pay with wallet credits, chat
-                in-session, leave reviews, and open disputes when needed—no subscription.
-              </p>
-              <div className="mt-6 flex flex-col sm:flex-row flex-wrap gap-2">
-                <CtaLink href={ctas.clientPrimary.href}>
-                  {ctas.clientPrimary.label}
-                  <FiArrowRight className="h-4 w-4 shrink-0" />
-                </CtaLink>
-                <CtaLink href={ctas.clientSecondary.href} variant="outline">
-                  {ctas.clientSecondary.label}
-                </CtaLink>
-              </div>
-            </div>
             <div className="rounded-2xl border border-border bg-card p-5 sm:p-7 md:p-8 flex flex-col">
               <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-primary-light text-primary mb-4">
                 <FiBriefcase className="h-5 w-5" />
@@ -147,8 +143,8 @@ export default function MarketingPage() {
                 For lawyers & firms
               </h3>
               <p className="m-0 mt-2 text-sm text-text-secondary leading-relaxed flex-1">
-                Marketplace profile and bookings stay available. Practice tools—cases, AI, documents,
-                planner, and firm seats—are gated by your active workspace plan.
+                Cases, documents, workspaces, roles, planner, AI, billing, and bookings—gated by
+                your active workspace plan (Free, Pro, or Firm).
               </p>
               <div className="mt-6 flex flex-col sm:flex-row flex-wrap gap-2">
                 <CtaLink href={ctas.lawyerPrimary.href}>
@@ -160,52 +156,41 @@ export default function MarketingPage() {
                 </CtaLink>
               </div>
             </div>
+            <div className="rounded-2xl border border-border bg-card p-5 sm:p-7 md:p-8 flex flex-col">
+              <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-primary-light text-primary mb-4">
+                <FiUser className="h-5 w-5" />
+              </span>
+              <h3 className="m-0 text-lg sm:text-xl font-bold text-text-primary">For clients</h3>
+              <p className="m-0 mt-2 text-sm text-text-secondary leading-relaxed flex-1">
+                Search verified lawyers, book CHAT or VIDEO sessions, pay with wallet credits, and
+                follow up in-session—no subscription required.
+              </p>
+              <div className="mt-6 flex flex-col sm:flex-row flex-wrap gap-2">
+                <CtaLink href={ctas.clientPrimary.href}>
+                  {ctas.clientPrimary.label}
+                  <FiArrowRight className="h-4 w-4 shrink-0" />
+                </CtaLink>
+                <CtaLink href={ctas.clientSecondary.href} variant="outline">
+                  {ctas.clientSecondary.label}
+                </CtaLink>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Marketplace */}
-      <section
-        id="marketplace"
-        className="scroll-mt-20 border-b border-border py-12 sm:py-16 md:py-20 px-4 sm:px-6"
-      >
-        <div className="max-w-[1100px] mx-auto">
-          <SectionHeader
-            eyebrow="Marketplace"
-            title="Hire and engage with confidence"
-            subtitle="Everything clients need to find counsel and complete consultations—built into the same product lawyers use to get booked."
-          />
-          <FeatureGrid items={MARKETPLACE_FEATURES} />
-        </div>
-      </section>
-
-      {/* Practice */}
+      {/* Practice deep-dive */}
       <section
         id="practice"
-        className="scroll-mt-20 border-b border-border bg-surface py-12 sm:py-16 md:py-20 px-4 sm:px-6"
-      >
-        <div className="max-w-[1100px] mx-auto">
-          <SectionHeader
-            eyebrow="Practice tools"
-            title="Run your practice in the active workspace"
-            subtitle="Marketplace bookings stay open on every plan. Cases, documents, planner, and related tools unlock according to Free, Pro, or Firm entitlements."
-          />
-          <FeatureGrid items={PRACTICE_FEATURES} />
-        </div>
-      </section>
-
-      {/* AI */}
-      <section
-        id="ai"
         className="scroll-mt-20 border-b border-border py-12 sm:py-16 md:py-20 px-4 sm:px-6"
       >
         <div className="max-w-[1100px] mx-auto">
           <SectionHeader
-            eyebrow="AI & knowledge"
-            title="Research and prep with grounded answers"
-            subtitle="Assistants retrieve from shared case law and your private documents. Usage counts against your workspace plan."
+            eyebrow="Cases & documents"
+            title="Keep matters and files in one workspace"
+            subtitle="Case management and document handling sit at the center of Adal—organized by the workspace you are working in."
           />
-          <FeatureGrid items={AI_FEATURES} />
+          <FeatureGrid items={PRACTICE_FEATURES} columns="two" />
         </div>
       </section>
 
@@ -216,24 +201,54 @@ export default function MarketingPage() {
       >
         <div className="max-w-[1100px] mx-auto">
           <SectionHeader
-            eyebrow="Workspaces & firms"
-            title="Solo today. Team when you are ready."
-            subtitle="Personal and firm workspaces share the same model. Switch context, invite colleagues, and inherit the active workspace plan."
+            eyebrow="Workspaces & teams"
+            title="Personal today. Firm when you are ready."
+            subtitle="Invite colleagues, assign roles, and share quotas—without losing the solo workflow you started with."
           />
-          <FeatureGrid items={FIRM_FEATURES} />
+          <FeatureGrid items={FIRM_FEATURES} columns="two" />
         </div>
       </section>
 
-      {/* Plans teaser */}
+      {/* Marketplace / bookings */}
+      <section
+        id="marketplace"
+        className="scroll-mt-20 border-b border-border py-12 sm:py-16 md:py-20 px-4 sm:px-6"
+      >
+        <div className="max-w-[1100px] mx-auto">
+          <SectionHeader
+            eyebrow="Bookings & marketplace"
+            title="Get booked—and hire with confidence"
+            subtitle="Lawyer bookings and KYC live alongside practice tools. Clients find counsel; lawyers manage availability and sessions."
+          />
+          <FeatureGrid items={MARKETPLACE_FEATURES} />
+        </div>
+      </section>
+
+      {/* AI */}
+      <section
+        id="ai"
+        className="scroll-mt-20 border-b border-border bg-surface py-12 sm:py-16 md:py-20 px-4 sm:px-6"
+      >
+        <div className="max-w-[1100px] mx-auto">
+          <SectionHeader
+            eyebrow="AI & document intelligence"
+            title="Assistants that work with your material"
+            subtitle="Research and prep with answers grounded in shared case law and your private documents—usage follows your workspace plan."
+          />
+          <FeatureGrid items={AI_FEATURES} columns="two" />
+        </div>
+      </section>
+
+      {/* Plans */}
       <section
         id="pricing-teaser"
         className="scroll-mt-20 border-b border-border py-12 sm:py-16 md:py-20 px-4 sm:px-6"
       >
         <div className="max-w-[1100px] mx-auto">
           <SectionHeader
-            eyebrow="Plans"
-            title="Practice tools billed per workspace"
-            subtitle="Clients never need a subscription. Lawyers and firms choose Free, Pro, or Firm for cases, AI, documents, storage, and seats. Compare full limits on Pricing."
+            eyebrow="Billing & plans"
+            title="Subscriptions that match the workspace"
+            subtitle="Clients never need a subscription. Lawyers and firms choose Free, Pro, or Firm for cases, AI, documents, storage, and seats—with invoices you can track."
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5">
             {PLAN_TEASERS.map((plan) => (
@@ -262,39 +277,54 @@ export default function MarketingPage() {
         </div>
       </section>
 
-      {/* Trust */}
+      {/* Trust + notifications */}
       <section
         id="trust"
         className="scroll-mt-20 border-b border-border bg-surface py-12 sm:py-16 md:py-20 px-4 sm:px-6"
       >
         <div className="max-w-[1100px] mx-auto">
           <SectionHeader
-            eyebrow="Trust"
-            title="Built for accountable legal work"
-            subtitle="Verification, secure accounts, and platform review tools keep the marketplace credible—without turning KYC into a product fee."
+            eyebrow="Trust & alerts"
+            title="Accountable work. Clear notifications."
+            subtitle="Verification and secure accounts keep the marketplace credible. In-app and email alerts keep the practice moving."
           />
           <FeatureGrid items={TRUST_POINTS} />
+        </div>
+      </section>
+
+      {/* Roadmap */}
+      <section
+        id="roadmap"
+        className="scroll-mt-20 border-b border-border py-12 sm:py-16 md:py-20 px-4 sm:px-6"
+      >
+        <div className="max-w-[1100px] mx-auto">
+          <SectionHeader
+            eyebrow="In progress"
+            title="More is already on the way"
+            subtitle="We are shipping deeper case-level AI and improved search and filtering—on top of the workspace you can use today."
+          />
+          <FeatureGrid items={ROADMAP_POINTS} columns="two" />
         </div>
       </section>
 
       {/* How it works */}
       <section
         id="how-it-works"
-        className="scroll-mt-20 border-b border-border py-12 sm:py-16 md:py-20 px-4 sm:px-6"
+        className="scroll-mt-20 border-b border-border bg-surface py-12 sm:py-16 md:py-20 px-4 sm:px-6"
       >
         <div className="max-w-[1100px] mx-auto">
           <SectionHeader
             eyebrow="How it works"
             title="Clear steps for each side"
-            subtitle="Same platform—different journeys."
+            subtitle="Same platform—practice-first for lawyers, booking-first for clients."
           />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">
             <div>
               <h3 className="m-0 mb-4 sm:mb-5 text-base sm:text-lg font-semibold text-text-primary">
-                Clients
+                Lawyers
               </h3>
               <ol className="m-0 p-0 list-none space-y-4">
-                {CLIENT_STEPS.map((s) => (
+                {LAWYER_STEPS.map((s) => (
                   <li key={s.step} className="flex gap-3 sm:gap-4">
                     <span className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-text text-sm font-bold">
                       {s.step}
@@ -311,10 +341,10 @@ export default function MarketingPage() {
             </div>
             <div>
               <h3 className="m-0 mb-4 sm:mb-5 text-base sm:text-lg font-semibold text-text-primary">
-                Lawyers
+                Clients
               </h3>
               <ol className="m-0 p-0 list-none space-y-4">
-                {LAWYER_STEPS.map((s) => (
+                {CLIENT_STEPS.map((s) => (
                   <li key={s.step} className="flex gap-3 sm:gap-4">
                     <span className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-text text-sm font-bold">
                       {s.step}
@@ -337,11 +367,10 @@ export default function MarketingPage() {
       <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6">
         <div className="max-w-[1100px] mx-auto rounded-2xl border border-border bg-card px-4 py-10 sm:px-8 sm:py-12 md:px-12 text-center">
           <h2 className="m-0 text-2xl sm:text-3xl md:text-4xl font-bold text-text-primary">
-            Ready to explore the full product?
+            Cases, documents, teams, billing, and AI—in one legal workspace
           </h2>
           <p className="m-0 mx-auto mt-3 max-w-xl text-sm sm:text-base text-text-secondary">
-            Create an account, browse lawyers, or open your practice dashboard. Pricing stays
-            transparent for lawyers and firms—clients book without a plan.
+            Start free as a lawyer, request a demo for your firm, or find counsel as a client.
           </p>
           <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 justify-center items-stretch sm:items-center">
             <CtaLink href={ctas.finalPrimary.href}>

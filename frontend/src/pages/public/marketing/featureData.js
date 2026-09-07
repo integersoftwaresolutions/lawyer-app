@@ -12,36 +12,75 @@ import {
   FiFolder,
   FiClock,
   FiDollarSign,
-  FiSettings,
   FiCpu,
   FiTarget,
   FiBookOpen,
   FiUsers,
   FiBriefcase,
   FiLock,
-  FiCheckCircle
+  FiCheckCircle,
+  FiFileText
 } from "react-icons/fi";
+
+/** Core product pillars — matches public product message */
+export const CORE_PILLARS = [
+  {
+    icon: FiFolder,
+    title: "Case & document management",
+    body: "Track matters, parties, status, and files in one workspace—so work stays organized, not scattered."
+  },
+  {
+    icon: FiBriefcase,
+    title: "Personal and firm workspaces",
+    body: "Start solo on a personal workspace, then create or join a firm without mixing contexts."
+  },
+  {
+    icon: FiUsers,
+    title: "Team roles and permissions",
+    body: "Owner, Admin, Lawyer, Paralegal—or custom roles from a fixed permission catalog."
+  },
+  {
+    icon: FiCalendar,
+    title: "Lawyer bookings & KYC",
+    body: "Publish availability, take consultations, and complete verification so clients can hire with confidence."
+  },
+  {
+    icon: FiDollarSign,
+    title: "Billing, subscriptions & invoices",
+    body: "Free, Pro, and Firm plans per workspace—with usage limits, Stripe checkout, and invoice history."
+  },
+  {
+    icon: FiCpu,
+    title: "AI Assistant & document intelligence",
+    body: "Research-mode chat grounded in case law and your private documents, with plan-based usage."
+  },
+  {
+    icon: FiClock,
+    title: "Smart Planner",
+    body: "Calendar for hearings and practice work—alongside marketplace bookings in one place."
+  },
+  {
+    icon: FiBell,
+    title: "In-app & email notifications",
+    body: "Booking, verification, case, and workspace updates—with preference controls."
+  }
+];
 
 export const MARKETPLACE_FEATURES = [
   {
     icon: FiSearch,
     title: "Lawyer search & profiles",
-    body: "Browse verified professionals by specialization, location, and availability."
+    body: "Clients browse verified professionals by specialization, location, and availability."
   },
   {
     icon: FiShield,
-    title: "Verification & KYC trust",
-    body: "Lawyers submit credentials for platform review so clients can hire with confidence."
+    title: "Verification & KYC",
+    body: "Lawyers submit credentials for platform review—trust without turning KYC into a product fee."
   },
   {
     icon: FiCalendar,
     title: "Book consultations",
-    body: "Schedule CHAT or VIDEO sessions against live availability—no subscription required for clients."
-  },
-  {
-    icon: FiClock,
-    title: "Availability management",
-    body: "Lawyers publish slots; clients pick times that work and get confirmation instantly."
+    body: "CHAT or VIDEO sessions against live availability. Clients never need a subscription."
   },
   {
     icon: FiMessageCircle,
@@ -67,11 +106,6 @@ export const MARKETPLACE_FEATURES = [
     icon: FiAlertCircle,
     title: "Disputes",
     body: "Raise issues on bookings; the platform can review and resolve with admin tools."
-  },
-  {
-    icon: FiBell,
-    title: "Email & in-app alerts",
-    body: "Booking, verification, and practice updates land in notifications—with preference controls."
   }
 ];
 
@@ -82,29 +116,19 @@ export const PRACTICE_FEATURES = [
     body: "Workspace-scoped cases with status, priority, parties, court fields, notes, and documents."
   },
   {
-    icon: FiBookOpen,
-    title: "Case repository",
-    body: "My cases, firm shared, and all accessible—plus search and filters in the active workspace."
-  },
-  {
-    icon: FiFolder,
-    title: "Legal documents",
-    body: "Upload private practice files with Private / Firm / Public visibility for RAG where allowed."
+    icon: FiFileText,
+    title: "Document library",
+    body: "Upload practice files with Private / Firm / Public visibility for secure sharing and AI where allowed."
   },
   {
     icon: FiCalendar,
     title: "Smart Planner",
-    body: "Calendar events for hearings and work—kept alongside bookings and practice routines."
+    body: "Hearings and work events on a practice calendar—kept next to your bookings."
   },
   {
-    icon: FiDollarSign,
-    title: "Bookings & earnings",
-    body: "Manage marketplace bookings and track earnings while you grow your profile."
-  },
-  {
-    icon: FiSettings,
-    title: "Account & workspace settings",
-    body: "Profile, security, notifications, and firm profile controls for the active workspace."
+    icon: FiBookOpen,
+    title: "Case repository views",
+    body: "My cases, firm shared, and all accessible—with search and filters in the active workspace."
   }
 ];
 
@@ -112,22 +136,22 @@ export const AI_FEATURES = [
   {
     icon: FiCpu,
     title: "AI Assistant",
-    body: "Research-mode chat grounded in retrieved legal context for day-to-day practice questions."
+    body: "Day-to-day research chat grounded in retrieved legal context for your practice questions."
+  },
+  {
+    icon: FiBookOpen,
+    title: "Document intelligence",
+    body: "Retrieval over shared case law plus your private documents—scoped to the active workspace."
   },
   {
     icon: FiTarget,
     title: "Cross-exam practice",
-    body: "Practice cross-examination scenarios in a dedicated mode built for preparation."
-  },
-  {
-    icon: FiBookOpen,
-    title: "RAG knowledge",
-    body: "Retrieval over a shared case-law corpus plus your private documents—scoped to your workspace."
+    body: "Dedicated mode to rehearse cross-examination scenarios during preparation."
   },
   {
     icon: FiLayers,
     title: "Plan-based usage",
-    body: "AI messages and document quotas follow Free, Pro, or Firm limits on the active workspace."
+    body: "AI messages and document quotas follow Free, Pro, or Firm limits on the workspace."
   }
 ];
 
@@ -135,12 +159,12 @@ export const FIRM_FEATURES = [
   {
     icon: FiBriefcase,
     title: "Personal & firm workspaces",
-    body: "Every lawyer starts personal; create or join firms without mixing contexts."
+    body: "Every lawyer starts personal; create or join firms when you are ready to collaborate."
   },
   {
     icon: FiUsers,
-    title: "Roles & invites",
-    body: "Owner, Admin, Lawyer, Paralegal—or custom roles from a fixed permission catalog."
+    title: "Roles, invites & permissions",
+    body: "Invite colleagues and assign access from a clear permission catalog."
   },
   {
     icon: FiLock,
@@ -173,7 +197,7 @@ export const TRUST_POINTS = [
   {
     icon: FiShield,
     title: "Verified lawyers",
-    body: "KYC-style verification builds trust. It is not a paid paywall for using the marketplace."
+    body: "KYC-style verification builds marketplace trust without gating practice tools behind a fee."
   },
   {
     icon: FiLock,
@@ -181,9 +205,22 @@ export const TRUST_POINTS = [
     body: "Signed-in sessions use industry-standard auth; sensitive actions stay behind login."
   },
   {
-    icon: FiCheckCircle,
-    title: "Platform oversight",
-    body: "Admins review verification and disputes so the marketplace stays accountable."
+    icon: FiBell,
+    title: "Stay in the loop",
+    body: "In-app and email notifications for bookings, verification, cases, and workspace activity."
+  }
+];
+
+export const ROADMAP_POINTS = [
+  {
+    icon: FiCpu,
+    title: "Deeper case-level AI",
+    body: "Richer assistance tied to specific matters—building on today’s workspace AI and documents."
+  },
+  {
+    icon: FiSearch,
+    title: "Improved search & filtering",
+    body: "Faster ways to find cases, documents, and people as practices grow."
   }
 ];
 
@@ -194,7 +231,19 @@ export const CLIENT_STEPS = [
 ];
 
 export const LAWYER_STEPS = [
-  { step: "1", title: "Join as a lawyer", body: "Create your profile and start a personal workspace (Pro trial available)." },
-  { step: "2", title: "Win work & run practice", body: "Take bookings while cases, AI, docs, and planner stay plan-gated." },
-  { step: "3", title: "Grow to a firm", body: "Upgrade or create a Firm workspace for seats, roles, and shared quotas." }
+  {
+    step: "1",
+    title: "Join as a lawyer",
+    body: "Create your profile and personal workspace—Pro trial available for practice tools."
+  },
+  {
+    step: "2",
+    title: "Run the practice",
+    body: "Manage cases, documents, planner, AI, and bookings from one legal workspace."
+  },
+  {
+    step: "3",
+    title: "Grow to a firm",
+    body: "Invite your team, set roles, and share quotas on a Firm workspace."
+  }
 ];

@@ -19,8 +19,8 @@ export default function Footer() {
           <div>
             <h3 className="text-lg font-bold mb-4 text-text-primary">Adal AI</h3>
             <p className="text-sm text-text-secondary mb-4 leading-relaxed">
-              Marketplace for clients. Practice tools for lawyers and firms—cases, AI, documents,
-              and workspace billing.
+              Legal practice management, simplified—cases, documents, teams, billing, and AI in one
+              workspace. Clients can book verified lawyers on the same platform.
             </p>
             <div className="flex gap-3">
               <a 

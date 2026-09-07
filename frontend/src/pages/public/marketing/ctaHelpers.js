@@ -40,13 +40,13 @@ export function resolveMarketingCtas(user) {
     };
   }
 
-  // Signed out
+  // Signed out — practice-first defaults
   return {
     clientPrimary: { label: "I need a lawyer", href: "/register?role=client" },
     clientSecondary: { label: "Browse lawyers", href: "/login?redirect=/lawyers" },
-    lawyerPrimary: { label: "I am a lawyer", href: "/register?role=lawyer" },
+    lawyerPrimary: { label: "Start as a lawyer", href: "/register?role=lawyer" },
     lawyerSecondary: { label: "View pricing", href: "/pricing" },
-    finalPrimary: { label: "Create free account", href: "/register" },
-    finalSecondary: { label: "Sign in", href: "/login" }
+    finalPrimary: { label: "Start free as a lawyer", href: "/register?role=lawyer" },
+    finalSecondary: { label: "Request a demo", href: "/request-demo" }
   };
 }
