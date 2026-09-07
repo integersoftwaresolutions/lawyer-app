@@ -40,7 +40,9 @@ export const env = {
   emailUser: optional("EMAIL_USER"),
   emailPassword: optional("EMAIL_PASSWORD") || optional("EMAIL_PASS"),
   emailFrom: optional("EMAIL_FROM") || optional("EMAIL_USER") || "noreply@lawyerapp.com",
-  emailFromName: optional("EMAIL_FROM_NAME", "Lawyer App"),
+  emailFromName: optional("EMAIL_FROM_NAME", "Adal AI"),
+  /** Sales inbox for public demo / setup requests */
+  leadsInbox: optional("LEADS_INBOX") || optional("EMAIL_USER"),
 
   // OTP configuration
   otpExpiryMinutes: Number(process.env.OTP_EXPIRY_MINUTES || 10),

@@ -1,23 +1,50 @@
 import { Link, useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import {
+  FiArrowRight,
+  FiBriefcase,
+  FiCheck,
+  FiUser
+} from "react-icons/fi";
 import { Navbar } from "../../components/layout";
 import Footer from "../../components/Footer";
 import { useTheme } from "../../context/ThemeContext";
-import { 
-  FiShield, 
-  FiClock, 
-  FiMessageCircle, 
-  FiDollarSign,
-  FiCheck,
-  FiStar,
-  FiArrowRight,
-  FiBriefcase,
-  FiUser
-} from "react-icons/fi";
+import { useAuth } from "../../hooks/useAuth";
+import { resolveMarketingCtas } from "./marketing/ctaHelpers";
+import {
+  AI_FEATURES,
+  CLIENT_STEPS,
+  FIRM_FEATURES,
+  LAWYER_STEPS,
+  MARKETPLACE_FEATURES,
+  PLAN_TEASERS,
+  PRACTICE_FEATURES,
+  TRUST_POINTS
+} from "./marketing/featureData";
+import { FeatureGrid, SectionHeader } from "./marketing/SectionBits";
+
+function CtaLink({ href, children, variant = "primary", className = "" }) {
+  const base =
+    "inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold no-underline transition-colors min-h-[44px]";
+  const styles =
+    variant === "primary"
+      ? "bg-primary text-primary-text hover:bg-primary-hover"
+      : variant === "secondary"
+        ? "border border-border bg-secondary text-secondary-text hover:bg-secondary-hover"
+        : "border border-border bg-card text-text-primary hover:border-primary";
+
+  return (
+    <Link to={href} className={`${base} ${styles} ${className}`}>
+      {children}
+    </Link>
+  );
+}
 
 export default function MarketingPage() {
   const location = useLocation();
   const { isDarkMode } = useTheme();
+  const { user } = useAuth();
+  const ctas = resolveMarketingCtas(user);
 
   useEffect(() => {
     if (!location.hash) return;
@@ -30,256 +57,307 @@ export default function MarketingPage() {
   return (
     <div className="min-h-screen bg-background text-text-primary">
       <Navbar />
-      {/* Hero Section */}
-      <div className="border-b border-border">
+
+      {/* Hero — overflow isolated so sticky nav stays reliable */}
+      <header className="relative border-b border-border overflow-x-clip">
         <div
           className={
             isDarkMode
-              ? "bg-[radial-gradient(1000px_400px_at_50%_0%,rgba(255,255,255,0.12),transparent_55%)]"
-              : "bg-[radial-gradient(1000px_400px_at_50%_0%,rgba(0,0,0,0.06),transparent_55%)]"
+              ? "absolute inset-0 bg-[radial-gradient(900px_420px_at_50%_-10%,rgba(10,107,110,0.35),transparent_60%)]"
+              : "absolute inset-0 bg-[radial-gradient(900px_420px_at_50%_-10%,rgba(8,84,86,0.14),transparent_60%)]"
           }
-        >
-          <div className="py-24 px-6 text-center max-w-[1200px] mx-auto">
-            <div className="mb-6">
-              <span className="inline-block px-4 py-2 rounded-full bg-primary-light text-primary text-sm font-medium mb-6">
-                Trusted by 10,000+ users
+          aria-hidden
+        />
+        <div className="relative max-w-[1100px] mx-auto px-4 sm:px-6 pt-12 pb-14 sm:pt-16 sm:pb-20 md:pt-20 md:pb-24">
+          <p className="m-0 mb-3 sm:mb-4 text-xs sm:text-sm font-semibold tracking-wide text-primary">
+            Adal AI
+          </p>
+          <h1 className="m-0 max-w-3xl text-[1.75rem] leading-tight sm:text-4xl md:text-5xl lg:text-6xl font-bold text-text-primary">
+            Legal marketplace and practice tools in one platform
+          </h1>
+          <p className="m-0 mt-4 sm:mt-5 max-w-xl text-base sm:text-lg text-text-secondary leading-relaxed">
+            Clients find verified lawyers and book consultations. Lawyers run cases, AI research,
+            documents, and firms—with Free, Pro, and Firm plans on each workspace.
+          </p>
+
+          <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row sm:flex-wrap gap-3">
+            <CtaLink href={ctas.clientPrimary.href}>
+              {ctas.clientPrimary.label}
+              <FiArrowRight className="h-4 w-4 shrink-0" />
+            </CtaLink>
+            <CtaLink href={ctas.lawyerPrimary.href} variant="outline">
+              {ctas.lawyerPrimary.label}
+            </CtaLink>
+            <Link
+              to="/pricing"
+              className="inline-flex w-full sm:w-auto items-center justify-center gap-1 px-2 py-3 text-sm font-semibold text-link no-underline hover:underline min-h-[44px]"
+            >
+              View pricing
+              <FiArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+
+          <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row sm:flex-wrap gap-x-5 gap-y-2 text-sm text-text-secondary">
+            {["Verified lawyers", "Workspace billing", "AI research & RAG"].map((chip) => (
+              <span key={chip} className="inline-flex items-center gap-2">
+                <FiCheck className="h-4 w-4 text-success shrink-0" />
+                {chip}
               </span>
+            ))}
+          </div>
+        </div>
+      </header>
+
+      {/* Dual audience */}
+      <section
+        id="features"
+        className="scroll-mt-20 border-b border-border py-12 sm:py-16 md:py-20 px-4 sm:px-6"
+      >
+        <div className="max-w-[1100px] mx-auto">
+          <SectionHeader
+            eyebrow="Who it is for"
+            title="Two products. One platform."
+            subtitle="Whether you need counsel or run a practice, everything stays in one account model—with clear paths for each side."
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            <div className="rounded-2xl border border-border bg-card p-5 sm:p-7 md:p-8 flex flex-col">
+              <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-primary-light text-primary mb-4">
+                <FiUser className="h-5 w-5" />
+              </span>
+              <h3 className="m-0 text-lg sm:text-xl font-bold text-text-primary">For clients</h3>
+              <p className="m-0 mt-2 text-sm text-text-secondary leading-relaxed flex-1">
+                Search verified lawyers, book CHAT or VIDEO sessions, pay with wallet credits, chat
+                in-session, leave reviews, and open disputes when needed—no subscription.
+              </p>
+              <div className="mt-6 flex flex-col sm:flex-row flex-wrap gap-2">
+                <CtaLink href={ctas.clientPrimary.href}>
+                  {ctas.clientPrimary.label}
+                  <FiArrowRight className="h-4 w-4 shrink-0" />
+                </CtaLink>
+                <CtaLink href={ctas.clientSecondary.href} variant="outline">
+                  {ctas.clientSecondary.label}
+                </CtaLink>
+              </div>
             </div>
-            <h1 className="text-6xl md:text-7xl font-bold mb-6 text-text-primary leading-tight">
-              Find Your Perfect
-              <span className="block text-primary">Legal Expert</span>
-            </h1>
-            <p className="text-xl md:text-2xl text-text-secondary mb-10 max-w-[700px] mx-auto leading-relaxed">
-              Connect with verified lawyers, book consultations instantly, and get expert legal advice tailored to your needs.
-            </p>
-            <div className="mx-auto mb-16 grid w-full max-w-2xl gap-4 sm:grid-cols-2">
-              <Link
-                to="/register?role=LAWYER"
-                className="group flex items-center gap-4 rounded-xl bg-primary px-6 py-5 text-left text-primary-text no-underline shadow-lg transition-all hover:bg-primary-hover hover:shadow-xl"
+            <div className="rounded-2xl border border-border bg-card p-5 sm:p-7 md:p-8 flex flex-col">
+              <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-primary-light text-primary mb-4">
+                <FiBriefcase className="h-5 w-5" />
+              </span>
+              <h3 className="m-0 text-lg sm:text-xl font-bold text-text-primary">
+                For lawyers & firms
+              </h3>
+              <p className="m-0 mt-2 text-sm text-text-secondary leading-relaxed flex-1">
+                Marketplace profile and bookings stay available. Practice tools—cases, AI, documents,
+                planner, and firm seats—are gated by your active workspace plan.
+              </p>
+              <div className="mt-6 flex flex-col sm:flex-row flex-wrap gap-2">
+                <CtaLink href={ctas.lawyerPrimary.href}>
+                  {ctas.lawyerPrimary.label}
+                  <FiArrowRight className="h-4 w-4 shrink-0" />
+                </CtaLink>
+                <CtaLink href={ctas.lawyerSecondary.href} variant="outline">
+                  {ctas.lawyerSecondary.label}
+                </CtaLink>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Marketplace */}
+      <section
+        id="marketplace"
+        className="scroll-mt-20 border-b border-border py-12 sm:py-16 md:py-20 px-4 sm:px-6"
+      >
+        <div className="max-w-[1100px] mx-auto">
+          <SectionHeader
+            eyebrow="Marketplace"
+            title="Hire and engage with confidence"
+            subtitle="Everything clients need to find counsel and complete consultations—built into the same product lawyers use to get booked."
+          />
+          <FeatureGrid items={MARKETPLACE_FEATURES} />
+        </div>
+      </section>
+
+      {/* Practice */}
+      <section
+        id="practice"
+        className="scroll-mt-20 border-b border-border bg-surface py-12 sm:py-16 md:py-20 px-4 sm:px-6"
+      >
+        <div className="max-w-[1100px] mx-auto">
+          <SectionHeader
+            eyebrow="Practice tools"
+            title="Run your practice in the active workspace"
+            subtitle="Marketplace bookings stay open on every plan. Cases, documents, planner, and related tools unlock according to Free, Pro, or Firm entitlements."
+          />
+          <FeatureGrid items={PRACTICE_FEATURES} />
+        </div>
+      </section>
+
+      {/* AI */}
+      <section
+        id="ai"
+        className="scroll-mt-20 border-b border-border py-12 sm:py-16 md:py-20 px-4 sm:px-6"
+      >
+        <div className="max-w-[1100px] mx-auto">
+          <SectionHeader
+            eyebrow="AI & knowledge"
+            title="Research and prep with grounded answers"
+            subtitle="Assistants retrieve from shared case law and your private documents. Usage counts against your workspace plan."
+          />
+          <FeatureGrid items={AI_FEATURES} />
+        </div>
+      </section>
+
+      {/* Firms */}
+      <section
+        id="firms"
+        className="scroll-mt-20 border-b border-border bg-surface py-12 sm:py-16 md:py-20 px-4 sm:px-6"
+      >
+        <div className="max-w-[1100px] mx-auto">
+          <SectionHeader
+            eyebrow="Workspaces & firms"
+            title="Solo today. Team when you are ready."
+            subtitle="Personal and firm workspaces share the same model. Switch context, invite colleagues, and inherit the active workspace plan."
+          />
+          <FeatureGrid items={FIRM_FEATURES} />
+        </div>
+      </section>
+
+      {/* Plans teaser */}
+      <section
+        id="pricing-teaser"
+        className="scroll-mt-20 border-b border-border py-12 sm:py-16 md:py-20 px-4 sm:px-6"
+      >
+        <div className="max-w-[1100px] mx-auto">
+          <SectionHeader
+            eyebrow="Plans"
+            title="Practice tools billed per workspace"
+            subtitle="Clients never need a subscription. Lawyers and firms choose Free, Pro, or Firm for cases, AI, documents, storage, and seats. Compare full limits on Pricing."
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5">
+            {PLAN_TEASERS.map((plan) => (
+              <div
+                key={plan.name}
+                className="rounded-2xl border border-border bg-card p-5 sm:p-6 flex flex-col"
               >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/15">
-                  <FiBriefcase className="h-5 w-5" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-base font-semibold">I am a lawyer</span>
-                  <span className="mt-0.5 block text-sm opacity-80">Grow your legal practice</span>
-                </span>
-                <FiArrowRight className="h-5 w-5 shrink-0 transition-transform group-hover:translate-x-1" />
-              </Link>
-              <Link
-                to="/register?role=CLIENT"
-                className="group flex items-center gap-4 rounded-xl border-2 border-border bg-card px-6 py-5 text-left text-text-primary no-underline shadow-sm transition-all hover:border-primary hover:shadow-lg"
-              >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-light text-primary">
-                  <FiUser className="h-5 w-5" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-base font-semibold">I need legal help</span>
-                  <span className="mt-0.5 block text-sm text-text-secondary">Continue as a client</span>
-                </span>
-                <FiArrowRight className="h-5 w-5 shrink-0 text-primary transition-transform group-hover:translate-x-1" />
-              </Link>
-            </div>
-            <div className="flex flex-wrap justify-center gap-8 text-sm text-text-secondary">
-              <div className="flex items-center gap-2">
-                <FiCheck className="w-5 h-5 text-success" />
-                <span>No credit card required</span>
+                <h3 className="m-0 text-lg sm:text-xl font-bold text-text-primary">{plan.name}</h3>
+                <p className="m-0 mt-2 text-sm text-text-secondary leading-relaxed flex-1">
+                  {plan.line}
+                </p>
               </div>
-              <div className="flex items-center gap-2">
-                <FiCheck className="w-5 h-5 text-success" />
-                <span>Free trial available</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <FiCheck className="w-5 h-5 text-success" />
-                <span>Cancel anytime</span>
-              </div>
+            ))}
+          </div>
+          <div className="mt-6 sm:mt-8">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <CtaLink href="/pricing">
+                Compare Free, Pro & Firm
+                <FiArrowRight className="h-4 w-4 shrink-0" />
+              </CtaLink>
+              <CtaLink href="/request-demo" variant="outline">
+                Request a demo
+              </CtaLink>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Features Section */}
-      <div className="py-24 px-6 max-w-[1200px] mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-text-primary">
-            Everything you need to hire with confidence
+      {/* Trust */}
+      <section
+        id="trust"
+        className="scroll-mt-20 border-b border-border bg-surface py-12 sm:py-16 md:py-20 px-4 sm:px-6"
+      >
+        <div className="max-w-[1100px] mx-auto">
+          <SectionHeader
+            eyebrow="Trust"
+            title="Built for accountable legal work"
+            subtitle="Verification, secure accounts, and platform review tools keep the marketplace credible—without turning KYC into a product fee."
+          />
+          <FeatureGrid items={TRUST_POINTS} />
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section
+        id="how-it-works"
+        className="scroll-mt-20 border-b border-border py-12 sm:py-16 md:py-20 px-4 sm:px-6"
+      >
+        <div className="max-w-[1100px] mx-auto">
+          <SectionHeader
+            eyebrow="How it works"
+            title="Clear steps for each side"
+            subtitle="Same platform—different journeys."
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">
+            <div>
+              <h3 className="m-0 mb-4 sm:mb-5 text-base sm:text-lg font-semibold text-text-primary">
+                Clients
+              </h3>
+              <ol className="m-0 p-0 list-none space-y-4">
+                {CLIENT_STEPS.map((s) => (
+                  <li key={s.step} className="flex gap-3 sm:gap-4">
+                    <span className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-text text-sm font-bold">
+                      {s.step}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="m-0 font-semibold text-text-primary text-sm sm:text-base">
+                        {s.title}
+                      </p>
+                      <p className="m-0 mt-1 text-sm text-text-secondary">{s.body}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            <div>
+              <h3 className="m-0 mb-4 sm:mb-5 text-base sm:text-lg font-semibold text-text-primary">
+                Lawyers
+              </h3>
+              <ol className="m-0 p-0 list-none space-y-4">
+                {LAWYER_STEPS.map((s) => (
+                  <li key={s.step} className="flex gap-3 sm:gap-4">
+                    <span className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-text text-sm font-bold">
+                      {s.step}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="m-0 font-semibold text-text-primary text-sm sm:text-base">
+                        {s.title}
+                      </p>
+                      <p className="m-0 mt-1 text-sm text-text-secondary">{s.body}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6">
+        <div className="max-w-[1100px] mx-auto rounded-2xl border border-border bg-card px-4 py-10 sm:px-8 sm:py-12 md:px-12 text-center">
+          <h2 className="m-0 text-2xl sm:text-3xl md:text-4xl font-bold text-text-primary">
+            Ready to explore the full product?
           </h2>
-          <p className="text-lg text-text-secondary max-w-[600px] mx-auto">
-            Powerful features designed to make finding and working with lawyers seamless
+          <p className="m-0 mx-auto mt-3 max-w-xl text-sm sm:text-base text-text-secondary">
+            Create an account, browse lawyers, or open your practice dashboard. Pricing stays
+            transparent for lawyers and firms—clients book without a plan.
           </p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="border border-border rounded-xl bg-card p-8 text-left hover:shadow-lg transition-all hover:border-primary">
-            <div className="w-12 h-12 rounded-lg bg-primary-light flex items-center justify-center mb-4 text-primary">
-              <FiShield className="w-6 h-6" />
-            </div>
-            <h3 className="text-lg font-bold mb-3 text-text-primary">
-              Verified Professionals
-            </h3>
-            <p className="text-sm leading-relaxed text-text-secondary">
-              All lawyers are verified with proper credentials and bar council registration for your peace of mind.
-            </p>
-          </div>
-          <div className="border border-border rounded-xl bg-card p-8 text-left hover:shadow-lg transition-all hover:border-primary">
-            <div className="w-12 h-12 rounded-lg bg-primary-light flex items-center justify-center mb-4 text-primary">
-              <FiClock className="w-6 h-6" />
-            </div>
-            <h3 className="text-lg font-bold mb-3 text-text-primary">
-              Fast Booking
-            </h3>
-            <p className="text-sm leading-relaxed text-text-secondary">
-              Book consultations in minutes. View availability, select time slots, and confirm instantly.
-            </p>
-          </div>
-          <div className="border border-border rounded-xl bg-card p-8 text-left hover:shadow-lg transition-all hover:border-primary">
-            <div className="w-12 h-12 rounded-lg bg-primary-light flex items-center justify-center mb-4 text-primary">
-              <FiMessageCircle className="w-6 h-6" />
-            </div>
-            <h3 className="text-lg font-bold mb-3 text-text-primary">
-              Secure Communication
-            </h3>
-            <p className="text-sm leading-relaxed text-text-secondary">
-              End-to-end encrypted messaging and video calls. Your conversations stay private and secure.
-            </p>
-          </div>
-          <div className="border border-border rounded-xl bg-card p-8 text-left hover:shadow-lg transition-all hover:border-primary">
-            <div className="w-12 h-12 rounded-lg bg-primary-light flex items-center justify-center mb-4 text-primary">
-              <FiDollarSign className="w-6 h-6" />
-            </div>
-            <h3 className="text-lg font-bold mb-3 text-text-primary">
-              Transparent Pricing
-            </h3>
-            <p className="text-sm leading-relaxed text-text-secondary">
-              Clear, upfront pricing with no hidden fees. See rates before booking and pay securely.
-            </p>
+          <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 justify-center items-stretch sm:items-center">
+            <CtaLink href={ctas.finalPrimary.href}>
+              {ctas.finalPrimary.label}
+              <FiArrowRight className="h-4 w-4 shrink-0" />
+            </CtaLink>
+            <CtaLink href="/request-demo" variant="secondary">
+              Request a demo
+            </CtaLink>
+            <CtaLink href="/pricing" variant="outline">
+              View pricing
+            </CtaLink>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Pricing teaser → dedicated /pricing page (SaaS pattern) */}
-      <div id="pricing" className="py-24 px-6 border-t border-border bg-surface">
-        <div className="max-w-[720px] mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-text-primary m-0">
-            Plans for lawyers
-          </h2>
-          <p className="text-lg text-text-secondary m-0 mb-8">
-            Free, Pro, and Firm for practice tools. Clients book without a subscription. Compare
-            limits, seats, and AI allowance on our pricing page.
-          </p>
-          <Link
-            to="/pricing"
-            className="inline-flex items-center gap-2 py-3 px-6 rounded-lg bg-primary text-primary-text font-semibold no-underline hover:bg-primary-hover transition-colors"
-          >
-            View pricing
-            <FiArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-      </div>
-
-      {/* Testimonials Section */}
-      <div id="testimonials" className="bg-surface py-24 px-6 border-t border-border">
-        <div className="text-center mb-16 max-w-[1200px] mx-auto">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-text-primary">
-            Trusted by Thousands
-          </h2>
-          <p className="text-lg text-text-secondary max-w-[600px] mx-auto">
-            See what our users have to say about their experience
-          </p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-[1200px] mx-auto">
-          <div className="border border-border rounded-xl bg-card p-8 hover:shadow-lg transition-all">
-            <div className="flex gap-1 mb-4 text-warning">
-              {[...Array(5)].map((_, i) => (
-                <FiStar key={i} className="w-5 h-5 fill-current" />
-              ))}
-            </div>
-            <p className="text-base leading-relaxed mb-6 text-text-secondary">
-              "Lawyer Marketplace made it so easy to find the right lawyer for my case. 
-              The platform is intuitive and the lawyers are highly qualified. I couldn't be happier with the service."
-            </p>
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-primary-light flex items-center justify-center text-primary font-bold">
-                SJ
-              </div>
-              <div>
-                <div className="font-semibold text-text-primary">Sarah Johnson</div>
-                <div className="text-sm text-text-secondary">Business Owner</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="border border-border rounded-xl bg-card p-8 hover:shadow-lg transition-all">
-            <div className="flex gap-1 mb-4 text-warning">
-              {[...Array(5)].map((_, i) => (
-                <FiStar key={i} className="w-5 h-5 fill-current" />
-              ))}
-            </div>
-            <p className="text-base leading-relaxed mb-6 text-text-secondary">
-              "As a lawyer, this platform has helped me connect with clients who need my expertise. 
-              It's streamlined my entire client acquisition process and increased my bookings significantly."
-            </p>
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-primary-light flex items-center justify-center text-primary font-bold">
-                MC
-              </div>
-              <div>
-                <div className="font-semibold text-text-primary">Michael Chen</div>
-                <div className="text-sm text-text-secondary">Criminal Defense Lawyer</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="border border-border rounded-xl bg-card p-8 hover:shadow-lg transition-all">
-            <div className="flex gap-1 mb-4 text-warning">
-              {[...Array(5)].map((_, i) => (
-                <FiStar key={i} className="w-5 h-5 fill-current" />
-              ))}
-            </div>
-            <p className="text-base leading-relaxed mb-6 text-text-secondary">
-              "The booking system is seamless and the quality of lawyers is exceptional. 
-              I found the perfect legal counsel for my business needs in just a few clicks."
-            </p>
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-primary-light flex items-center justify-center text-primary font-bold">
-                ER
-              </div>
-              <div>
-                <div className="font-semibold text-text-primary">Emily Rodriguez</div>
-                <div className="text-sm text-text-secondary">Startup Founder</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* CTA Section */}
-      <div className="py-24 px-6 bg-gradient-to-b from-surface to-background border-t border-border">
-        <div className="max-w-[1200px] mx-auto border border-border rounded-2xl bg-card p-12 text-center shadow-xl">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-text-primary">
-            Ready to find the right lawyer?
-          </h2>
-          <p className="text-xl mx-auto mb-8 max-w-[680px] text-text-secondary">
-            Join thousands of satisfied clients and lawyers. Create your account in minutes and start your legal journey today.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/register"
-              className="py-4 px-8 rounded-lg bg-primary text-primary-text cursor-pointer font-semibold no-underline inline-flex items-center justify-center gap-2 hover:bg-primary-hover transition-all shadow-lg hover:shadow-xl"
-            >
-              Create Free Account
-              <FiArrowRight className="w-5 h-5" />
-            </Link>
-            <Link
-              to="/login"
-              className="py-4 px-8 rounded-lg border-2 border-border bg-secondary text-secondary-text cursor-pointer font-semibold no-underline inline-flex items-center justify-center hover:bg-secondary-hover transition-all"
-            >
-              Sign In
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* Footer */}
       <Footer />
     </div>
   );

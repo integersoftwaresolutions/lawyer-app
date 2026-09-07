@@ -84,7 +84,7 @@ function getTransporter() {
  * @param {string} options.html - Optional custom HTML (overrides template)
  * @param {string} options.text - Optional plain text version
  */
-export async function sendEmail({ to, subject, template, variables = {}, html, text }) {
+export async function sendEmail({ to, subject, template, variables = {}, html, text, replyTo }) {
   const mailTransporter = getTransporter();
 
   // Generate HTML from template if not provided
@@ -103,6 +103,7 @@ export async function sendEmail({ to, subject, template, variables = {}, html, t
     console.log("📧 EMAIL (Development Mode - Not Actually Sent)");
     console.log("=".repeat(70));
     console.log("To:", to);
+    if (replyTo) console.log("Reply-To:", replyTo);
     console.log("Subject:", subject);
     console.log("\n--- Plain Text Version (redacted) ---");
     console.log((text || "N/A").replace(/\b\d{4,8}\b/g, "******").substring(0, 500));
@@ -118,7 +119,8 @@ export async function sendEmail({ to, subject, template, variables = {}, html, t
       to,
       subject,
       text,
-      html
+      html,
+      ...(replyTo ? { replyTo } : {})
     };
 
     const info = await mailTransporter.sendMail(mailOptions);

@@ -1,9 +1,9 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card } from "../../components/ui";
 
-export default function AuthLayout({ 
-  children, 
-  title, 
+export default function AuthLayout({
+  children,
+  title,
   subtitle,
   showBackButton = false,
   onBack,
@@ -22,8 +22,23 @@ export default function AuthLayout({
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-background">
       <div className="w-full max-w-[540px]">
+        <div className="mb-6 text-center">
+          <Link
+            to="/"
+            className="inline-block text-xl font-bold text-text-primary no-underline hover:text-primary transition-colors"
+          >
+            Adal AI
+          </Link>
+          <p className="m-0 mt-1 text-xs text-text-muted">
+            <Link to="/" className="text-text-muted no-underline hover:text-primary transition-colors">
+              Back to home
+            </Link>
+          </p>
+        </div>
+
         {showBackButton && (
           <button
+            type="button"
             onClick={handleBack}
             className="flex items-center gap-1.5 mb-4 py-2 bg-transparent border-none text-text-secondary text-sm cursor-pointer hover:text-text-primary transition-colors"
           >
@@ -35,21 +50,14 @@ export default function AuthLayout({
           {(title || subtitle) && (
             <div className="mb-7 text-center">
               {title && (
-                <h1 className="text-[26px] font-semibold m-0 mb-2 text-text-primary">
-                  {title}
-                </h1>
+                <h1 className="text-[26px] font-semibold m-0 mb-2 text-text-primary">{title}</h1>
               )}
-              {subtitle && (
-                typeof subtitle === 'string' ? (
-                  <p className="text-sm m-0 text-text-secondary">
-                    {subtitle}
-                  </p>
+              {subtitle &&
+                (typeof subtitle === "string" ? (
+                  <p className="text-sm m-0 text-text-secondary">{subtitle}</p>
                 ) : (
-                  <div className="text-sm m-0 text-text-secondary">
-                    {subtitle}
-                  </div>
-                )
-              )}
+                  <div className="text-sm m-0 text-text-secondary">{subtitle}</div>
+                ))}
             </div>
           )}
 
@@ -101,11 +109,7 @@ export function FormSection({ title, children }) {
 }
 
 export function FormRow({ children }) {
-  return (
-    <div className="grid grid-cols-2 gap-3">
-      {children}
-    </div>
-  );
+  return <div className="grid grid-cols-2 gap-3">{children}</div>;
 }
 
 export function ErrorMessage({ message }) {

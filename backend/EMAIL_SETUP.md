@@ -16,7 +16,7 @@ EMAIL_SECURE=false
 EMAIL_USER=your-email@gmail.com
 EMAIL_PASSWORD=your-app-password
 EMAIL_FROM=noreply@lawyerapp.com
-EMAIL_FROM_NAME=Lawyer App
+EMAIL_FROM_NAME=Adal AI
 
 # OTP Configuration
 OTP_EXPIRY_MINUTES=10

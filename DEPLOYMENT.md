@@ -96,9 +96,11 @@ JWT_ACCESS_SECRET=...
 JWT_REFRESH_SECRET=...
 COOKIE_SECURE=true
 COOKIE_SAME_SITE=none
+LEADS_INBOX=integersoftwaressolutions@gmail.com
 ```
 
-Copy remaining keys from `backend/.env.example` as needed.  
+Copy remaining keys from `backend/.env.example` as needed (email SMTP, Stripe, OpenAI, etc.).  
+`LEADS_INBOX` receives public **Request a demo** form submissions.  
 Render injects `PORT` — the app already reads `process.env.PORT`.
 
 8. Deploy → open `https://…onrender.com/health` → should return OK.

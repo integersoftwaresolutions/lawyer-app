@@ -29,7 +29,7 @@ function renderTemplate(template, variables) {
 function getBaseVariables() {
   const baseUrl = (env.appBaseUrl || env.clientOrigin || "").replace(/\/$/, "");
   return {
-    appName: env.emailFromName || "Lawyer App",
+    appName: env.emailFromName || "Adal AI",
     year: new Date().getFullYear().toString(),
     supportEmail: env.emailFrom || "support@lawyerapp.com",
     appBaseUrl: baseUrl,

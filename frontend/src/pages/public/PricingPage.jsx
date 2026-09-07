@@ -67,15 +67,15 @@ export default function PricingPage() {
               </Link>
             </div>
             <div className="rounded-xl border border-border bg-card p-5 text-left">
-              <h2 className="text-base font-semibold text-text-primary m-0">Already a lawyer?</h2>
+              <h2 className="text-base font-semibold text-text-primary m-0">Want a walkthrough?</h2>
               <p className="text-sm text-text-secondary m-0 mt-2">
-                Manage payment method, invoices, and usage for your active workspace in Billing.
+                Book a demo or request setup help for your firm—no account required.
               </p>
               <Link
-                to={user?.role === "LAWYER" ? "/lawyer/billing/subscription" : "/login?redirect=/lawyer/billing/subscription"}
+                to="/request-demo"
                 className="inline-flex items-center gap-1 text-sm font-semibold text-link no-underline mt-3 hover:underline"
               >
-                {user?.role === "LAWYER" ? "Go to billing" : "Sign in to billing"}
+                Request a demo
                 <FiArrowRight className="w-4 h-4" />
               </Link>
             </div>

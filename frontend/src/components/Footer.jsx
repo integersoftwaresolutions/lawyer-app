@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { 
   FiMail, 
-  FiPhone, 
   FiMapPin, 
   FiTwitter, 
   FiLinkedin, 
@@ -18,10 +17,10 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           {/* Company Info */}
           <div>
-            <h3 className="text-lg font-bold mb-4 text-text-primary">Lawyer Marketplace</h3>
+            <h3 className="text-lg font-bold mb-4 text-text-primary">Adal AI</h3>
             <p className="text-sm text-text-secondary mb-4 leading-relaxed">
-              Connect with experienced lawyers for all your legal needs. 
-              Find the right legal professional and get expert advice.
+              Marketplace for clients. Practice tools for lawyers and firms—cases, AI, documents,
+              and workspace billing.
             </p>
             <div className="flex gap-3">
               <a 
@@ -75,8 +74,23 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/#testimonials" className="text-sm text-text-secondary hover:text-primary transition-colors">
-                  Testimonials
+                <Link to="/request-demo" className="text-sm text-text-secondary hover:text-primary transition-colors">
+                  Request a demo
+                </Link>
+              </li>
+              <li>
+                <Link to="/#features" className="text-sm text-text-secondary hover:text-primary transition-colors">
+                  Features
+                </Link>
+              </li>
+              <li>
+                <Link to="/#marketplace" className="text-sm text-text-secondary hover:text-primary transition-colors">
+                  Marketplace
+                </Link>
+              </li>
+              <li>
+                <Link to="/#practice" className="text-sm text-text-secondary hover:text-primary transition-colors">
+                  Practice tools
                 </Link>
               </li>
             </ul>
@@ -87,7 +101,7 @@ export default function Footer() {
             <h4 className="text-sm font-semibold mb-4 text-text-primary uppercase tracking-wide">For Lawyers</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/register" className="text-sm text-text-secondary hover:text-primary transition-colors">
+                <Link to="/register?role=lawyer" className="text-sm text-text-secondary hover:text-primary transition-colors">
                   Join as Lawyer
                 </Link>
               </li>
@@ -97,19 +111,24 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <a href="#" className="text-sm text-text-secondary hover:text-primary transition-colors">
-                  How It Works
-                </a>
+                <Link to="/request-demo" className="text-sm text-text-secondary hover:text-primary transition-colors">
+                  Request a demo
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-sm text-text-secondary hover:text-primary transition-colors">
-                  Success Stories
-                </a>
+                <Link to="/#how-it-works" className="text-sm text-text-secondary hover:text-primary transition-colors">
+                  How it works
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-sm text-text-secondary hover:text-primary transition-colors">
-                  Resources
-                </a>
+                <Link to="/#ai" className="text-sm text-text-secondary hover:text-primary transition-colors">
+                  AI & knowledge
+                </Link>
+              </li>
+              <li>
+                <Link to="/#firms" className="text-sm text-text-secondary hover:text-primary transition-colors">
+                  Firms & workspaces
+                </Link>
               </li>
             </ul>
           </div>
@@ -120,22 +139,20 @@ export default function Footer() {
             <ul className="space-y-3">
               <li className="flex items-start gap-2">
                 <FiMail className="w-4 h-4 text-text-secondary mt-0.5 flex-shrink-0" />
-                <a href="mailto:support@lawyermarketplace.com" className="text-sm text-text-secondary hover:text-primary transition-colors">
-                  support@lawyermarketplace.com
-                </a>
-              </li>
-              <li className="flex items-start gap-2">
-                <FiPhone className="w-4 h-4 text-text-secondary mt-0.5 flex-shrink-0" />
-                <a href="tel:+1234567890" className="text-sm text-text-secondary hover:text-primary transition-colors">
-                  +1 (234) 567-890
+                <a href="mailto:support@adal-ai.com" className="text-sm text-text-secondary hover:text-primary transition-colors">
+                  support@adal-ai.com
                 </a>
               </li>
               <li className="flex items-start gap-2">
                 <FiMapPin className="w-4 h-4 text-text-secondary mt-0.5 flex-shrink-0" />
-                <span className="text-sm text-text-secondary">
-                  123 Legal Street, Suite 100<br />
-                  New York, NY 10001
-                </span>
+                <a
+                  href="https://adal-ai.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm text-text-secondary hover:text-primary transition-colors"
+                >
+                  adal-ai.com
+                </a>
               </li>
             </ul>
           </div>
@@ -144,7 +161,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="border-t border-border pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-text-secondary">
-            &copy; {currentYear} Lawyer Marketplace. All rights reserved.
+            &copy; {currentYear} Adal AI. All rights reserved.
           </p>
           <div className="flex gap-6">
             <Link to="#" className="text-sm text-text-secondary hover:text-primary transition-colors">

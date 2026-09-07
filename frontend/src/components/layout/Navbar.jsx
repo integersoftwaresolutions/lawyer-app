@@ -25,7 +25,7 @@ export default function Navbar({
 
   useEffect(() => {
     setMobileMenuOpen(false);
-  }, [location.pathname]);
+  }, [location.pathname, location.hash]);
 
   useEffect(() => {
     if (mobileMenuOpen) {
@@ -44,7 +44,9 @@ export default function Navbar({
     : [
         { to: user ? "/lawyers" : "/login", label: "Find Lawyers" },
         { to: "/pricing", label: "Pricing" },
-        { to: "/#testimonials", label: "Testimonials" }
+        { to: "/request-demo", label: "Request a demo" },
+        { to: "/#features", label: "Features" },
+        { to: "/#how-it-works", label: "How it works" }
       ];
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
@@ -75,7 +77,7 @@ export default function Navbar({
               to="/"
               className="font-bold text-text-primary no-underline truncate text-lg md:text-xl"
             >
-              Lawyer Marketplace
+              Adal AI
             </Link>
           ) : null}
         </div>
@@ -177,15 +179,21 @@ export default function Navbar({
       )}
 
       <div
+        id="site-mobile-menu"
         className={`
           fixed top-14 left-0 right-0
           bg-card border-b border-border shadow-lg
           z-[95]
-          transition-transform duration-300 ease-in-out
+          transition-[transform,opacity,visibility] duration-300 ease-in-out
           md:hidden
-          ${mobileMenuOpen ? "translate-y-0" : "-translate-y-full pointer-events-none"}
           max-h-[calc(100vh-56px)] overflow-y-auto
+          ${
+            mobileMenuOpen
+              ? "translate-y-0 opacity-100 visible"
+              : "-translate-y-full opacity-0 invisible pointer-events-none"
+          }
         `}
+        aria-hidden={!mobileMenuOpen}
       >
         <div className="px-4 py-4 space-y-1">
           {navLinks.map((link) => (
@@ -193,6 +201,7 @@ export default function Navbar({
               key={link.to}
               to={link.to}
               onClick={closeMobileMenu}
+              tabIndex={mobileMenuOpen ? undefined : -1}
               className="block px-4 py-3 rounded-lg text-text-primary no-underline text-sm font-medium hover:bg-surface-hover transition-colors"
             >
               {link.label}
@@ -205,6 +214,7 @@ export default function Navbar({
               <Link
                 to="/register"
                 onClick={closeMobileMenu}
+                tabIndex={mobileMenuOpen ? undefined : -1}
                 className="block px-4 py-3 rounded-lg bg-primary text-primary-text no-underline text-sm font-medium text-center hover:opacity-90 transition-opacity"
               >
                 Get Started
@@ -218,6 +228,7 @@ export default function Navbar({
               <Link
                 to={getDashboardPath(user.role)}
                 onClick={closeMobileMenu}
+                tabIndex={mobileMenuOpen ? undefined : -1}
                 className="block px-4 py-3 rounded-lg text-text-primary no-underline text-sm font-medium hover:bg-surface-hover transition-colors"
               >
                 Dashboard
@@ -225,6 +236,7 @@ export default function Navbar({
               <Link
                 to={getProfilePath(user.role)}
                 onClick={closeMobileMenu}
+                tabIndex={mobileMenuOpen ? undefined : -1}
                 className="block px-4 py-3 rounded-lg text-text-primary no-underline text-sm font-medium hover:bg-surface-hover transition-colors"
               >
                 Settings
@@ -232,6 +244,7 @@ export default function Navbar({
               <button
                 type="button"
                 onClick={handleMobileLogout}
+                tabIndex={mobileMenuOpen ? undefined : -1}
                 className="w-full text-left px-4 py-3 rounded-lg text-danger text-sm font-medium hover:bg-surface-hover transition-colors"
               >
                 Logout
