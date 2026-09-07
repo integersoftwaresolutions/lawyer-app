@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { lawyerApi } from "../../services/lawyer.api";
 import { Badge, PageHeader, PageShell, StatCard, StateHandler } from "../../components/ui";
+import PlanStatusBanner from "../../components/billing/PlanStatusBanner";
 import { useStateHandler } from "../../hooks/useStateHandler";
 import {
   DashboardAreaTrendChart,
@@ -108,6 +109,8 @@ export default function LawyerOverviewPage() {
             </>
           }
         />
+
+        <PlanStatusBanner />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
           <StatCard icon={FiCalendar} value={stats?.upcomingBookings || 0} label="Upcoming Sessions" />

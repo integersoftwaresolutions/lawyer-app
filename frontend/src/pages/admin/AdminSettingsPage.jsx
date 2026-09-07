@@ -78,9 +78,9 @@ export default function AdminSettingsPage() {
           <Input
             label="Verification Fee ($)"
             type="number"
-            value={settings.verificationFee || 0}
-            onChange={(e) => handleChange("verificationFee", parseFloat(e.target.value) || 0)}
-            helperText="One-time fee charged to lawyers for verification"
+            value={0}
+            disabled
+            helperText="Deprecated — KYC is trust-only. Subscriptions gate practice tools via Stripe."
           />
           <Input
             label="Monthly Credit Grant"
@@ -138,10 +138,8 @@ export default function AdminSettingsPage() {
 
           <h4 className="text-text-primary mb-3">Verification</h4>
           <p>
-            Lawyers must submit verification documents (Bar License, Government ID) to be verified.
-            {settings.verificationFee > 0 
-              ? ` A one-time fee of $${settings.verificationFee} is charged for verification.`
-              : " Verification is currently free."}
+            Lawyers must submit verification documents (Bar License, Government ID) for trust review.
+            There is no verification fee — practice tools are gated by workspace subscriptions (Stripe).
           </p>
         </div>
       </Card>

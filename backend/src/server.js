@@ -6,6 +6,7 @@ import { initSocket } from "./socket/index.js";
 import { seedAdmin } from "./seeders/seedAdmin.js";
 import { seedUsers } from "./seeders/seedUsers.js";
 import { startReminderJob } from "./jobs/index.js";
+import { startBillingJob } from "./jobs/billing.job.js";
 
 process.on("unhandledRejection", (reason) => {
   console.error("❌ Unhandled Rejection:", reason);
@@ -35,6 +36,7 @@ async function bootstrap() {
   initSocket(server);
 
   startReminderJob();
+  startBillingJob();
 
   server.listen(env.port, () => {
     console.log(`✅ Backend running on http://localhost:${env.port}`);

@@ -1,5 +1,6 @@
 import {
   FiBriefcase,
+  FiCreditCard,
   FiSettings,
   FiShield,
   FiUserPlus,
@@ -16,6 +17,13 @@ export const WORKSPACE_NAV_ITEMS = Object.freeze([
     id: "overview",
     label: "Overview",
     icon: FiBriefcase
+  },
+  {
+    id: "billing",
+    label: "Billing",
+    icon: FiCreditCard,
+    to: "/lawyer/billing/subscription",
+    anyPermissions: [PERMISSIONS.BILLING_VIEW, PERMISSIONS.BILLING_MANAGE]
   },
   {
     id: "members",

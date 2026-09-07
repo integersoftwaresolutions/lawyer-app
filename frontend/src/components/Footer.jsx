@@ -70,7 +70,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/#pricing" className="text-sm text-text-secondary hover:text-primary transition-colors">
+                <Link to="/pricing" className="text-sm text-text-secondary hover:text-primary transition-colors">
                   Pricing
                 </Link>
               </li>
@@ -89,6 +89,11 @@ export default function Footer() {
               <li>
                 <Link to="/register" className="text-sm text-text-secondary hover:text-primary transition-colors">
                   Join as Lawyer
+                </Link>
+              </li>
+              <li>
+                <Link to="/pricing" className="text-sm text-text-secondary hover:text-primary transition-colors">
+                  Free / Pro / Firm
                 </Link>
               </li>
               <li>

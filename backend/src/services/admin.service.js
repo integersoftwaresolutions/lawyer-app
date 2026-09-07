@@ -61,7 +61,6 @@ export async function updateSettings(patch) {
   
   const allowedFields = [
     "commissionPercent",
-    "verificationFee",
     "monthlyCreditGrant",
     "profileBoostFee7Days",
     "profileBoostFee30Days"
@@ -71,6 +70,8 @@ export async function updateSettings(patch) {
       doc[field] = patch[field];
     }
   }
+  // Verification fee removed as product paywall — subscriptions gate practice tools
+  doc.verificationFee = 0;
   
   await doc.save();
   return doc.toObject();

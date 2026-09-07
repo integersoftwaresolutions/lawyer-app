@@ -22,5 +22,6 @@ const AiUsageLogSchema = new mongoose.Schema(
 );
 
 AiUsageLogSchema.index({ userId: 1, createdAt: -1 });
+AiUsageLogSchema.index({ "metadata.workspaceId": 1, createdAt: -1 });
 
 export default mongoose.model("AiUsageLog", AiUsageLogSchema);

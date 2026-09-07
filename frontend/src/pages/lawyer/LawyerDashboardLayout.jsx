@@ -16,7 +16,8 @@ import {
   FiFolder,
   FiBriefcase,
   FiSettings,
-  FiLayers
+  FiLayers,
+  FiCreditCard
 } from "react-icons/fi";
 
 export default function LawyerDashboardLayout() {
@@ -26,12 +27,60 @@ export default function LawyerDashboardLayout() {
 
   const menuItems = [
     { id: "overview", label: "Overview", icon: FiHome },
-    { id: "workspace", label: "Workspace", icon: FiBriefcase },
+    {
+      id: "billing",
+      label: "Billing",
+      icon: FiCreditCard,
+      to: "/lawyer/billing/subscription",
+      children: [
+        {
+          id: "billing-subscription",
+          label: "Subscription",
+          to: "/lawyer/billing/subscription",
+          exact: true
+        },
+        {
+          id: "billing-usage",
+          label: "Usage",
+          to: "/lawyer/billing/usage"
+        },
+        {
+          id: "billing-invoices",
+          label: "Invoices",
+          to: "/lawyer/billing/invoices"
+        }
+      ]
+    },
+    {
+      id: "workspace",
+      label: "Workspace",
+      icon: FiBriefcase,
+      to: "/lawyer/workspace/overview"
+    },
     ...(canViewCases ? [{ id: "cases", label: "Cases", icon: FiLayers }] : []),
     ...(canUseAi
       ? [
-          { id: "ai", label: "AI Assistant", icon: FiCpu },
-          { id: "cross-exam", label: "Cross-Exam Practice", icon: FiTarget }
+          {
+            id: "ai-tools",
+            label: "AI tools",
+            icon: FiCpu,
+            to: "/lawyer/ai",
+            children: [
+              {
+                id: "ai",
+                label: "AI Assistant",
+                to: "/lawyer/ai",
+                icon: FiCpu,
+                exact: true
+              },
+              {
+                id: "cross-exam",
+                label: "Cross-Exam Practice",
+                to: "/lawyer/cross-exam",
+                icon: FiTarget
+              }
+            ]
+          }
         ]
       : []),
     ...(canViewDocs ? [{ id: "documents", label: "Documents", icon: FiFolder }] : []),
@@ -41,7 +90,12 @@ export default function LawyerDashboardLayout() {
     { id: "earnings", label: "Earnings", icon: FiDollarSign },
     { id: "verification", label: "Verification", icon: FiCheckCircle },
     { id: "reviews", label: "Reviews", icon: FiStar },
-    { id: "settings", label: "Account settings", icon: FiSettings }
+    {
+      id: "settings",
+      label: "Account settings",
+      icon: FiSettings,
+      to: "/lawyer/settings/profile"
+    }
   ];
 
   return (

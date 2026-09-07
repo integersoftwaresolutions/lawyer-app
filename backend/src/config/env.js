@@ -72,5 +72,18 @@ export const env = {
   ),
   ragTopK: Number(process.env.RAG_TOP_K || 6),
   ragMinScore: Number(process.env.RAG_MIN_SCORE || 0.35),
-  ragPrivateDocumentMinScore: Number(process.env.RAG_PRIVATE_DOCUMENT_MIN_SCORE || 0.18)
+  ragPrivateDocumentMinScore: Number(process.env.RAG_PRIVATE_DOCUMENT_MIN_SCORE || 0.18),
+
+  // Billing / Stripe
+  stripeSecretKey: optional("STRIPE_SECRET_KEY"),
+  stripeWebhookSecret: optional("STRIPE_WEBHOOK_SECRET"),
+  stripePriceProMonthly: optional("STRIPE_PRICE_PRO_MONTHLY"),
+  stripePriceFirmMonthly: optional("STRIPE_PRICE_FIRM_MONTHLY"),
+  billingTrialDays: Number(process.env.BILLING_TRIAL_DAYS || 14),
+  billingPastDueGraceDays: Number(process.env.BILLING_PAST_DUE_GRACE_DAYS || 3),
+  billingReconcileEnabled: (process.env.BILLING_RECONCILE_ENABLED || "true") === "true",
+  billingJobIntervalMs: Number(process.env.BILLING_JOB_INTERVAL_MS || 60 * 60 * 1000),
+  billingDisplayPricePro: Number(process.env.BILLING_DISPLAY_PRICE_PRO || 29),
+  billingDisplayPriceFirm: Number(process.env.BILLING_DISPLAY_PRICE_FIRM || 99),
+  billingDisplayCurrency: optional("BILLING_DISPLAY_CURRENCY", "usd")
 };

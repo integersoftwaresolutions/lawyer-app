@@ -156,125 +156,23 @@ export default function MarketingPage() {
         </div>
       </div>
 
-      {/* Pricing Section */}
-      <div id="pricing" className="py-24 px-6 max-w-[1200px] mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-text-primary">
-            Simple, Transparent Pricing
+      {/* Pricing teaser → dedicated /pricing page (SaaS pattern) */}
+      <div id="pricing" className="py-24 px-6 border-t border-border bg-surface">
+        <div className="max-w-[720px] mx-auto text-center">
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-text-primary m-0">
+            Plans for lawyers
           </h2>
-          <p className="text-lg text-text-secondary max-w-[600px] mx-auto">
-            Choose the plan that works best for you. All plans include access to our verified lawyer network.
+          <p className="text-lg text-text-secondary m-0 mb-8">
+            Free, Pro, and Firm for practice tools. Clients book without a subscription. Compare
+            limits, seats, and AI allowance on our pricing page.
           </p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="border border-border rounded-2xl bg-card p-8 text-center hover:shadow-lg transition-all">
-            <h3 className="text-2xl font-bold mb-2 text-text-primary">Basic</h3>
-            <div className="mb-2">
-              <span className="text-5xl font-bold text-text-primary">Free</span>
-            </div>
-            <p className="text-base text-text-secondary mb-8">Perfect for getting started</p>
-            <ul className="list-none p-0 m-0 mb-8 text-left space-y-3">
-              <li className="flex items-center gap-2 text-text-secondary">
-                <FiCheck className="w-5 h-5 text-success flex-shrink-0" />
-                <span>Browse verified lawyers</span>
-              </li>
-              <li className="flex items-center gap-2 text-text-secondary">
-                <FiCheck className="w-5 h-5 text-success flex-shrink-0" />
-                <span>Book consultations</span>
-              </li>
-              <li className="flex items-center gap-2 text-text-secondary">
-                <FiCheck className="w-5 h-5 text-success flex-shrink-0" />
-                <span>Basic messaging</span>
-              </li>
-              <li className="flex items-center gap-2 text-text-secondary">
-                <FiCheck className="w-5 h-5 text-success flex-shrink-0" />
-                <span>Profile reviews</span>
-              </li>
-            </ul>
-            <Link
-              to="/register"
-              className="py-3 px-6 rounded-lg border-2 border-border bg-secondary text-secondary-text cursor-pointer font-semibold no-underline inline-block hover:bg-secondary-hover transition-all w-full"
-            >
-              Start Free
-            </Link>
-          </div>
-
-          <div className="border-2 border-primary rounded-2xl bg-card p-8 text-center relative hover:shadow-xl transition-all scale-105">
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-primary text-primary-text text-xs font-semibold">
-              Most Popular
-            </div>
-            <h3 className="text-2xl font-bold mb-2 text-text-primary">Professional</h3>
-            <div className="mb-2">
-              <span className="text-5xl font-bold text-text-primary">$29</span>
-              <span className="text-text-secondary">/mo</span>
-            </div>
-            <p className="text-base text-text-secondary mb-8">For regular legal needs</p>
-            <ul className="list-none p-0 m-0 mb-8 text-left space-y-3">
-              <li className="flex items-center gap-2 text-text-secondary">
-                <FiCheck className="w-5 h-5 text-success flex-shrink-0" />
-                <span>Everything in Basic</span>
-              </li>
-              <li className="flex items-center gap-2 text-text-secondary">
-                <FiCheck className="w-5 h-5 text-success flex-shrink-0" />
-                <span>Unlimited messaging</span>
-              </li>
-              <li className="flex items-center gap-2 text-text-secondary">
-                <FiCheck className="w-5 h-5 text-success flex-shrink-0" />
-                <span>Priority support</span>
-              </li>
-              <li className="flex items-center gap-2 text-text-secondary">
-                <FiCheck className="w-5 h-5 text-success flex-shrink-0" />
-                <span>Document review</span>
-              </li>
-              <li className="flex items-center gap-2 text-text-secondary">
-                <FiCheck className="w-5 h-5 text-success flex-shrink-0" />
-                <span>Advanced search filters</span>
-              </li>
-            </ul>
-            <Link
-              to="/register"
-              className="py-3 px-6 rounded-lg bg-primary text-primary-text cursor-pointer font-semibold no-underline inline-block hover:bg-primary-hover transition-all w-full shadow-lg"
-            >
-              Get Started
-            </Link>
-          </div>
-
-          <div className="border border-border rounded-2xl bg-card p-8 text-center hover:shadow-lg transition-all">
-            <h3 className="text-2xl font-bold mb-2 text-text-primary">Enterprise</h3>
-            <div className="mb-2">
-              <span className="text-5xl font-bold text-text-primary">$99</span>
-              <span className="text-text-secondary">/mo</span>
-            </div>
-            <p className="text-base text-text-secondary mb-8">For businesses and teams</p>
-            <ul className="list-none p-0 m-0 mb-8 text-left space-y-3">
-              <li className="flex items-center gap-2 text-text-secondary">
-                <FiCheck className="w-5 h-5 text-success flex-shrink-0" />
-                <span>Everything in Professional</span>
-              </li>
-              <li className="flex items-center gap-2 text-text-secondary">
-                <FiCheck className="w-5 h-5 text-success flex-shrink-0" />
-                <span>Team collaboration</span>
-              </li>
-              <li className="flex items-center gap-2 text-text-secondary">
-                <FiCheck className="w-5 h-5 text-success flex-shrink-0" />
-                <span>Dedicated account manager</span>
-              </li>
-              <li className="flex items-center gap-2 text-text-secondary">
-                <FiCheck className="w-5 h-5 text-success flex-shrink-0" />
-                <span>Custom integrations</span>
-              </li>
-              <li className="flex items-center gap-2 text-text-secondary">
-                <FiCheck className="w-5 h-5 text-success flex-shrink-0" />
-                <span>API access</span>
-              </li>
-            </ul>
-            <Link
-              to="/register"
-              className="py-3 px-6 rounded-lg border-2 border-border bg-secondary text-secondary-text cursor-pointer font-semibold no-underline inline-block hover:bg-secondary-hover transition-all w-full"
-            >
-              Contact Sales
-            </Link>
-          </div>
+          <Link
+            to="/pricing"
+            className="inline-flex items-center gap-2 py-3 px-6 rounded-lg bg-primary text-primary-text font-semibold no-underline hover:bg-primary-hover transition-colors"
+          >
+            View pricing
+            <FiArrowRight className="w-4 h-4" />
+          </Link>
         </div>
       </div>
 

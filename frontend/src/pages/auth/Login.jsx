@@ -16,6 +16,11 @@ export default function Login() {
   const fromVerify = searchParams.get("from") === "verify";
   const sessionReason = searchParams.get("reason");
   const requestedRole = searchParams.get("role")?.toUpperCase();
+  const redirectParam = searchParams.get("redirect");
+  const safeRedirect =
+    redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("//")
+      ? redirectParam
+      : null;
   const selectedRole = ["CLIENT", "LAWYER"].includes(requestedRole) ? requestedRole : "";
   const roleLabel = selectedRole === "LAWYER" ? "Lawyer" : "Client";
 
@@ -70,7 +75,12 @@ export default function Login() {
       }
       
       toast.success("Login successful!");
-      navigate(getDashboardPath(res.data.user?.role || res.data.role), { replace: true });
+      const role = res.data.user?.role || res.data.role;
+      const dest =
+        safeRedirect && role === "LAWYER" && safeRedirect.startsWith("/lawyer")
+          ? safeRedirect
+          : getDashboardPath(role);
+      navigate(dest, { replace: true });
     } catch (error) {
       handleLoginError(error);
     } finally {

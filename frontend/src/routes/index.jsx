@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import MarketingPage from "../pages/public/MarketingPage.jsx";
+import PricingPage from "../pages/public/PricingPage.jsx";
 import LawyerSearch from "../pages/public/LawyerSearch.jsx";
 import LawyerProfile from "../pages/public/LawyerProfile.jsx";
 import Login from "../pages/auth/Login.jsx";
@@ -49,6 +50,12 @@ import AdminVerificationPage from "../pages/admin/AdminVerificationPage.jsx";
 import AdminDisputesPage from "../pages/admin/AdminDisputesPage.jsx";
 import AdminSettingsPage from "../pages/admin/AdminSettingsPage.jsx";
 import AdminCaseLawPage from "../pages/admin/AdminCaseLawPage.jsx";
+import AdminSubscriptionsPage from "../pages/admin/AdminSubscriptionsPage.jsx";
+import AdminSubscriptionDetailPage from "../pages/admin/AdminSubscriptionDetailPage.jsx";
+import AdminPlanCatalogPage from "../pages/admin/AdminPlanCatalogPage.jsx";
+import BillingSubscriptionPage from "../pages/lawyer/billing/BillingSubscriptionPage.jsx";
+import BillingUsagePage from "../pages/lawyer/billing/BillingUsagePage.jsx";
+import BillingInvoicesPage from "../pages/lawyer/billing/BillingInvoicesPage.jsx";
 
 import SessionChat from "../pages/client/SessionChat.jsx";
 import NotificationsPage from "../components/notifications/NotificationsPage.jsx";
@@ -77,7 +84,7 @@ export default function RoutesRoot() {
           </LandingRoute>
         }
       />
-      <Route path="/pricing" element={<MarketingPage />} />
+      <Route path="/pricing" element={<PricingPage />} />
       
       {/* Client Dashboard Routes */}
       <Route
@@ -164,6 +171,10 @@ export default function RoutesRoot() {
           }
         />
         <Route path="planner" element={<LawyerPlannerPage />} />
+        <Route path="billing" element={<Navigate to="/lawyer/billing/subscription" replace />} />
+        <Route path="billing/subscription" element={<BillingSubscriptionPage />} />
+        <Route path="billing/usage" element={<BillingUsagePage />} />
+        <Route path="billing/invoices" element={<BillingInvoicesPage />} />
         <Route path="profile" element={<Navigate to="/lawyer/settings/profile" replace />} />
         <Route path="availability" element={<LawyerAvailabilityPage />} />
         <Route path="bookings" element={<LawyerBookingsPage />} />
@@ -184,6 +195,7 @@ export default function RoutesRoot() {
       >
         <Route index element={<Navigate to="overview" replace />} />
         <Route path="overview" element={<WorkspaceOverviewPage />} />
+        <Route path="billing" element={<Navigate to="/lawyer/billing/subscription" replace />} />
         <Route
           path="members"
           element={
@@ -251,6 +263,9 @@ export default function RoutesRoot() {
         <Route path="verification" element={<AdminVerificationPage />} />
         <Route path="disputes" element={<AdminDisputesPage />} />
         <Route path="case-law" element={<AdminCaseLawPage />} />
+        <Route path="subscriptions" element={<AdminSubscriptionsPage />} />
+        <Route path="subscriptions/catalog" element={<AdminPlanCatalogPage />} />
+        <Route path="subscriptions/:workspaceId" element={<AdminSubscriptionDetailPage />} />
         <Route path="settings" element={<AdminSettingsPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="dashboard" element={<Navigate to="/admin/overview" replace />} />

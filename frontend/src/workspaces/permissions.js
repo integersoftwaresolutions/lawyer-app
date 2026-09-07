@@ -56,6 +56,9 @@ export function hasAnyPermission(permissions = [], keys = []) {
  */
 export function canAccessWorkspaceItem(item, { isFirm, permissions }) {
   if (item.requireFirm && !isFirm) return false;
+  if (item.anyPermissions?.length) {
+    return hasAnyPermission(permissions, item.anyPermissions);
+  }
   if (item.permissions?.length && !hasAllPermissions(permissions, item.permissions)) {
     return false;
   }

@@ -38,12 +38,13 @@ export default function Navbar({
     };
   }, [mobileMenuOpen]);
 
+  // Public Pricing is always the conversion page (auth-aware). In-app billing is separate.
   const navLinks = hideMarketingLinks
     ? []
     : [
         { to: user ? "/lawyers" : "/login", label: "Find Lawyers" },
-        { to: "/pricing#pricing", label: "Pricing" },
-        { to: "/pricing#testimonials", label: "Testimonials" }
+        { to: "/pricing", label: "Pricing" },
+        { to: "/#testimonials", label: "Testimonials" }
       ];
 
   const closeMobileMenu = () => setMobileMenuOpen(false);

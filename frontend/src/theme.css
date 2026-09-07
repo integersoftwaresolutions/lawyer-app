@@ -147,14 +147,14 @@
   --color-primary-light: #1A3D40;
   --color-primary-light-hover: #245054;
 
-  /* Secondary — brown (same brand) */
-  --color-secondary: #5c4637;
-  --color-secondary-hover: #463428;
-  --color-secondary-border: #5A4536;
-  --color-secondary-shadow: rgba(90, 69, 54, 0.35);
-  --color-secondary-text: #FFFFFF;
-  --color-secondary-light: #2E241C;
-  --color-secondary-light-hover: #3D3127;
+  /* Secondary — warm taupe inverted for dark surfaces (readable outline + solid) */
+  --color-secondary: #C9B5A4;
+  --color-secondary-hover: #D9C7B8;
+  --color-secondary-border: #A8927E;
+  --color-secondary-shadow: rgba(201, 181, 164, 0.28);
+  --color-secondary-text: #141414;
+  --color-secondary-light: #1C1916;
+  --color-secondary-light-hover: #2A2520;
 
   /* Accent — golden (same brand) */
   --color-accent: #F5AB1A;

@@ -5,6 +5,7 @@ import { validate } from "../middlewares/validate.middleware.js";
 import * as adminCtrl from "../controllers/admin.controller.js";
 import { resolveDisputeSchema, updateDisputeStatusSchema } from "../validators/dispute.validators.js";
 import { adminRagRouter } from "./rag.routes.js";
+import * as billingCtrl from "../controllers/billing.controller.js";
 
 const r = Router();
 
@@ -31,5 +32,12 @@ r.get("/disputes", adminCtrl.getDisputes);
 r.get("/disputes/:disputeId", adminCtrl.getDisputeById);
 r.patch("/disputes/:disputeId/status", validate(updateDisputeStatusSchema), adminCtrl.updateDisputeStatus);
 r.post("/disputes/:disputeId/resolve", validate(resolveDisputeSchema), adminCtrl.resolveDispute);
+
+r.get("/billing/catalog", billingCtrl.adminCatalog);
+r.get("/billing/subscriptions", billingCtrl.adminListSubscriptions);
+r.get("/billing/subscriptions/:workspaceId", billingCtrl.adminGetSubscription);
+r.post("/billing/subscriptions/:workspaceId/grant", billingCtrl.adminGrant);
+r.post("/billing/subscriptions/:workspaceId/force-free", billingCtrl.adminForceFree);
+r.post("/billing/subscriptions/:workspaceId/reconcile", billingCtrl.adminReconcile);
 
 export default r;

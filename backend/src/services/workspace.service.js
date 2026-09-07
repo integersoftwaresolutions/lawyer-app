@@ -72,6 +72,9 @@ export async function bootstrapPersonalWorkspace(userId, { fullName, email } = {
 
   await User.findByIdAndUpdate(userId, { activeWorkspaceId: workspace._id });
 
+  const { startPersonalTrial } = await import("../billing/subscription.service.js");
+  await startPersonalTrial(workspace._id);
+
   return workspace;
 }
 
@@ -213,13 +216,6 @@ export async function createFirm(userId, body = {}) {
     throw new ApiError(400, `You can own at most ${WORKSPACE_LIMITS.MAX_OWNED_FIRMS} firms`);
   }
 
-  const joinedCount = await Membership.countDocuments({
-    userId,
-    status: MEMBERSHIP_STATUS.ACTIVE,
-    deletedAt: null,
-    isOwner: false
-  });
-  // joined firms only — personal doesn't count toward join cap meaningfully
   const firmMemberships = await Membership.find({
     userId,
     status: MEMBERSHIP_STATUS.ACTIVE,
@@ -240,11 +236,31 @@ export async function createFirm(userId, body = {}) {
     throw new ApiError(409, "Firm slug already taken");
   }
 
-  const workspace = await Workspace.create({
-    type: WORKSPACE_TYPES.FIRM,
+  const { isStripeConfigured } = await import("../billing/providers/stripe.provider.js");
+  const { createFirmCheckout } = await import("../billing/subscription.service.js");
+  const { env } = await import("../config/env.js");
+
+  if (isStripeConfigured() && !body.skipCheckout) {
+    const base = env.appBaseUrl || env.clientOrigin;
+    const checkout = await createFirmCheckout({
+      actorUserId: userId,
+      firmPayload: { ...body, name, slug },
+      successUrl: `${base}/lawyer/billing?firmCheckout=success`,
+      cancelUrl: `${base}/lawyer/billing?firmCheckout=cancel`
+    });
+    if (checkout?.checkoutUrl) {
+      return {
+        requiresCheckout: true,
+        checkoutUrl: checkout.checkoutUrl,
+        sessionId: checkout.sessionId
+      };
+    }
+  }
+
+  // Dev / no Stripe: create firm with manual Firm plan
+  return finalizeFirmCreate(userId, {
     name,
     slug,
-    ownerUserId: userId,
     address: body.address || "",
     phone: body.phone || "",
     website: body.website || "",
@@ -252,6 +268,24 @@ export async function createFirm(userId, body = {}) {
     city: body.city || "",
     description: body.description || "",
     logoMediaId: body.logoMediaId || null
+  });
+}
+
+async function finalizeFirmCreate(userId, firm, billing = {}) {
+  const workspace = await Workspace.create({
+    type: WORKSPACE_TYPES.FIRM,
+    name: firm.name,
+    slug: firm.slug,
+    ownerUserId: userId,
+    address: firm.address || "",
+    phone: firm.phone || "",
+    website: firm.website || "",
+    practiceAreas: Array.isArray(firm.practiceAreas) ? firm.practiceAreas : [],
+    city: firm.city || "",
+    description: firm.description || "",
+    logoMediaId: firm.logoMediaId || null,
+    planId: "firm",
+    seatLimit: billing.seatLimit ?? 10
   });
 
   await seedFirmBuiltinRoles(workspace._id);
@@ -269,8 +303,37 @@ export async function createFirm(userId, body = {}) {
     workspaceId: workspace._id,
     actorUserId: userId,
     action: WORKSPACE_AUDIT_ACTIONS.FIRM_CREATED,
-    meta: { name, slug }
+    meta: { name: firm.name, slug: firm.slug }
   });
+
+  const { PLAN_KEYS, getPlanDefinition } = await import("../billing/planCatalog.js");
+  const { ensureSubscription, applyStripeSubscription, adminGrantPlan } = await import(
+    "../billing/subscription.service.js"
+  );
+  const { stripeBillingProvider } = await import("../billing/providers/stripe.provider.js");
+
+  if (billing.stripeSubscriptionId) {
+    const stripeSub = await stripeBillingProvider.retrieveSubscription(billing.stripeSubscriptionId);
+    if (stripeSub) {
+      const sub = await ensureSubscription(workspace._id);
+      if (billing.stripeCustomerId) {
+        sub.stripeCustomerId = billing.stripeCustomerId;
+        await sub.save();
+      }
+      await applyStripeSubscription(workspace._id, stripeSub, {
+        planKey: PLAN_KEYS.FIRM,
+        stripeCustomerId: billing.stripeCustomerId
+      });
+    }
+  } else {
+    await adminGrantPlan({
+      workspaceId: workspace._id,
+      planKey: PLAN_KEYS.FIRM,
+      adminUserId: userId,
+      reason: billing.reason || "firm_create_manual",
+      seatLimit: getPlanDefinition(PLAN_KEYS.FIRM).limits["seats"]
+    });
+  }
 
   const { expandPermissions } = await import("../workspaces/permissions.catalog.js");
   return formatWorkspace(
@@ -284,6 +347,39 @@ export async function createFirm(userId, body = {}) {
     null,
     expandPermissions({ isOwner: true, role: null })
   );
+}
+
+/**
+ * Called from Stripe webhook after Firm Checkout completes.
+ */
+export async function createFirmFromBillingCheckout({
+  actorUserId,
+  stripeCustomerId,
+  stripeSubscriptionId,
+  firm
+}) {
+  const name = String(firm.name || "").trim();
+  if (!name) throw new ApiError(400, "Firm name missing from checkout metadata");
+
+  let slug = firm.slug ? slugify(firm.slug) : await uniqueFirmSlug(name);
+  if (await Workspace.exists({ slug, deletedAt: null })) {
+    slug = await uniqueFirmSlug(name);
+  }
+
+  return finalizeFirmCreate(actorUserId, {
+    name,
+    slug,
+    address: firm.address || "",
+    phone: firm.phone || "",
+    website: firm.website || "",
+    practiceAreas: firm.practiceAreas || [],
+    city: firm.city || "",
+    description: firm.description || ""
+  }, {
+    stripeCustomerId,
+    stripeSubscriptionId,
+    reason: "stripe_firm_checkout"
+  });
 }
 
 export async function updateFirm(userId, workspaceId, body = {}) {
@@ -829,6 +925,9 @@ export async function createInvite(actorUserId, workspaceId, body = {}) {
     throw new ApiError(403, "Missing permission: members.invite");
   }
 
+  const { assertCanAddSeat } = await import("../billing/entitlement.service.js");
+  await assertCanAddSeat(workspaceId);
+
   const role = await Role.findOne({ _id: body.roleId, workspaceId, deletedAt: null });
   if (!role) throw new ApiError(400, "roleId is required and must belong to this firm");
 
@@ -969,6 +1068,9 @@ export async function acceptInvite(userId, { token }) {
     deletedAt: null
   });
   if (!workspace) throw new ApiError(404, "Firm no longer exists");
+
+  const { assertCanAddSeat } = await import("../billing/entitlement.service.js");
+  await assertCanAddSeat(workspace._id);
 
   const existing = await Membership.findOne({
     workspaceId: workspace._id,

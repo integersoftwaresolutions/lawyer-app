@@ -67,6 +67,7 @@ export const BUILTIN_ROLE_PRESETS = Object.freeze({
       P.DOCS_DELETE,
       P.DOCS_MANAGE_VISIBILITY,
       P.BILLING_VIEW,
+      P.BILLING_MANAGE,
       P.AI_USE,
       P.WORKSPACE_SETTINGS,
       P.WORKSPACE_AUDIT

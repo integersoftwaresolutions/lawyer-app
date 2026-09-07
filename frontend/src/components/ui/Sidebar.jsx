@@ -126,6 +126,7 @@ export default function Sidebar({
           md:translate-x-0
           flex flex-col
           overflow-hidden
+          group/sidebar
           ${className}
         `}
       >
@@ -133,7 +134,7 @@ export default function Sidebar({
         {desktopHeader}
 
         <div
-          className={`flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain p-4 md:p-6 ${contentClassName}`}
+          className={`sidebar-scroll flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain p-4 md:p-6 ${contentClassName}`}
         >
           {children}
         </div>

@@ -101,6 +101,10 @@ export async function ingestLegalDocumentFromText({
   ctx = null
 }) {
   if (!body.text) throw new ApiError(400, "text is required when no file is uploaded");
+
+  const { assertCanUploadDocument } = await import("../../billing/entitlement.service.js");
+  await assertCanUploadDocument(workspaceId);
+
   const caseId = body.caseId || null;
   if (caseId && ctx) await assertCanAttachToCase(ctx, caseId);
   return ingestService.ingestLegalDocument(
@@ -128,6 +132,10 @@ export async function ingestLegalDocumentFromFile({
   ctx = null
 }) {
   if (!file?.buffer) throw new ApiError(400, "File is required");
+
+  const { assertCanUploadDocument } = await import("../../billing/entitlement.service.js");
+  await assertCanUploadDocument(workspaceId, { additionalBytes: file.size || file.buffer?.length || 0 });
+
   const caseId = body.caseId || null;
   if (caseId && ctx) await assertCanAttachToCase(ctx, caseId);
   return ingestService.ingestLegalDocument(

@@ -70,7 +70,7 @@ export default function WorkspaceSwitcher({ variant = "sidebar" }) {
     e.preventDefault();
     setBusy(true);
     try {
-      await dispatch(
+      const data = await dispatch(
         createFirm({
           name: form.name.trim(),
           city: form.city,
@@ -83,6 +83,13 @@ export default function WorkspaceSwitcher({ variant = "sidebar" }) {
             : []
         })
       ).unwrap();
+
+      if (data?.requiresCheckout && data?.checkoutUrl) {
+        toast.success("Redirecting to Firm checkout…");
+        window.location.href = data.checkoutUrl;
+        return;
+      }
+
       setCreateOpen(false);
       setForm({
         name: "",
@@ -196,7 +203,7 @@ export default function WorkspaceSwitcher({ variant = "sidebar" }) {
       <Modal
         isOpen={createOpen}
         onClose={() => setCreateOpen(false)}
-        title="Create firm"
+        title="Create firm workspace"
         size="lg"
         footer={
           <>
@@ -204,12 +211,26 @@ export default function WorkspaceSwitcher({ variant = "sidebar" }) {
               Cancel
             </Button>
             <Button onClick={handleCreate} loading={busy}>
-              Create firm
+              Continue
             </Button>
           </>
         }
       >
         <form onSubmit={handleCreate} className="space-y-3">
+          <p className="text-sm text-text-secondary m-0">
+            Firm plan includes seats and shared practice quotas. With Stripe configured, you&apos;ll
+            complete payment before the firm is created. Prefer to compare plans first?{" "}
+            <button
+              type="button"
+              className="text-link underline bg-transparent border-0 p-0 cursor-pointer"
+              onClick={() => {
+                setCreateOpen(false);
+                navigate("/lawyer/billing/subscription");
+              }}
+            >
+              Open Plans & billing
+            </button>
+          </p>
           <Input
             label="Firm name"
             required

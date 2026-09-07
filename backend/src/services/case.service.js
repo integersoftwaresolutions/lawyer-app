@@ -272,6 +272,9 @@ export async function createCase(ctx, body) {
     throw new ApiError(403, "Missing permission: cases.create");
   }
 
+  const { assertCanCreateCase } = await import("../billing/entitlement.service.js");
+  await assertCanCreateCase(workspaceId);
+
   const primaryLawyerUserId = body.primaryLawyerUserId
     ? String(body.primaryLawyerUserId)
     : String(userId);

@@ -38,6 +38,16 @@ export default function UserMenuPanel({ onNavigate }) {
         <Link to={getDashboardPath(user.role)} onClick={close} className={linkClass}>
           Dashboard
         </Link>
+        {user.role === "LAWYER" ? (
+          <>
+            <Link to="/lawyer/billing/subscription" onClick={close} className={linkClass}>
+              Billing
+            </Link>
+            <Link to="/pricing" onClick={close} className={linkClass}>
+              Pricing
+            </Link>
+          </>
+        ) : null}
         <Link to={getProfilePath(user.role)} onClick={close} className={linkClass}>
           Account settings
         </Link>

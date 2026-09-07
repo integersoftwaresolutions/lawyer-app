@@ -17,6 +17,10 @@ export function getErrorMessage(error) {
 
   // Check for response data with message
   if (error.response?.data?.message) {
+    const code = error.response.data.code || "";
+    if (String(code).startsWith("PLAN_LIMIT") || code === "PLAN_BILLING_LOCKED") {
+      return `${error.response.data.message} Open Plans & billing to upgrade.`;
+    }
     return error.response.data.message;
   }
 

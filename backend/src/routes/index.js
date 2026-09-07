@@ -10,6 +10,7 @@ import plannerRoutes from "./planner.routes.js";
 import notificationsRoutes from "./notifications.routes.js";
 import workspaceRoutes from "./workspace.routes.js";
 import caseRoutes from "./case.routes.js";
+import billingRoutes from "../billing/billing.routes.js";
 import {
   SPECIALIZATIONS,
   CITIES,
@@ -25,6 +26,7 @@ const router = Router();
 router.use("/auth", authRoutes);
 router.use("/workspaces", workspaceRoutes);
 router.use("/cases", caseRoutes);
+router.use("/billing", billingRoutes);
 router.use("/lawyers", lawyerRoutes);
 router.use("/clients", clientRoutes);
 router.use("/bookings", bookingRoutes);

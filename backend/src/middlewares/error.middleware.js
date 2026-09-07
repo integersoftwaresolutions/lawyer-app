@@ -8,6 +8,7 @@ export function errorMiddleware(err, req, res, next) {
   const payload = {
     statusCode,
     message: err.message || "Server Error",
+    code: isApi ? err.code : undefined,
     errors: isApi ? err.errors : undefined
   };
 

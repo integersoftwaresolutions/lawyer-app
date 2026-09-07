@@ -48,6 +48,11 @@ export async function sendMessage({ sessionId, lawyerId, workspaceId = null, con
 
   const session = await sessionService.getOwnedSession(sessionId, lawyerId, workspaceId);
 
+  if (workspaceId) {
+    const { assertCanUseAi } = await import("../../billing/entitlement.service.js");
+    await assertCanUseAi(workspaceId);
+  }
+
   const dailyLimit = await usageService.getDailyLimit();
   const todayCount = await usageService.countTodayRequests(lawyerId);
   if (todayCount >= dailyLimit) {
@@ -96,7 +101,10 @@ export async function sendMessage({ sessionId, lawyerId, workspaceId = null, con
     promptTokens: result.usage.promptTokens,
     completionTokens: result.usage.completionTokens,
     totalTokens: result.usage.totalTokens,
-    metadata: { source: "chat_message" }
+    metadata: {
+      source: "chat_message",
+      workspaceId: workspaceId ? String(workspaceId) : String(session.workspaceId || "")
+    }
   });
 
   await sessionService.updateSessionTitle(session, userTurn.content);

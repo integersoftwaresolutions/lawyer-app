@@ -14,6 +14,7 @@ const DEFAULT_REDIRECT = "/lawyer/workspace/overview";
  */
 export default function RequirePermission({
   permissions = [],
+  anyPermissions = [],
   requireFirm = false,
   redirectTo = DEFAULT_REDIRECT,
   fallback = null,
@@ -30,7 +31,7 @@ export default function RequirePermission({
   }
 
   const ok = canAccessWorkspaceItem(
-    { requireFirm, permissions },
+    { requireFirm, permissions, anyPermissions },
     { isFirm, permissions: granted }
   );
 

@@ -57,11 +57,12 @@ export function sendListSuccess(res, opts = {}) {
   });
 }
 
-export function sendError(res, { statusCode = 500, message = "Server Error", errors = undefined }) {
+export function sendError(res, { statusCode = 500, message = "Server Error", errors = undefined, code = undefined }) {
   return res.status(statusCode).json({
     success: false,
     statusCode,
     message,
+    ...(code ? { code } : {}),
     ...(errors ? { errors } : {})
   });
 }

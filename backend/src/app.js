@@ -8,6 +8,7 @@ import { rateLimitMiddleware } from "./middlewares/rateLimit.middleware.js";
 import apiRoutes from "./routes/index.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
 import { sendSuccess } from "./helpers/response.helper.js";
+import * as billingCtrl from "./controllers/billing.controller.js";
 
 export function createApp() {
   const app = express();
@@ -17,6 +18,14 @@ export function createApp() {
   }));
   app.use(corsMiddleware);
   app.use(rateLimitMiddleware);
+
+  // Stripe webhooks need the raw body for signature verification
+  app.post(
+    "/api/billing/webhooks/stripe",
+    express.raw({ type: "application/json" }),
+    billingCtrl.stripeWebhook
+  );
+
   app.use(express.json({ limit: "1mb" }));
   app.use(cookieParser());
   app.use(morgan("dev"));

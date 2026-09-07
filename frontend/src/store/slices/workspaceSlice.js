@@ -39,11 +39,15 @@ export const createFirm = createAsyncThunk(
   async (body, { dispatch, rejectWithValue }) => {
     try {
       const res = await workspaceApi.createFirm(body);
-      await dispatch(fetchWorkspaces());
-      if (res.data?.id) {
-        await dispatch(activateWorkspace(res.data.id));
+      const data = res.data;
+      if (data?.requiresCheckout && data?.checkoutUrl) {
+        return data;
       }
-      return res.data;
+      await dispatch(fetchWorkspaces());
+      if (data?.id) {
+        await dispatch(activateWorkspace(data.id));
+      }
+      return data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
     }
