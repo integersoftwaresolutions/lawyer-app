@@ -38,8 +38,8 @@ async function bootstrap() {
   startReminderJob();
   startBillingJob();
 
-  server.listen(env.port, () => {
-    console.log(`✅ Backend running on http://localhost:${env.port}`);
+  server.listen(env.port, "0.0.0.0", () => {
+    console.log(`✅ Backend running on http://0.0.0.0:${env.port}`);
   });
 }
 

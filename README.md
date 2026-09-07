@@ -449,6 +449,20 @@ Guards: `ProtectedRoute` (role), `AuthRoute`, `VerifyEmailRoute`, `LandingRoute`
 
 ---
 
+## Deployment (Render)
+
+Deploy **frontend and backend both on Render** — no Vercel.
+
+| Service | Render type | Config |
+|---------|-------------|--------|
+| API | Web Service (Docker) | [`backend/Dockerfile`](./backend/Dockerfile) |
+| UI | Static Site | Vite build → `frontend/dist` |
+| Blueprint | Both | [`render.yaml`](./render.yaml) |
+
+Step-by-step: **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
+
+---
+
 ## Quick start checklist
 
 1. [ ] MongoDB running  
