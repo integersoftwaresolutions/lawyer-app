@@ -144,7 +144,7 @@ export default function MarketingPage() {
               </h3>
               <p className="m-0 mt-2 text-sm text-text-secondary leading-relaxed flex-1">
                 Cases, documents, workspaces, roles, planner, AI, billing, and bookings—gated by
-                your active workspace plan (Free, Pro, or Firm).
+                your active workspace plan.
               </p>
               <div className="mt-6 flex flex-col sm:flex-row flex-wrap gap-2">
                 <CtaLink href={ctas.lawyerPrimary.href}>
@@ -248,15 +248,23 @@ export default function MarketingPage() {
           <SectionHeader
             eyebrow="Billing & plans"
             title="Subscriptions that match the workspace"
-            subtitle="Clients never need a subscription. Lawyers and firms choose Free, Pro, or Firm for cases, AI, documents, storage, and seats—with invoices you can track."
+            subtitle="Clients never need a subscription. Lawyers and firms choose Adal Base, Adal Max, or a Law Firm plan—self-serve checkout is coming soon."
           />
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
             {PLAN_TEASERS.map((plan) => (
               <div
                 key={plan.name}
                 className="rounded-2xl border border-border bg-card p-5 sm:p-6 flex flex-col"
               >
-                <h3 className="m-0 text-lg sm:text-xl font-bold text-text-primary">{plan.name}</h3>
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="m-0 text-lg sm:text-xl font-bold text-text-primary">{plan.name}</h3>
+                  <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-text-muted border border-border rounded-full px-2 py-0.5">
+                    Soon
+                  </span>
+                </div>
+                {plan.priceLabel ? (
+                  <p className="m-0 mt-2 text-sm font-semibold text-primary">{plan.priceLabel}</p>
+                ) : null}
                 <p className="m-0 mt-2 text-sm text-text-secondary leading-relaxed flex-1">
                   {plan.line}
                 </p>
@@ -266,7 +274,7 @@ export default function MarketingPage() {
           <div className="mt-6 sm:mt-8">
             <div className="flex flex-col sm:flex-row gap-3">
               <CtaLink href="/pricing">
-                Compare Free, Pro & Firm
+                View full pricing
                 <FiArrowRight className="h-4 w-4 shrink-0" />
               </CtaLink>
               <CtaLink href="/request-demo" variant="outline">

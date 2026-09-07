@@ -47,7 +47,7 @@ export const CORE_PILLARS = [
   {
     icon: FiDollarSign,
     title: "Billing, subscriptions & invoices",
-    body: "Free, Pro, and Firm plans per workspace—with usage limits, Stripe checkout, and invoice history."
+    body: "Adal Base, Adal Max, and Law Firm plans per workspace—with usage limits and invoices (checkout coming soon)."
   },
   {
     icon: FiCpu,
@@ -180,16 +180,24 @@ export const FIRM_FEATURES = [
 
 export const PLAN_TEASERS = [
   {
-    name: "Free",
-    line: "Solo essentials—cases, light AI, and documents on a personal workspace."
+    name: "Adal Base",
+    priceLabel: "Rs 1,000/mo",
+    line: "1 user · Limited AI — after a 1-month Base trial"
   },
   {
-    name: "Pro",
-    line: "Higher limits for growing practices, with a 14-day Pro trial for new lawyers."
+    name: "Adal Max",
+    priceLabel: "Rs 3,000/mo",
+    line: "1 user · Extended AI for growing solo practices"
   },
   {
-    name: "Firm",
-    line: "Team seats, shared quotas, roles, and invites for firm workspaces."
+    name: "Law Firm Plan",
+    priceLabel: "Rs 4,000/mo",
+    line: "Up to 5 users · Team workspace"
+  },
+  {
+    name: "Law Firm Max",
+    priceLabel: "Rs 10,000/mo",
+    line: "Up to 7 users · Extended AI for firms"
   }
 ];
 
@@ -234,7 +242,7 @@ export const LAWYER_STEPS = [
   {
     step: "1",
     title: "Join as a lawyer",
-    body: "Create your profile and personal workspace—Pro trial available for practice tools."
+    body: "Create your profile and personal workspace—start with a one-month Base-level trial."
   },
   {
     step: "2",

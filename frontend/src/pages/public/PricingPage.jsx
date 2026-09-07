@@ -1,25 +1,21 @@
 import { Link } from "react-router-dom";
 import { Navbar } from "../../components/layout";
 import Footer from "../../components/Footer";
-import PlanComparisonCards from "../../components/billing/PlanComparisonCards";
 import { useAuth } from "../../hooks/useAuth";
-import { usePlansCatalog } from "../../hooks/usePlansCatalog";
-import { resolvePublicPricingCta } from "../../billing/plans";
 import { FiArrowRight } from "react-icons/fi";
+import ComingSoonPlanCards from "./marketing/ComingSoonPlanCards";
 
 /**
- * Public conversion Pricing page (Stripe / Notion / GitHub pattern).
- * Auth-aware CTAs; checkout still happens in-app for lawyers (workspace-scoped).
+ * Public pricing preview. Checkout is not live yet — cards are non-clickable.
  */
 export default function PricingPage() {
   const { user } = useAuth();
-  const { plans } = usePlansCatalog();
 
   const audienceNote =
     user?.role === "CLIENT"
       ? "You don’t need a subscription to book lawyers. Plans below are for legal professionals."
       : user?.role === "LAWYER"
-        ? "You’re signed in. Choose a plan to continue in Billing for your active workspace."
+        ? "Self-serve billing is coming soon. Request a demo if you need a walkthrough for your firm."
         : "For lawyers and firms. Clients browse and book without a subscription.";
 
   return (
@@ -36,20 +32,19 @@ export default function PricingPage() {
               Plans for modern legal practice
             </h1>
             <p className="text-lg text-text-secondary max-w-[640px] mx-auto m-0 mt-4">
-              Free, Pro, and Firm unlock cases, AI, documents, and seats. Marketplace profile and
-              bookings are included on every plan.
+              Trial, Adal Base, Adal Max, and Law Firm plans for cases, AI, documents, and seats.
+              Marketplace profile and bookings stay available for lawyers on every plan.
             </p>
             <p className="text-sm text-text-muted max-w-[560px] mx-auto m-0 mt-3">{audienceNote}</p>
+            <p className="inline-flex items-center mt-5 px-3 py-1.5 rounded-full border border-border bg-surface text-xs font-semibold text-text-secondary">
+              Self-serve checkout coming soon
+            </p>
           </div>
         </div>
 
-        <div className="max-w-[1100px] mx-auto px-6 py-12 sm:py-16">
-          <PlanComparisonCards
-            plans={plans}
-            ctaMode="link"
-            getHref={(plan) => resolvePublicPricingCta(plan, user).href}
-            getLabel={(plan) => resolvePublicPricingCta(plan, user).label}
-            footnote="New lawyers get a 14-day Pro trial on their personal workspace. Billing is per workspace — firm members inherit the firm plan while that workspace is active."
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-12 sm:py-16">
+          <ComingSoonPlanCards
+            footnote="First month is a Base-level trial. Paid billing starts after trial when checkout goes live. Billing will be per workspace — firm members inherit the active firm plan."
           />
 
           <div className="mt-14 grid gap-4 sm:grid-cols-2 max-w-3xl mx-auto">
