@@ -1,0 +1,350 @@
+/* Organix-style marketing motion — one reveal system for the whole page */
+
+:root {
+  --mkt-reveal-distance: 24px;
+  --mkt-reveal-duration: 0.7s;
+  --mkt-reveal-ease: ease;
+  --mkt-reveal-stagger: 0.08s;
+}
+
+/* Single reveal motion (used by .reveal and .reveal-item) */
+.reveal,
+.reveal-group .reveal-item {
+  opacity: 0;
+  transform: translateY(var(--mkt-reveal-distance));
+  transition:
+    opacity var(--mkt-reveal-duration) var(--mkt-reveal-ease),
+    transform var(--mkt-reveal-duration) var(--mkt-reveal-ease);
+  will-change: opacity, transform;
+}
+
+.reveal.is-visible,
+.reveal-group.is-visible .reveal-item {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal.is-resetting,
+.reveal-group.is-resetting .reveal-item {
+  transition: none !important;
+  transition-delay: 0s !important;
+}
+
+/* Identical stagger for every group */
+.reveal-group.is-visible .reveal-item:nth-child(1) {
+  transition-delay: 0s;
+}
+.reveal-group.is-visible .reveal-item:nth-child(2) {
+  transition-delay: calc(var(--mkt-reveal-stagger) * 1);
+}
+.reveal-group.is-visible .reveal-item:nth-child(3) {
+  transition-delay: calc(var(--mkt-reveal-stagger) * 2);
+}
+.reveal-group.is-visible .reveal-item:nth-child(4) {
+  transition-delay: calc(var(--mkt-reveal-stagger) * 3);
+}
+.reveal-group.is-visible .reveal-item:nth-child(5) {
+  transition-delay: calc(var(--mkt-reveal-stagger) * 4);
+}
+.reveal-group.is-visible .reveal-item:nth-child(6) {
+  transition-delay: calc(var(--mkt-reveal-stagger) * 5);
+}
+.reveal-group.is-visible .reveal-item:nth-child(7) {
+  transition-delay: calc(var(--mkt-reveal-stagger) * 6);
+}
+.reveal-group.is-visible .reveal-item:nth-child(8) {
+  transition-delay: calc(var(--mkt-reveal-stagger) * 7);
+}
+.reveal-group.is-visible .reveal-item:nth-child(9) {
+  transition-delay: calc(var(--mkt-reveal-stagger) * 8);
+}
+.reveal-group.is-visible .reveal-item:nth-child(10) {
+  transition-delay: calc(var(--mkt-reveal-stagger) * 9);
+}
+.reveal-group.is-visible .reveal-item:nth-child(11) {
+  transition-delay: calc(var(--mkt-reveal-stagger) * 10);
+}
+.reveal-group.is-visible .reveal-item:nth-child(12) {
+  transition-delay: calc(var(--mkt-reveal-stagger) * 11);
+}
+
+/* Ken Burns hero background only */
+@keyframes kenBurns {
+  from {
+    transform: scale(1.08);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.ken-burns {
+  animation: kenBurns 14s ease-out forwards;
+  transform-origin: center center;
+}
+
+.hero-bg-frame {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Full-page landing background (painted on page root so it sits above ThemeProvider fill) */
+.mkt-landing--light,
+.mkt-landing--dark {
+  background-color: var(--color-background);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+.mkt-landing--light {
+  background-image:
+    linear-gradient(
+      color-mix(in srgb, var(--color-background) 58%, transparent),
+      color-mix(in srgb, var(--color-background) 58%, transparent)
+    ),
+    url("/images/marketing/landing-bg-light.png");
+}
+
+.mkt-landing--dark {
+  background-image:
+    linear-gradient(
+      color-mix(in srgb, var(--color-background) 62%, transparent),
+      color-mix(in srgb, var(--color-background) 62%, transparent)
+    ),
+    url("/images/marketing/landing-bg-dark.png");
+}
+
+/* Alternating bands stay readable but let the page image show through */
+.mkt-landing .mkt-band {
+  background: color-mix(in srgb, var(--color-surface) 68%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mkt-landing--light,
+  .mkt-landing--dark {
+    background-attachment: scroll;
+  }
+
+  .mkt-spotlight__img,
+  .mkt-spotlight:hover .mkt-spotlight__img,
+  .mkt-spotlight--hero .mkt-spotlight__img {
+    transform: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Expressive product spotlight frames */
+.mkt-spotlight {
+  margin: 0;
+}
+
+.mkt-spotlight__frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--color-text-primary) 6%, transparent),
+    0 18px 40px color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.mkt-spotlight__frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    transparent 55%,
+    color-mix(in srgb, var(--color-background) 18%, transparent) 100%
+  );
+}
+
+.mkt-spotlight__img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  object-position: center;
+  transform: scale(1.02);
+  transition: transform 0.7s var(--mkt-reveal-ease);
+}
+
+.mkt-spotlight:hover .mkt-spotlight__img {
+  transform: scale(1.05);
+}
+
+.mkt-spotlight--hero .mkt-spotlight__frame {
+  border-radius: 1.15rem;
+  box-shadow:
+    0 2px 8px color-mix(in srgb, var(--color-text-primary) 8%, transparent),
+    0 24px 56px color-mix(in srgb, var(--color-primary) 16%, transparent);
+}
+
+.mkt-spotlight--hero .mkt-spotlight__img {
+  animation: kenBurns 14s ease-out forwards;
+}
+
+.mkt-split-visual {
+  display: grid;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .mkt-split-visual {
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 2rem;
+  }
+
+  .mkt-split-visual--flip {
+    grid-template-columns: 0.95fr 1.05fr;
+  }
+
+  .mkt-split-visual--flip .mkt-spotlight {
+    order: -1;
+  }
+}
+
+/* Soft float on icons */
+@keyframes floatSoft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-float-soft {
+  animation: floatSoft 4s ease-in-out infinite;
+}
+
+.float-delay-1 {
+  animation-delay: 0.2s;
+}
+.float-delay-2 {
+  animation-delay: 0.55s;
+}
+.float-delay-3 {
+  animation-delay: 0.9s;
+}
+.float-delay-4 {
+  animation-delay: 1.25s;
+}
+
+/* Hover micro-interactions */
+.mkt-card {
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+  background: color-mix(in srgb, var(--color-card) 92%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.mkt-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+}
+
+.dark .mkt-card:hover {
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+}
+
+.mkt-card-media {
+  overflow: hidden;
+}
+
+.mkt-card-media > img,
+.mkt-card-media-scale {
+  transition: transform 0.45s ease;
+}
+
+.mkt-card:hover .mkt-card-media > img,
+.mkt-card:hover .mkt-card-media-scale {
+  transform: scale(1.055);
+}
+
+.mkt-btn {
+  transition:
+    transform 0.25s ease,
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.mkt-btn:hover {
+  transform: translateY(-2px);
+}
+
+.mkt-card-action {
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+  pointer-events: none;
+}
+
+.mkt-card:hover .mkt-card-action,
+.mkt-card:focus-within .mkt-card-action {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+@media (hover: none) {
+  .mkt-card-action {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ken-burns,
+  .animate-float-soft {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .reveal,
+  .reveal-group .reveal-item {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .mkt-card,
+  .mkt-card-media > img,
+  .mkt-card-media-scale,
+  .mkt-btn,
+  .mkt-card-action {
+    transition: none !important;
+  }
+
+  .mkt-card:hover,
+  .mkt-btn:hover,
+  .mkt-card:hover .mkt-card-media > img,
+  .mkt-card:hover .mkt-card-media-scale {
+    transform: none !important;
+  }
+
+  .mkt-card-action {
+    opacity: 1 !important;
+    transform: none !important;
+    pointer-events: auto !important;
+  }
+}

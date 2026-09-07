@@ -155,13 +155,7 @@ export default function Login() {
         </>
       }
     >
-      <GoogleAuthButton 
-          onSuccess={handleGoogleSuccess}
-          text="signin_with"
-        disabled={loading}
-        />
-
-      <AuthDivider text="or continue with email" />
+      
 
       {sessionNotice ? (
         <div className="mb-4 rounded-lg border border-warning bg-warning-light px-3 py-2 text-sm text-text-primary">

@@ -75,9 +75,26 @@ export default function Navbar({
           ) : !hideBrand ? (
             <Link
               to="/"
-              className="font-bold text-text-primary no-underline truncate text-lg md:text-xl"
+              className="flex items-center gap-2 no-underline shrink-0"
             >
-              Adal AI
+              {/* Light mode */}
+              <img
+                src="/public/images/adal-logo-light-mode.png"
+                alt="Adal AI"
+                className="h-8 w-auto object-contain dark:hidden"
+              />
+
+              {/* Dark mode */}
+              <img
+                src="/public/images/adal-logo-dark-mode.png"
+                alt="Adal AI"
+                aria-hidden="true"
+                className="hidden h-8 w-auto object-contain dark:block"
+              />
+
+              <span className="font-bold text-text-primary truncate text-lg md:text-xl">
+                Adal AI
+              </span>
             </Link>
           ) : null}
         </div>
