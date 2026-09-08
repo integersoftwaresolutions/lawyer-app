@@ -1,5 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Card } from "../../components/ui";
+import BrandLogo from "../../components/BrandLogo";
+import ThemeToggle from "../../components/ThemeToggle";
 
 export default function AuthLayout({
   children,
@@ -20,15 +22,17 @@ export default function AuthLayout({
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-background">
+    <div className="relative min-h-screen flex items-center justify-center p-6 bg-background">
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-10">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-[540px]">
         <div className="mb-6 text-center">
-          <Link
-            to="/"
-            className="inline-block text-xl font-bold text-text-primary no-underline hover:text-primary transition-colors"
-          >
-            Adal AI
-          </Link>
+          <BrandLogo
+            className="justify-center"
+            imgClassName="h-9 w-auto"
+            wordmarkClassName="text-xl font-bold text-text-primary"
+          />
           <p className="m-0 mt-1 text-xs text-text-muted">
             <Link to="/" className="text-text-muted no-underline hover:text-primary transition-colors">
               Back to home

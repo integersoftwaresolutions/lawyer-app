@@ -31,10 +31,12 @@ services:
         value: "true"
       - key: COOKIE_SAME_SITE
         value: none
-      - key: EMAIL_USER
+      - key: RESEND_API_KEY
         sync: false
-      - key: EMAIL_PASSWORD
-        sync: false
+      - key: EMAIL_FROM
+        value: beth.t@example.com
+      - key: EMAIL_FROM_NAME
+        value: Adal AI
       - key: LEADS_INBOX
         sync: false
       - key: OPENAI_API_KEY

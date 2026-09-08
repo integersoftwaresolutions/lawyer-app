@@ -1,137 +1,93 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import { env } from "../config/env.js";
 import { renderEmailTemplate, htmlToText } from "./template.service.js";
 
-let transporter = null;
+let resendClient = null;
+let loggedTransport = false;
 
-/**
- * Initialize and get email transporter
- */
-function getTransporter() {
-  if (transporter) return transporter;
+function getResend() {
+  if (!env.resendApiKey) return null;
+  if (!resendClient) resendClient = new Resend(env.resendApiKey);
+  return resendClient;
+}
 
-  // Check if email is configured
-  const isConfigured = env.emailUser && env.emailPassword && env.emailHost;
-  
-  if (!isConfigured) {
-    if (env.nodeEnv === "development") {
-      console.warn("\n⚠️  EMAIL NOT CONFIGURED");
-      console.warn("   OTPs will be logged to console instead of being sent.");
-      console.warn("   To enable email sending, add to .env:");
-      console.warn("   EMAIL_USER=your-email@gmail.com");
-      console.warn("   EMAIL_PASSWORD=your-app-password");
-      console.warn("   EMAIL_HOST=smtp.gmail.com\n");
-    }
-    return null;
+function formatFrom() {
+  if (env.emailFrom.includes("<")) return env.emailFrom;
+  return `${env.emailFromName} <${env.emailFrom}>`;
+}
+
+function logTransportOnce(configured) {
+  if (loggedTransport) return;
+  loggedTransport = true;
+
+  if (configured) {
+    console.log(`📧 Email transport: resend (HTTPS) from ${formatFrom()}`);
+    return;
   }
 
-  try {
-    const isGmail = env.emailHost.includes("gmail");
+  console.warn("\n⚠️  RESEND_API_KEY is not set — emails will be logged, not sent.");
+  console.warn("   Add RESEND_API_KEY=re_xxxxxxxx to backend/.env (or Render env).");
+  console.warn("   Test sender: EMAIL_FROM=beth.t@example.com\n");
+}
 
-    transporter = nodemailer.createTransport(
-      isGmail && env.emailPort === 465
-        ? {
-            host: "smtp.gmail.com",
-            port: 465,
-            secure: true,
-            auth: {
-              user: env.emailUser,
-              pass: env.emailPassword
-            }
-          }
-        : isGmail
-          ? {
-              service: "gmail",
-              auth: {
-                user: env.emailUser,
-                pass: env.emailPassword
-              }
-            }
-          : {
-              host: env.emailHost,
-              port: env.emailPort,
-              secure: env.emailSecure,
-              auth: {
-                user: env.emailUser,
-                pass: env.emailPassword
-              }
-            }
-    );
-
-    // Verify connection
-    transporter.verify((error) => {
-      if (error) {
-        console.error("❌ Email transporter verification failed:", error.message);
-      } else {
-        console.log("✅ Email transporter configured successfully");
-      }
-    });
-
-    return transporter;
-  } catch (error) {
-    console.error("❌ Failed to create email transporter:", error);
-    return null;
-  }
+function logDevEmail({ to, subject, text, replyTo }) {
+  console.log("\n" + "=".repeat(70));
+  console.log("📧 EMAIL (Development Mode - Not Actually Sent)");
+  console.log("=".repeat(70));
+  console.log("To:", to);
+  if (replyTo) console.log("Reply-To:", replyTo);
+  console.log("Subject:", subject);
+  console.log("\n--- Plain Text Version (redacted) ---");
+  console.log((text || "N/A").replace(/\b\d{4,8}\b/g, "******").substring(0, 500));
+  console.log("=".repeat(70));
+  console.log("💡 Set RESEND_API_KEY to send real emails via Resend.");
+  console.log("=".repeat(70) + "\n");
 }
 
 /**
- * Send email using template
- * @param {object} options - Email options
- * @param {string} options.to - Recipient email
- * @param {string} options.subject - Email subject
- * @param {string} options.template - Template name (without .html)
- * @param {object} options.variables - Template variables
- * @param {string} options.html - Optional custom HTML (overrides template)
- * @param {string} options.text - Optional plain text version
+ * Send email using template via Resend HTTPS API.
+ * @param {object} options
+ * @param {string} options.to
+ * @param {string} options.subject
+ * @param {string} options.template
+ * @param {object} options.variables
+ * @param {string} options.html
+ * @param {string} options.text
+ * @param {string} [options.replyTo]
  */
 export async function sendEmail({ to, subject, template, variables = {}, html, text, replyTo }) {
-  const mailTransporter = getTransporter();
+  const resend = getResend();
+  logTransportOnce(Boolean(resend));
 
-  // Generate HTML from template if not provided
   if (!html && template) {
     html = renderEmailTemplate(template, variables);
   }
-
-  // Generate text version if not provided
   if (!text && html) {
     text = htmlToText(html);
   }
 
-  // In development without email config, log to console
-  if (!mailTransporter) {
-    console.log("\n" + "=".repeat(70));
-    console.log("📧 EMAIL (Development Mode - Not Actually Sent)");
-    console.log("=".repeat(70));
-    console.log("To:", to);
-    if (replyTo) console.log("Reply-To:", replyTo);
-    console.log("Subject:", subject);
-    console.log("\n--- Plain Text Version (redacted) ---");
-    console.log((text || "N/A").replace(/\b\d{4,8}\b/g, "******").substring(0, 500));
-    console.log("=".repeat(70));
-    console.log("💡 Configure EMAIL_USER, EMAIL_PASSWORD, EMAIL_HOST in .env to send real emails.");
-    console.log("=".repeat(70) + "\n");
+  if (!resend) {
+    logDevEmail({ to, subject, text, replyTo });
     return { success: true, messageId: "dev-mode", sent: false };
   }
 
   try {
-    const mailOptions = {
-      from: `"${env.emailFromName}" <${env.emailFrom}>`,
+    const { data, error } = await resend.emails.send({
+      from: formatFrom(),
       to,
       subject,
-      text,
       html,
+      text,
       ...(replyTo ? { replyTo } : {})
-    };
+    });
 
-    const info = await mailTransporter.sendMail(mailOptions);
-    
-    console.log(`✅ Email sent successfully to ${to} (Message ID: ${info.messageId})`);
-    
-    return { 
-      success: true, 
-      messageId: info.messageId,
-      sent: true 
-    };
+    if (error) {
+      throw new Error(error.message || JSON.stringify(error));
+    }
+
+    const messageId = data?.id;
+    console.log(`✅ Email sent via resend to ${to} (Message ID: ${messageId})`);
+    return { success: true, messageId, sent: true };
   } catch (error) {
     console.error("❌ Email send error:", error);
     throw new Error(`Failed to send email: ${error.message}`);

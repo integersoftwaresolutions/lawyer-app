@@ -228,7 +228,7 @@ Copy from `backend/.env.example`. Important groups:
 |-------|-----------|
 | Core | `NODE_ENV`, `PORT` (default `5000`), `MONGO_URI`, `CLIENT_ORIGIN`, `APP_BASE_URL` |
 | Auth | `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `JWT_*_EXPIRES_IN`, `COOKIE_SECURE`, `COOKIE_SAME_SITE` |
-| Email / OTP | `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASSWORD`, `EMAIL_FROM*`, `OTP_*` (empty SMTP → emails logged to console) |
+| Email / OTP | `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_FROM_NAME`, `OTP_*` (empty key → emails logged to console) |
 | Rate limit | `RATE_LIMIT_WINDOW_MS`, `RATE_LIMIT_MAX` |
 | AI | `OPENAI_API_KEY`, `OPENAI_MODEL`, `OPENAI_EMBEDDING_MODEL`, `AI_DAILY_REQUEST_LIMIT`, `ENCRYPTION_KEY` |
 | RAG | `PINECONE_API_KEY`, `PINECONE_INDEX`, `PINECONE_CASE_LAW_NAMESPACE`, `RAG_*` |

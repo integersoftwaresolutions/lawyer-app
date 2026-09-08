@@ -7,8 +7,8 @@ const DemoRequestSchema = new mongoose.Schema(
   {
     fullName: { type: String, required: true, trim: true, maxlength: 120 },
     email: { type: String, required: true, trim: true, lowercase: true, maxlength: 254, index: true },
-    company: { type: String, required: true, trim: true, maxlength: 160 },
-    phone: { type: String, default: "", trim: true, maxlength: 40 },
+    company: { type: String, default: "", trim: true, maxlength: 160 },
+    phone: { type: String, required: true, trim: true, maxlength: 40 },
     roleTitle: { type: String, default: "", trim: true, maxlength: 120 },
     interest: {
       type: String,

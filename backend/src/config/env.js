@@ -31,18 +31,12 @@ export const env = {
   rateLimitWindowMs: Number(process.env.RATE_LIMIT_WINDOW_MS || 60000),
   rateLimitMax: Number(process.env.RATE_LIMIT_MAX || 120),
 
-  // Email configuration (optional - will log to console in development if not configured)
-  emailHost: optional("EMAIL_HOST") || optional("SMTP_HOST", "smtp.gmail.com"),
-  emailPort: Number(optional("EMAIL_PORT") || optional("SMTP_PORT", "587")),
-  emailSecure:
-    (optional("EMAIL_SECURE", "") === "true") ||
-    Number(optional("EMAIL_PORT") || optional("SMTP_PORT", "587")) === 465,
-  emailUser: optional("EMAIL_USER"),
-  emailPassword: optional("EMAIL_PASSWORD") || optional("EMAIL_PASS"),
-  emailFrom: optional("EMAIL_FROM") || optional("EMAIL_USER") || "noreply@lawyerapp.com",
+  // Email via Resend HTTPS API (SMTP is blocked on Render)
+  resendApiKey: optional("RESEND_API_KEY"),
+  emailFrom: optional("EMAIL_FROM", "beth.t@example.com"),
   emailFromName: optional("EMAIL_FROM_NAME", "Adal AI"),
   /** Sales inbox for public demo / setup requests */
-  leadsInbox: optional("LEADS_INBOX") || optional("EMAIL_USER"),
+  leadsInbox: optional("LEADS_INBOX"),
 
   // OTP configuration
   otpExpiryMinutes: Number(process.env.OTP_EXPIRY_MINUTES || 10),

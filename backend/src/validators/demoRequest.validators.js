@@ -5,11 +5,26 @@ export const createDemoRequestSchema = Joi.object({
   body: Joi.object({
     fullName: Joi.string().trim().min(2).max(120).required(),
     email: Joi.string().trim().email().max(254).required(),
-    company: Joi.string().trim().min(2).max(160).required(),
-    phone: Joi.string().trim().allow("").max(40).optional(),
+    phone: Joi.string()
+      .trim()
+      .max(40)
+      .required()
+      .custom((value, helpers) => {
+        if (String(value).replace(/\D/g, "").length < 7) {
+          return helpers.error("any.invalid");
+        }
+        return value;
+      })
+      .messages({
+        "any.invalid": "Please enter a valid phone number",
+        "any.required": "Phone is required",
+        "string.empty": "Phone is required"
+      }),
+    company: Joi.string().trim().allow("").max(160).optional(),
     roleTitle: Joi.string().trim().allow("").max(120).optional(),
     interest: Joi.string()
       .valid(...DEMO_INTERESTS)
+      .empty("")
       .default("demo"),
     teamSize: Joi.string().trim().allow("").max(40).optional(),
     message: Joi.string().trim().allow("").max(2000).optional(),

@@ -27,7 +27,7 @@ const INITIAL = {
   company: "",
   phone: "",
   roleTitle: "",
-  interest: "demo",
+  interest: "",
   teamSize: "",
   message: "",
   website: ""
@@ -59,11 +59,9 @@ export default function RequestDemoPage() {
     if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
       errors.email = "Please enter a valid work email";
     }
-    if (!form.company.trim() || form.company.trim().length < 2) {
-      errors.company = "Please enter your company or firm name";
-    }
-    if (!form.interest) {
-      errors.interest = "Please select what you need";
+    const phoneDigits = form.phone.replace(/\D/g, "");
+    if (phoneDigits.length < 7) {
+      errors.phone = "Please enter a phone number";
     }
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
@@ -111,8 +109,8 @@ export default function RequestDemoPage() {
               See Adal AI for your practice
             </h1>
             <p className="text-base sm:text-lg text-text-secondary m-0 mt-3 leading-relaxed">
-              Tell us about your firm or team. We&apos;ll follow up to schedule a demo or help with
-              setup—no account required.
+              Share your name, email, and phone. Everything else is optional—we&apos;ll follow up
+              to schedule a demo or help with setup.
             </p>
           </div>
         </div>
@@ -175,7 +173,22 @@ export default function RequestDemoPage() {
               </div>
 
               <Input
-                label="Company / firm *"
+                label="Phone *"
+                name="phone"
+                type="tel"
+                autoComplete="tel"
+                value={form.phone}
+                onChange={(e) => update("phone", e.target.value)}
+                error={fieldErrors.phone}
+                placeholder="+92 …"
+              />
+
+              <p className="m-0 mb-3 mt-1 text-xs font-semibold uppercase tracking-wide text-text-muted">
+                Optional details
+              </p>
+
+              <Input
+                label="Company / firm"
                 name="company"
                 autoComplete="organization"
                 value={form.company}
@@ -186,33 +199,12 @@ export default function RequestDemoPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
                 <Input
-                  label="Phone"
-                  name="phone"
-                  type="tel"
-                  autoComplete="tel"
-                  value={form.phone}
-                  onChange={(e) => update("phone", e.target.value)}
-                  placeholder="+92 …"
-                />
-                <Input
                   label="Your role"
                   name="roleTitle"
                   autoComplete="organization-title"
                   value={form.roleTitle}
                   onChange={(e) => update("roleTitle", e.target.value)}
                   placeholder="Managing partner, Ops, …"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
-                <Select
-                  label="What do you need? *"
-                  name="interest"
-                  options={INTEREST_OPTIONS}
-                  value={form.interest}
-                  onChange={(e) => update("interest", e.target.value)}
-                  error={fieldErrors.interest}
-                  placeholder="Select…"
                 />
                 <Select
                   label="Team size"
@@ -223,6 +215,16 @@ export default function RequestDemoPage() {
                   placeholder="Optional"
                 />
               </div>
+
+              <Select
+                label="What do you need?"
+                name="interest"
+                options={INTEREST_OPTIONS}
+                value={form.interest}
+                onChange={(e) => update("interest", e.target.value)}
+                error={fieldErrors.interest}
+                placeholder="Product demo (default)"
+              />
 
               <Textarea
                 label="Anything else we should know?"

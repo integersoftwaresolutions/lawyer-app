@@ -10,6 +10,7 @@ import NotificationBell from "../notifications/NotificationBell";
 import UserMenuPanel from "./UserMenuPanel";
 import { getDashboardPath, getProfilePath } from "../../utils/authRoutes";
 import { FiMenu, FiX, FiMoreVertical } from "react-icons/fi";
+import BrandLogo from "../BrandLogo";
 
 export default function Navbar({
   onSidebarToggle,
@@ -73,29 +74,7 @@ export default function Navbar({
           {startSlot ? (
             <div className="min-w-0 flex-1 md:flex-none">{startSlot}</div>
           ) : !hideBrand ? (
-            <Link
-              to="/"
-              className="flex items-center gap-2 no-underline shrink-0"
-            >
-              {/* Light mode */}
-              <img
-                src="/public/images/adal-logo-light-mode.png"
-                alt="Adal AI"
-                className="h-8 w-auto object-contain dark:hidden"
-              />
-
-              {/* Dark mode */}
-              <img
-                src="/public/images/adal-logo-dark-mode.png"
-                alt="Adal AI"
-                aria-hidden="true"
-                className="hidden h-8 w-auto object-contain dark:block"
-              />
-
-              <span className="font-bold text-text-primary truncate text-lg md:text-xl">
-                Adal AI
-              </span>
-            </Link>
+            <BrandLogo />
           ) : null}
         </div>
 

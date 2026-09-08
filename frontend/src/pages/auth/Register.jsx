@@ -5,7 +5,6 @@ import { useToast } from "../../hooks/useToast";
 import { useStepNavigation } from "../../hooks/useStepNavigation";
 import { useAuthForm } from "../../hooks/useAuthForm";
 import AuthLayout, { AuthLink } from "./AuthLayout";
-import { RegisterMethodStep } from "./steps/RegisterMethodStep";
 import { RoleSelectionStep } from "./steps/RoleSelectionStep";
 import { RegistrationFormStep } from "./steps/RegistrationFormStep";
 
@@ -18,9 +17,8 @@ const INITIAL_FORM_DATA = {
 };
 
 const REGISTER_STEPS = {
-  METHOD: 1,
-  ROLE: 2,
-  FORM: 3
+  ROLE: 1,
+  FORM: 2
 };
 
 export default function Register() {
@@ -31,9 +29,12 @@ export default function Register() {
   const requestedRole = searchParams.get("role")?.toUpperCase();
   const initialRole = ["CLIENT", "LAWYER"].includes(requestedRole) ? requestedRole : "";
   
-  const { step, goNext, goBack, goTo, canGoBack } = useStepNavigation(REGISTER_STEPS.METHOD, {
-    defaultBackPath: initialRole ? `/login?role=${initialRole}` : "/login"
-  });
+  const { step, goNext, goBack, canGoBack } = useStepNavigation(
+    initialRole ? REGISTER_STEPS.FORM : REGISTER_STEPS.ROLE,
+    {
+      defaultBackPath: initialRole ? `/login?role=${initialRole}` : "/login"
+    }
+  );
   
   const { formData, errors, loading, setLoading, handleChange, setError, setErrors, clearErrors } = useAuthForm(INITIAL_FORM_DATA);
   const [role, setRole] = useState(initialRole);
@@ -114,19 +115,12 @@ export default function Register() {
 
   const handleRoleSelect = (selectedRole) => {
     setRole(selectedRole);
-  };
-
-  const handleMethodContinue = () => {
-    if (role) {
-      goTo(REGISTER_STEPS.FORM);
-      return;
-    }
     goNext();
   };
 
   const handleBack = () => {
-    if (step === REGISTER_STEPS.FORM && initialRole) {
-      goTo(REGISTER_STEPS.METHOD);
+    if (initialRole) {
+      navigate(initialRole ? `/login?role=${initialRole}` : "/login");
       return;
     }
     goBack();
@@ -143,15 +137,15 @@ export default function Register() {
 
   const getStepTitle = () => {
     switch (step) {
-      case REGISTER_STEPS.METHOD:
-        return {
-          title: role ? `Create ${role === "LAWYER" ? "Lawyer" : "Client"} Account` : "Create Account",
-          subtitle: "Get started with your free account"
-        };
       case REGISTER_STEPS.ROLE:
         return { title: "Choose Your Role", subtitle: "How will you be using the platform?" };
       case REGISTER_STEPS.FORM:
-        return { title: "Create Your Account", subtitle: "Enter your basic information to get started" };
+        return {
+          title: role
+            ? `Create ${role === "LAWYER" ? "Lawyer" : "Client"} Account`
+            : "Create Your Account",
+          subtitle: "Enter your basic information to get started"
+        };
       default:
         return { title: "", subtitle: "" };
     }
@@ -163,24 +157,13 @@ export default function Register() {
     <AuthLayout
       title={title}
       subtitle={subtitle}
-      showBackButton={canGoBack}
+      showBackButton={canGoBack && !initialRole}
       onBack={handleBack}
       footer={authFooter}
     >
-      {step === REGISTER_STEPS.METHOD && (
-        <RegisterMethodStep
-          onEmailClick={handleMethodContinue}
-          onGoogleSuccess={handleMethodContinue}
-        />
-      )}
-
       {step === REGISTER_STEPS.ROLE && (
-        <RoleSelectionStep
-          selectedRole={role}
-          onRoleSelect={handleRoleSelect}
-          onContinue={goNext}
-              />
-        )}
+        <RoleSelectionStep onRoleSelect={handleRoleSelect} />
+      )}
 
       {step === REGISTER_STEPS.FORM && (
         <RegistrationFormStep

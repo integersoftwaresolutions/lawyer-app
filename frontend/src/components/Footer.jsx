@@ -7,6 +7,7 @@ import {
   FiFacebook,
   FiGithub
 } from "react-icons/fi";
+import BrandLogo from "./BrandLogo";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -17,7 +18,12 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           {/* Company Info */}
           <div>
-            <h3 className="text-lg font-bold mb-4 text-text-primary">Adal AI</h3>
+            <div className="mb-4">
+              <BrandLogo
+                imgClassName="h-8 w-auto"
+                wordmarkClassName="text-lg font-bold text-text-primary"
+              />
+            </div>
             <p className="text-sm text-text-secondary mb-4 leading-relaxed">
               Legal practice management, simplified—cases, documents, teams, billing, and AI in one
               workspace. Clients can book verified lawyers on the same platform.

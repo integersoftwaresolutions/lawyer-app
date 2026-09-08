@@ -1,11 +1,9 @@
-import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../hooks/useToast";
 import { useAuthForm } from "../../hooks/useAuthForm";
 import { Input, Button } from "../../components/ui";
-import AuthLayout, { AuthDivider, AuthLink, ErrorMessage, FormSection } from "./AuthLayout";
-import { GoogleAuthButton } from "./components/GoogleAuthButton";
+import AuthLayout, { AuthLink, ErrorMessage, FormSection } from "./AuthLayout";
 import { getDashboardPath } from "../../utils/authRoutes";
 
 export default function Login() {
@@ -110,19 +108,6 @@ export default function Login() {
     } else {
       setError("submit", message);
       toast.error(message);
-    }
-  };
-
-  const handleGoogleSuccess = async (response) => {
-    setLoading(true);
-    try {
-      console.log("Google login success:", response);
-      // TODO: Implement Google OAuth login
-    } catch (error) {
-      console.error("Google login failed:", error);
-      toast.error("Google sign-in failed");
-    } finally {
-      setLoading(false);
     }
   };
 

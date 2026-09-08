@@ -18,7 +18,7 @@ Config in this repo: [`render.yaml`](./render.yaml) (Blueprint) + [`backend/Dock
 - MongoDB Atlas (or any hosted Mongo) connection string
 - Strong JWT secrets
 
-Optional later: Stripe, OpenAI, Pinecone, SMTP.
+Optional later: Stripe, OpenAI, Pinecone, Resend (HTTPS email — SMTP is blocked on Render).
 
 ---
 
@@ -99,7 +99,7 @@ COOKIE_SAME_SITE=none
 LEADS_INBOX=integersoftwaressolutions@gmail.com
 ```
 
-Copy remaining keys from `backend/.env.example` as needed (email SMTP, Stripe, OpenAI, etc.).  
+Copy remaining keys from `backend/.env.example` as needed (`RESEND_API_KEY` + `EMAIL_FROM`, Stripe, OpenAI, etc.). See `backend/EMAIL_SETUP.md`.  
 `LEADS_INBOX` receives public **Request a demo** form submissions.  
 Render injects `PORT` — the app already reads `process.env.PORT`.
 

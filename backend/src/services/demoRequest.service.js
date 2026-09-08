@@ -46,7 +46,7 @@ function buildLeadEmailText(lead, interestLabel, submittedAt) {
     "",
     `Name: ${lead.fullName}`,
     `Email: ${lead.email}`,
-    `Company: ${lead.company}`,
+    `Company: ${lead.company || "—"}`,
     `Phone: ${lead.phone || "—"}`,
     `Role: ${lead.roleTitle || "—"}`,
     `Interest: ${interestLabel}`,
@@ -70,17 +70,23 @@ function buildLeadVariables(lead) {
   const phone = (lead.phone || "").trim();
   const role = (lead.roleTitle || "").trim();
   const teamSize = (lead.teamSize || "").trim();
+  const company = (lead.company || "").trim();
+  const fromFirm = company
+    ? ` from <strong>${escapeHtml(company)}</strong>`
+    : "";
 
   return {
-    preheader: `${lead.fullName} at ${lead.company} — ${interestLabel}`,
+    preheader: company
+      ? `${lead.fullName} at ${company} — ${interestLabel}`
+      : `${lead.fullName} — ${interestLabel}`,
     headline: "New demo request",
-    introLine: `<strong>${escapeHtml(lead.fullName)}</strong> from <strong>${escapeHtml(
-      lead.company
-    )}</strong> requested <strong>${escapeHtml(interestLabel)}</strong> via the public form.`,
+    introLine: `<strong>${escapeHtml(lead.fullName)}</strong>${fromFirm} requested <strong>${escapeHtml(
+      interestLabel
+    )}</strong> via the public form.`,
     fullName: escapeHtml(lead.fullName),
     email: escapeHtml(lead.email),
-    company: escapeHtml(lead.company),
-    companyEncoded: encodeURIComponent(lead.company || "Adal AI"),
+    company: company ? escapeHtml(company) : "—",
+    companyEncoded: encodeURIComponent(company || lead.fullName || "Adal AI"),
     phoneDisplay: phone
       ? `<a href="tel:${escapeHtml(phone.replace(/\s+/g, ""))}">${escapeHtml(phone)}</a>`
       : "—",
@@ -135,7 +141,7 @@ export async function createDemoRequest(payload, { ip = "", userAgent = "" } = {
     const vars = buildLeadVariables(lead);
     await sendEmail({
       to: inbox,
-      subject: `[Adal AI] ${vars.interestLabelRaw} — ${lead.company} — ${lead.fullName}`,
+      subject: `[Adal AI] ${vars.interestLabelRaw} — ${lead.company || lead.fullName}`,
       template: "demo-request-lead",
       variables: vars,
       text: buildLeadEmailText(lead, vars.interestLabelRaw, vars.submittedAtRaw),
