@@ -4,8 +4,10 @@ import { FiArrowRight, FiCheck } from "react-icons/fi";
 import { Navbar } from "../../components/layout";
 import Footer from "../../components/Footer";
 import { Button, Input, Select, Textarea } from "../../components/ui";
+import { useTheme } from "../../context/ThemeContext";
 import { submitDemoRequest } from "../../services/demo.api";
 import { getErrorMessage } from "../../utils/errorHandler";
+import "./marketing/marketing-motion.css";
 
 const INTEREST_OPTIONS = [
   { value: "demo", label: "Product demo" },
@@ -34,6 +36,7 @@ const INITIAL = {
 };
 
 export default function RequestDemoPage() {
+  const { isDarkMode } = useTheme();
   const [form, setForm] = useState(INITIAL);
   const [fieldErrors, setFieldErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -96,12 +99,27 @@ export default function RequestDemoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-text-primary flex flex-col">
+    <div
+      className={`min-h-screen relative text-text-primary flex flex-col ${
+        isDarkMode ? "mkt-landing--dark bg-background" : "mkt-landing--light bg-background"
+      }`}
+    >
       <Navbar />
 
       <main className="flex-1">
-        <div className="border-b border-border">
-          <div className="max-w-[720px] mx-auto px-4 sm:px-6 py-10 sm:py-14">
+        {/* Hero Header Section with Radial Gradient Background */}
+        <header className="relative border-b border-border overflow-x-clip">
+          <div className="hero-bg-frame" aria-hidden>
+            <div
+              className={
+                isDarkMode
+                  ? "ken-burns absolute inset-0 bg-[radial-gradient(900px_420px_at_50%_-10%,rgba(10,107,110,0.35),transparent_60%)]"
+                  : "ken-burns absolute inset-0 bg-[radial-gradient(900px_420px_at_50%_-10%,rgba(8,84,86,0.14),transparent_60%)]"
+              }
+            />
+          </div>
+
+          <div className="relative max-w-[720px] mx-auto px-4 sm:px-6 py-10 sm:py-14 text-center">
             <p className="text-xs sm:text-sm font-semibold text-primary m-0 mb-3 tracking-wide uppercase">
               Request a demo
             </p>
@@ -113,8 +131,9 @@ export default function RequestDemoPage() {
               to schedule a demo or help with setup.
             </p>
           </div>
-        </div>
+        </header>
 
+        {/* Form Body Container */}
         <div className="max-w-[720px] mx-auto px-4 sm:px-6 py-8 sm:py-12">
           {done ? (
             <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 text-center">
@@ -147,7 +166,7 @@ export default function RequestDemoPage() {
           ) : (
             <form
               onSubmit={handleSubmit}
-              className="relative rounded-2xl border border-border bg-card p-5 sm:p-8"
+              className="relative rounded-2xl border border-border bg-card p-5 sm:p-8 shadow-sm"
               noValidate
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
