@@ -26,7 +26,8 @@ async function requireBillingAccess(userId, workspaceId, { manage = false } = {}
 
 export async function getCatalog(req, res, next) {
   try {
-    return sendSuccess(res, { data: subscriptionService.getCatalogPublic() });
+    const data = await subscriptionService.getCatalogPublic();
+    return sendSuccess(res, { data });
   } catch (e) {
     next(e);
   }
@@ -153,9 +154,10 @@ export async function adminForceFree(req, res, next) {
     const data = await subscriptionService.adminForceFree({
       workspaceId: req.params.workspaceId,
       adminUserId: req.user.id,
-      reason: req.body.reason || ""
+      reason: req.body.reason || "",
+      practiceLocked: Boolean(req.body.practiceLocked)
     });
-    return sendSuccess(res, { data, message: "Workspace set to Free" });
+    return sendSuccess(res, { data, message: "Workspace set to Base (unpaid)" });
   } catch (e) {
     next(e);
   }
@@ -172,7 +174,35 @@ export async function adminReconcile(req, res, next) {
 
 export async function adminCatalog(req, res, next) {
   try {
-    return sendSuccess(res, { data: subscriptionService.getCatalogPublic() });
+    const catalog = await subscriptionService.getCatalogPublic();
+    const { getCatalogDefaultsSnapshot } = await import("../billing/planDefinition.service.js");
+    const defaults = await getCatalogDefaultsSnapshot();
+    return sendSuccess(res, {
+      data: {
+        ...catalog,
+        defaults
+      }
+    });
+  } catch (e) {
+    next(e);
+  }
+}
+
+export async function adminUpdatePlan(req, res, next) {
+  try {
+    const { updatePlanDefinition } = await import("../billing/planDefinition.service.js");
+    const data = await updatePlanDefinition(req.params.planKey, req.body, req.user.id);
+    return sendSuccess(res, { data, message: "Plan updated" });
+  } catch (e) {
+    next(e);
+  }
+}
+
+export async function adminResetPlan(req, res, next) {
+  try {
+    const { resetPlanDefinition } = await import("../billing/planDefinition.service.js");
+    const data = await resetPlanDefinition(req.params.planKey, req.user.id);
+    return sendSuccess(res, { data, message: "Plan reset to defaults" });
   } catch (e) {
     next(e);
   }

@@ -10,8 +10,10 @@ export function isStripeConfigured() {
 
 export function getStripePriceMap() {
   return {
-    [PLAN_KEYS.PRO]: env.stripePriceProMonthly || null,
-    [PLAN_KEYS.FIRM]: env.stripePriceFirmMonthly || null
+    [PLAN_KEYS.BASE]: env.stripePriceBaseMonthly || null,
+    [PLAN_KEYS.MAX]: env.stripePriceMaxMonthly || env.stripePriceProMonthly || null,
+    [PLAN_KEYS.FIRM]: env.stripePriceFirmMonthly || null,
+    [PLAN_KEYS.FIRM_MAX]: env.stripePriceFirmMaxMonthly || null
   };
 }
 
@@ -60,6 +62,7 @@ export const stripeBillingProvider = {
   }) {
     const stripe = await getStripeClientAsync();
     if (!stripe) throw new Error("Stripe is not configured");
+    // No trial_period_days — Base trial is app-local only
     return stripe.checkout.sessions.create({
       mode,
       customer: customerId,

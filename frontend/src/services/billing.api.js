@@ -17,6 +17,10 @@ export const billingApi = {
 
 export const adminBillingApi = {
   catalog: () => api.get("/admin/billing/catalog").then((r) => r.data),
+  updatePlan: (planKey, body) =>
+    api.patch(`/admin/billing/catalog/${planKey}`, body).then((r) => r.data),
+  resetPlan: (planKey) =>
+    api.post(`/admin/billing/catalog/${planKey}/reset`).then((r) => r.data),
   listSubscriptions: (params) =>
     api.get("/admin/billing/subscriptions", { params }).then((r) => normalizeListResponse(r.data)),
   getSubscription: (workspaceId) =>

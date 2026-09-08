@@ -1,6 +1,6 @@
 import { ApiError } from "../helpers/apiError.js";
 import LawyerProfile from "../models/LawyerProfile.js";
-import { VERIFICATION_STATUS } from "../config/constants.js";
+import { ERROR_CODES, VERIFICATION_STATUS } from "../config/constants.js";
 
 /**
  * Marketplace-only gate: KYC approved. No verification fee.
@@ -25,7 +25,9 @@ export async function requireVerifiedLawyer(req, res, next) {
     if (profile.verificationStatus !== VERIFICATION_STATUS.APPROVED) {
       throw new ApiError(
         403,
-        "Your account must be verified to access this feature. Please complete the verification process."
+        "Your lawyer profile must be verified before you can use this page.",
+        undefined,
+        ERROR_CODES.LAWYER_NOT_VERIFIED
       );
     }
 

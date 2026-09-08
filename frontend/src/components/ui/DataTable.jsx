@@ -1,6 +1,8 @@
 import Spinner from "./Spinner";
 import Button from "./Button";
 import { getErrorMessage } from "../../utils/errorHandler";
+import { isLawyerNotVerifiedError } from "../../utils/lawyerVerification";
+import VerificationRequiredPanel from "../verification/VerificationRequiredPanel";
 
 /**
  * Canonical data table for list pages.
@@ -18,6 +20,7 @@ export default function DataTable({
   emptyMessage = "No records found",
   emptyDescription = "Try adjusting filters or check back later.",
   emptyIcon = null,
+  emptyAction = null,
   className = "",
   stickyHeader = true,
   onRowClick,
@@ -49,17 +52,23 @@ export default function DataTable({
     >
       <div className="overflow-x-auto scrollbar-sm">
         {error ? (
-          <div className="px-6 py-14 text-center">
-            <p className="text-sm font-medium text-text-primary m-0 mb-1">Couldn’t load data</p>
-            <p className="text-xs text-text-muted m-0 mb-4 max-w-sm mx-auto">
-              {getErrorMessage(error)}
-            </p>
-            {typeof retry === "function" && (
-              <Button size="sm" variant="secondary" outline onClick={retry}>
-                Try again
-              </Button>
-            )}
-          </div>
+          isLawyerNotVerifiedError(error) ? (
+            <div className="px-4 py-8 sm:px-6">
+              <VerificationRequiredPanel compact />
+            </div>
+          ) : (
+            <div className="px-6 py-14 text-center">
+              <p className="text-sm font-medium text-text-primary m-0 mb-1">Couldn’t load data</p>
+              <p className="text-xs text-text-muted m-0 mb-4 max-w-sm mx-auto">
+                {getErrorMessage(error)}
+              </p>
+              {typeof retry === "function" && (
+                <Button size="sm" variant="secondary" outline onClick={retry}>
+                  Try again
+                </Button>
+              )}
+            </div>
+          )
         ) : loading ? (
           <TableSkeleton
             columns={columns}
@@ -71,7 +80,7 @@ export default function DataTable({
             stickyHeader={stickyHeader}
           />
         ) : rows.length === 0 ? (
-          <EmptyState message={emptyMessage} description={emptyDescription} icon={emptyIcon} />
+          <EmptyState message={emptyMessage} description={emptyDescription} icon={emptyIcon} action={emptyAction} />
         ) : (
           <table className="w-full border-collapse" style={{ minWidth }}>
             <thead>
@@ -192,7 +201,7 @@ function TableSkeleton({
   );
 }
 
-function EmptyState({ message, description, icon }) {
+function EmptyState({ message, description, icon, action }) {
   return (
     <div className="m-4 sm:m-5 rounded-xl border border-dashed border-card-border bg-surface">
       <div className="flex flex-col items-center justify-center py-12 sm:py-14 px-6 text-center">
@@ -210,6 +219,7 @@ function EmptyState({ message, description, icon }) {
         </div>
         <p className="text-text-primary font-medium text-sm m-0">{message}</p>
         {description ? <p className="text-text-muted text-xs mt-1.5 m-0 max-w-xs">{description}</p> : null}
+        {action ? <div className="mt-4">{action}</div> : null}
       </div>
     </div>
   );

@@ -10,6 +10,8 @@ import DayEventsPanel from "./DayEventsPanel";
 import EventDetailPanel from "./EventDetailPanel";
 import EventFormModal from "./EventFormModal";
 import { ConfirmModal, Spinner } from "../ui";
+import VerificationRequiredPanel from "../verification/VerificationRequiredPanel";
+import { isLawyerNotVerifiedError } from "../../utils/lawyerVerification";
 
 /**
  * Reusable calendar shell — pass any calendar API adapter (lawyer or future client).
@@ -72,6 +74,14 @@ export default function CalendarShell({
   const editingEvent = cal.formOpen && cal.selectedEvent && !cal.formDefaults ? cal.selectedEvent : null;
   const showSidePanel = !cal.formOpen && (cal.selectedEvent || cal.selectedDayKey);
   const dayEvents = cal.selectedDayKey ? cal.eventsByDate[cal.selectedDayKey] || [] : [];
+
+  if (!cal.loading && isLawyerNotVerifiedError(cal.error)) {
+    return (
+      <div className={className}>
+        <VerificationRequiredPanel compact />
+      </div>
+    );
+  }
 
   return (
     <div className={`flex flex-col h-full min-h-0 gap-3 ${className}`}>

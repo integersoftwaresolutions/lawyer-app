@@ -4,9 +4,9 @@ import {
   LIMIT_KEYS,
   FEATURE_KEYS,
   PLAN_LIMIT_ERROR_CODES,
-  getPlanDefinition,
   entitlementsPlanKey
 } from "./planCatalog.js";
+import { getResolvedPlan } from "./planDefinition.service.js";
 import * as usageMeters from "./usageMeters.js";
 import {
   ensureSubscription,
@@ -38,7 +38,7 @@ export async function getEntitlements(workspaceId) {
   }
 
   const effectivePlanKey = entitlementsPlanKey(sub);
-  const plan = getPlanDefinition(effectivePlanKey);
+  const plan = await getResolvedPlan(effectivePlanKey);
   const limits = {
     ...plan.limits,
     [LIMIT_KEYS.SEATS]: limitOrSeat(plan, sub)
@@ -81,7 +81,7 @@ export async function assertPracticeWritable(workspaceId) {
   if (ent.practiceLocked) {
     throwLimit(
       PLAN_LIMIT_ERROR_CODES.BILLING_LOCKED,
-      "This workspace billing is past due. Update payment to continue.",
+      "Practice tools are locked. Subscribe or update payment to continue.",
       { upgradeRequired: true }
     );
   }
@@ -147,7 +147,7 @@ export async function assertCanAddSeat(workspaceId) {
   if (meter.used >= meter.limit) {
     throwLimit(
       PLAN_LIMIT_ERROR_CODES.SEATS,
-      `Seat limit reached (${meter.limit}). Upgrade your Firm plan or remove a member.`,
+      `Seat limit reached (${meter.limit}). Upgrade your firm plan or remove a member.`,
       { limit: meter.limit, used: meter.used, upgradeRequired: true }
     );
   }
@@ -155,14 +155,14 @@ export async function assertCanAddSeat(workspaceId) {
 }
 
 export async function assertCanCreateFirm(actorPersonalWorkspaceId = null) {
-  // Firm create is gated by Checkout / Stripe Firm plan, not personal Free feature flag.
-  // Personal `features.create_firm` stays false — paid Firm checkout is the path.
-  // When Stripe is off, workspace service grants Firm manually.
-  if (actorPersonalWorkspaceId) {
-    const ent = await getEntitlements(actorPersonalWorkspaceId);
+  if (!actorPersonalWorkspaceId) return null;
+  const ent = await getEntitlements(actorPersonalWorkspaceId);
+  if (!ent.features[FEATURE_KEYS.CREATE_FIRM]) {
+    // Personal Base/Max never have create_firm; firm create still goes through Stripe firm checkout.
+    // Soft check only — paid firm checkout remains the path. Log for visibility.
     return ent;
   }
-  return null;
+  return ent;
 }
 
 export async function hasFeature(workspaceId, featureKey) {

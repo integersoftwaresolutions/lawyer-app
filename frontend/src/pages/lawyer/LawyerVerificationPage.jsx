@@ -1,7 +1,8 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { lawyerApi } from "../../services/lawyer.api";
 import { Card, Badge, Button, StateHandler, Modal, PageHeader, PageShell } from "../../components/ui";
 import { useToast } from "../../hooks/useToast";
+import { useAuth } from "../../hooks/useAuth";
 import { useStateHandler } from "../../hooks/useStateHandler";
 import { getProfilePictureUrl } from "../../utils/profilePicture";
 import {
@@ -90,6 +91,7 @@ export default function LawyerVerificationPage() {
   const fileInputRef = useRef(null);
   const pendingDocTypeRef = useRef(null);
   const toast = useToast();
+  const { loadProfile } = useAuth();
 
   const { loading, error, data, retry } = useStateHandler(async () => {
     const res = await lawyerApi.getVerificationStatus();
@@ -97,6 +99,11 @@ export default function LawyerVerificationPage() {
   });
 
   const verificationData = data;
+
+  useEffect(() => {
+    if (!verificationData?.profile?.verificationStatus) return;
+    loadProfile().catch(() => {});
+  }, [verificationData?.profile?.verificationStatus, loadProfile]);
 
   const openFilePicker = (docType) => {
     pendingDocTypeRef.current = docType;

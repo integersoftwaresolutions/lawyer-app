@@ -24,7 +24,7 @@ const QUICK_LINKS = [
 
 const LAWYER_LINKS = [
   { to: "/register?role=lawyer", label: "Join as Lawyer" },
-  { to: "/pricing", label: "Free / Pro / Firm" },
+  { to: "/pricing", label: "Base / Max / Firm" },
   { to: "/request-demo", label: "Request a demo" },
   { to: "/#how-it-works", label: "How it works" },
   { to: "/#ai", label: "AI & knowledge" },

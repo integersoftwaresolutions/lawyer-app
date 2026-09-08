@@ -236,6 +236,9 @@ export async function createFirm(userId, body = {}) {
     throw new ApiError(409, "Firm slug already taken");
   }
 
+  const { resolveFirmCreatePlanKey } = await import("../billing/planCatalog.js");
+  const planKey = resolveFirmCreatePlanKey(body.planKey);
+
   const { isStripeConfigured } = await import("../billing/providers/stripe.provider.js");
   const { createFirmCheckout } = await import("../billing/subscription.service.js");
   const { env } = await import("../config/env.js");
@@ -245,6 +248,7 @@ export async function createFirm(userId, body = {}) {
     const checkout = await createFirmCheckout({
       actorUserId: userId,
       firmPayload: { ...body, name, slug },
+      planKey,
       successUrl: `${base}/lawyer/billing?firmCheckout=success`,
       cancelUrl: `${base}/lawyer/billing?firmCheckout=cancel`
     });
@@ -252,12 +256,13 @@ export async function createFirm(userId, body = {}) {
       return {
         requiresCheckout: true,
         checkoutUrl: checkout.checkoutUrl,
-        sessionId: checkout.sessionId
+        sessionId: checkout.sessionId,
+        planKey
       };
     }
   }
 
-  // Dev / no Stripe: create firm with manual Firm plan
+  // Dev / no Stripe: create firm with the chosen firm plan
   return finalizeFirmCreate(userId, {
     name,
     slug,
@@ -268,10 +273,13 @@ export async function createFirm(userId, body = {}) {
     city: body.city || "",
     description: body.description || "",
     logoMediaId: body.logoMediaId || null
-  });
+  }, { planKey, reason: "firm_create_manual" });
 }
 
 async function finalizeFirmCreate(userId, firm, billing = {}) {
+  const { resolveFirmCreatePlanKey } = await import("../billing/planCatalog.js");
+  const planKey = resolveFirmCreatePlanKey(billing.planKey);
+
   const workspace = await Workspace.create({
     type: WORKSPACE_TYPES.FIRM,
     name: firm.name,
@@ -284,8 +292,8 @@ async function finalizeFirmCreate(userId, firm, billing = {}) {
     city: firm.city || "",
     description: firm.description || "",
     logoMediaId: firm.logoMediaId || null,
-    planId: "firm",
-    seatLimit: billing.seatLimit ?? 10
+    planId: planKey,
+    seatLimit: billing.seatLimit ?? null
   });
 
   await seedFirmBuiltinRoles(workspace._id);
@@ -306,11 +314,14 @@ async function finalizeFirmCreate(userId, firm, billing = {}) {
     meta: { name: firm.name, slug: firm.slug }
   });
 
-  const { PLAN_KEYS, getPlanDefinition } = await import("../billing/planCatalog.js");
+  const { getResolvedPlan } = await import("../billing/planDefinition.service.js");
   const { ensureSubscription, applyStripeSubscription, adminGrantPlan } = await import(
     "../billing/subscription.service.js"
   );
   const { stripeBillingProvider } = await import("../billing/providers/stripe.provider.js");
+
+  const firmPlan = await getResolvedPlan(planKey);
+  const firmSeats = firmPlan.limits.seats;
 
   if (billing.stripeSubscriptionId) {
     const stripeSub = await stripeBillingProvider.retrieveSubscription(billing.stripeSubscriptionId);
@@ -321,19 +332,24 @@ async function finalizeFirmCreate(userId, firm, billing = {}) {
         await sub.save();
       }
       await applyStripeSubscription(workspace._id, stripeSub, {
-        planKey: PLAN_KEYS.FIRM,
+        planKey,
         stripeCustomerId: billing.stripeCustomerId
       });
     }
   } else {
     await adminGrantPlan({
       workspaceId: workspace._id,
-      planKey: PLAN_KEYS.FIRM,
+      planKey,
       adminUserId: userId,
       reason: billing.reason || "firm_create_manual",
-      seatLimit: getPlanDefinition(PLAN_KEYS.FIRM).limits["seats"]
+      seatLimit: billing.seatLimit ?? firmSeats
     });
   }
+
+  await Workspace.updateOne(
+    { _id: workspace._id },
+    { $set: { seatLimit: billing.seatLimit ?? firmSeats, planId: planKey } }
+  );
 
   const { expandPermissions } = await import("../workspaces/permissions.catalog.js");
   return formatWorkspace(
@@ -356,6 +372,7 @@ export async function createFirmFromBillingCheckout({
   actorUserId,
   stripeCustomerId,
   stripeSubscriptionId,
+  planKey,
   firm
 }) {
   const name = String(firm.name || "").trim();
@@ -365,6 +382,8 @@ export async function createFirmFromBillingCheckout({
   if (await Workspace.exists({ slug, deletedAt: null })) {
     slug = await uniqueFirmSlug(name);
   }
+
+  const { resolveFirmCreatePlanKey } = await import("../billing/planCatalog.js");
 
   return finalizeFirmCreate(actorUserId, {
     name,
@@ -378,6 +397,7 @@ export async function createFirmFromBillingCheckout({
   }, {
     stripeCustomerId,
     stripeSubscriptionId,
+    planKey: resolveFirmCreatePlanKey(planKey),
     reason: "stripe_firm_checkout"
   });
 }

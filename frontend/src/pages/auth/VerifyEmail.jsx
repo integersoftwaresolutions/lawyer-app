@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { FiCheckCircle, FiMail } from "react-icons/fi";
 import { useAuth } from "../../hooks/useAuth";
@@ -8,6 +8,7 @@ import { Button } from "../../components/ui";
 import AuthLayout, { AuthDivider, AuthLink, ErrorMessage, FormSection } from "./AuthLayout";
 import { OtpInput } from "./components/OtpInput";
 import { ResendOtpButton } from "./components/ResendOtpButton";
+import { forceLogout } from "../../auth/session";
 
 function profilePathForRole(role) {
   if (role === "LAWYER") return "/lawyer/settings/profile";
@@ -27,6 +28,7 @@ export default function VerifyEmail() {
   const [code, setCode] = useState("");
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [leaving, setLeaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
 
@@ -56,6 +58,24 @@ export default function VerifyEmail() {
 
     sendOtpOnLoad();
   }, [email, from, navigate, otpSent, toast]);
+
+  const leaveSession = useCallback(
+    async (path) => {
+      setLeaving(true);
+      try {
+        if (isAuthenticated) {
+          await forceLogout({ reason: "user", redirect: false, clearServerSession: true });
+        }
+        navigate(path, { replace: true });
+      } catch (err) {
+        console.error("Failed to leave verification:", err);
+        navigate(path, { replace: true });
+      } finally {
+        setLeaving(false);
+      }
+    },
+    [isAuthenticated, navigate]
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -116,16 +136,6 @@ export default function VerifyEmail() {
     }
   };
 
-  const handleBack = () => {
-    if (from === "login") {
-      navigate(`/login?from=verify&email=${encodeURIComponent(email)}`);
-    } else if (from === "register") {
-      navigate("/register");
-    } else {
-      navigate("/login");
-    }
-  };
-
   if (success) {
     return (
       <AuthLayout
@@ -148,11 +158,9 @@ export default function VerifyEmail() {
       subtitle={
         <div className="flex items-center gap-2 justify-center">
           <FiMail className="text-text-secondary" />
-          <span>We've sent a verification code to {email}</span>
+          <span>We sent a verification code to {email}</span>
         </div>
       }
-      showBackButton={!!from}
-      onBack={handleBack}
       footer={
         <ResendOtpButton
           onResend={handleResend}
@@ -172,15 +180,27 @@ export default function VerifyEmail() {
           type="submit"
           fullWidth
           loading={loading}
-          disabled={loading || code.length !== 6}
+          disabled={loading || leaving || code.length !== 6}
         >
           Verify Email
         </Button>
 
         <AuthDivider />
 
-        <div className="text-center">
-          <AuthLink onClick={() => navigate("/login")}>Back to Login</AuthLink>
+        <div className="text-center space-y-2">
+          <p className="text-sm text-text-secondary m-0">
+            Wrong email?{" "}
+            <AuthLink onClick={() => !leaving && leaveSession("/register")}>
+              Use a different email
+            </AuthLink>
+          </p>
+          <p className="text-sm text-text-secondary m-0">
+            {isAuthenticated ? (
+              <AuthLink onClick={() => !leaving && leaveSession("/login")}>Sign out</AuthLink>
+            ) : (
+              <AuthLink onClick={() => navigate("/login")}>Back to login</AuthLink>
+            )}
+          </p>
         </div>
       </form>
     </AuthLayout>

@@ -37,11 +37,15 @@ export default function BillingSubscriptionPage() {
     firmBusy,
     firmForm,
     setFirmForm,
-    handleUpgradePro,
+    handleCheckout,
     handleSelectPlan,
     handlePortal,
     handleCreateFirm
   } = billing;
+
+  const visiblePlans = isFirm
+    ? plans.filter((p) => p.key === PLAN_KEYS.FIRM || p.key === PLAN_KEYS.FIRM_MAX)
+    : plans;
 
   return (
     <StateHandler loading={loading} error={error} retry={load}>
@@ -61,24 +65,39 @@ export default function BillingSubscriptionPage() {
 
         {!stripeConfigured && (
           <div className="mb-4 rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-secondary">
-            Live checkout is not configured in this environment. An admin can grant Pro/Firm for
-            testing.
+            Live checkout is not configured in this environment. An admin can grant Base / Max / Firm
+            plans for testing.
           </div>
         )}
 
         {entitlements?.practiceLocked && (
           <div className="mb-4 rounded-xl border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-text-primary">
-            Practice tools are locked due to past-due billing.{" "}
+            Practice tools are locked (trial ended or past-due billing).{" "}
             {canManage ? (
-              <button
-                type="button"
-                className="text-link underline bg-transparent border-0 p-0 cursor-pointer"
-                onClick={handlePortal}
-              >
-                Update payment
-              </button>
+              <>
+                <button
+                  type="button"
+                  className="text-link underline bg-transparent border-0 p-0 cursor-pointer"
+                  onClick={() => handleCheckout(isFirm ? PLAN_KEYS.FIRM : PLAN_KEYS.BASE)}
+                >
+                  Subscribe
+                </button>
+                {sub?.stripeCustomerId ? (
+                  <>
+                    {" "}
+                    or{" "}
+                    <button
+                      type="button"
+                      className="text-link underline bg-transparent border-0 p-0 cursor-pointer"
+                      onClick={handlePortal}
+                    >
+                      update payment
+                    </button>
+                  </>
+                ) : null}
+              </>
             ) : (
-              "Ask a billing manager to update payment."
+              "Ask a billing manager to subscribe or update payment."
             )}
           </div>
         )}
@@ -94,7 +113,7 @@ export default function BillingSubscriptionPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="text-2xl font-semibold text-text-primary m-0 capitalize">
+                  <h3 className="text-2xl font-semibold text-text-primary m-0">
                     {entitlements?.planName || currentPlanKey}
                   </h3>
                   <Badge variant={billingStatusVariant(sub?.status)}>{sub?.status || "FREE"}</Badge>
@@ -102,7 +121,7 @@ export default function BillingSubscriptionPage() {
                 </div>
                 {sub?.status === "TRIALING" && sub?.trialEndsAt && (
                   <p className="text-sm text-text-muted m-0 mt-2">
-                    Trial ends {new Date(sub.trialEndsAt).toLocaleString()}
+                    Base trial ends {new Date(sub.trialEndsAt).toLocaleString()}
                   </p>
                 )}
                 {sub?.currentPeriodEnd && sub?.status === "ACTIVE" && (
@@ -113,9 +132,22 @@ export default function BillingSubscriptionPage() {
                 )}
               </div>
               <div className="flex flex-col sm:flex-row gap-2">
-                {canManage && !isFirm && (currentPlanKey !== "pro" || sub?.status === "TRIALING") && (
-                  <Button loading={busyPlanKey === PLAN_KEYS.PRO} onClick={handleUpgradePro}>
-                    {sub?.status === "TRIALING" ? "Subscribe now" : "Upgrade to Pro"}
+                {canManage &&
+                  !isFirm &&
+                  (currentPlanKey !== PLAN_KEYS.MAX || sub?.status === "TRIALING") && (
+                    <Button
+                      loading={busyPlanKey === PLAN_KEYS.MAX}
+                      onClick={() => handleCheckout(PLAN_KEYS.MAX)}
+                    >
+                      {sub?.status === "TRIALING" ? "Subscribe to Max" : "Upgrade to Max"}
+                    </Button>
+                  )}
+                {canManage && isFirm && currentPlanKey !== PLAN_KEYS.FIRM_MAX && (
+                  <Button
+                    loading={busyPlanKey === PLAN_KEYS.FIRM_MAX}
+                    onClick={() => handleCheckout(PLAN_KEYS.FIRM_MAX)}
+                  >
+                    Upgrade to Firm Max
                   </Button>
                 )}
                 {canManage && sub?.stripeCustomerId && (
@@ -141,11 +173,12 @@ export default function BillingSubscriptionPage() {
             Change plan
           </h2>
           <p className="text-sm text-text-secondary m-0 mb-5">
-            Applies to the <strong>active workspace</strong>. Switch workspace in the top bar to
-            bill another one.
+            {isFirm
+              ? "Applies to the active firm workspace. Switch workspace in the top bar to bill another one."
+              : "Base and Max apply to this personal workspace. Law Firm Plan and Law Firm Max create a new firm on the plan you pick."}
           </p>
           <PlanComparisonCards
-            plans={plans}
+            plans={visiblePlans.length ? visiblePlans : plans}
             currentPlanKey={currentPlanKey}
             highlightCurrent
             ctaMode="button"
@@ -163,6 +196,7 @@ export default function BillingSubscriptionPage() {
           firmBusy={firmBusy}
           onSubmit={handleCreateFirm}
           stripeConfigured={stripeConfigured}
+          plans={plans}
         />
       </PageShell>
     </StateHandler>

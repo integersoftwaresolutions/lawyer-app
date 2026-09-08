@@ -16,7 +16,7 @@ import { usePaginatedQuery } from "../../hooks/usePaginatedQuery";
 
 const STATUS_OPTIONS = [
   { value: "", label: "All statuses" },
-  { value: "FREE", label: "Free" },
+  { value: "FREE", label: "Unpaid / Free status" },
   { value: "TRIALING", label: "Trialing" },
   { value: "ACTIVE", label: "Active" },
   { value: "PAST_DUE", label: "Past due" },
@@ -25,9 +25,10 @@ const STATUS_OPTIONS = [
 
 const PLAN_OPTIONS = [
   { value: "", label: "All plans" },
-  { value: "free", label: "Free" },
-  { value: "pro", label: "Pro" },
-  { value: "firm", label: "Firm" }
+  { value: "base", label: "Adal Base" },
+  { value: "max", label: "Adal Max" },
+  { value: "firm", label: "Law Firm" },
+  { value: "firm_max", label: "Law Firm Max" }
 ];
 
 export default function AdminSubscriptionsPage() {

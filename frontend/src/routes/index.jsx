@@ -39,6 +39,9 @@ import WorkspaceRolesPage from "../pages/lawyer/workspace/WorkspaceRolesPage.jsx
 import WorkspaceInvitesPage from "../pages/lawyer/workspace/WorkspaceInvitesPage.jsx";
 import WorkspaceProfilePage from "../pages/lawyer/workspace/WorkspaceProfilePage.jsx";
 import RequirePermission from "../components/workspace/RequirePermission.jsx";
+import AiComingSoonGate from "../components/ai/AiComingSoonGate.jsx";
+import BillingComingSoonGate from "../components/billing/BillingComingSoonGate.jsx";
+import { FiActivity, FiCpu, FiCreditCard, FiFileText, FiFolder, FiTarget } from "react-icons/fi";
 import { PERMISSIONS } from "../workspaces/permissions.js";
 import AdminWorkspacesPage from "../pages/admin/AdminWorkspacesPage.jsx";
 
@@ -136,7 +139,13 @@ export default function RoutesRoot() {
           path="ai"
           element={
             <RequirePermission permissions={[PERMISSIONS.AI_USE]} redirectTo="/lawyer/overview">
-              <LawyerAiAssistantPage />
+              <AiComingSoonGate
+                icon={FiCpu}
+                title="AI Legal Assistant"
+                description="Research chat grounded in case law and your documents is launching soon."
+              >
+                <LawyerAiAssistantPage />
+              </AiComingSoonGate>
             </RequirePermission>
           }
         />
@@ -144,7 +153,13 @@ export default function RoutesRoot() {
           path="cross-exam"
           element={
             <RequirePermission permissions={[PERMISSIONS.AI_USE]} redirectTo="/lawyer/overview">
-              <LawyerCrossExamPage />
+              <AiComingSoonGate
+                icon={FiTarget}
+                title="Cross-Exam Practice"
+                description="AI-assisted cross-examination practice and prep reports are launching soon."
+              >
+                <LawyerCrossExamPage />
+              </AiComingSoonGate>
             </RequirePermission>
           }
         />
@@ -152,7 +167,13 @@ export default function RoutesRoot() {
           path="documents"
           element={
             <RequirePermission permissions={[PERMISSIONS.DOCS_VIEW]} redirectTo="/lawyer/overview">
-              <LawyerDocumentsPage />
+              <AiComingSoonGate
+                icon={FiFolder}
+                title="Documents"
+                description="Document intelligence — upload and search your files with AI — is launching soon."
+              >
+                <LawyerDocumentsPage />
+              </AiComingSoonGate>
             </RequirePermission>
           }
         />
@@ -174,9 +195,42 @@ export default function RoutesRoot() {
         />
         <Route path="planner" element={<LawyerPlannerPage />} />
         <Route path="billing" element={<Navigate to="/lawyer/billing/subscription" replace />} />
-        <Route path="billing/subscription" element={<BillingSubscriptionPage />} />
-        <Route path="billing/usage" element={<BillingUsagePage />} />
-        <Route path="billing/invoices" element={<BillingInvoicesPage />} />
+        <Route
+          path="billing/subscription"
+          element={
+            <BillingComingSoonGate
+              icon={FiCreditCard}
+              title="Subscription"
+              description="Plan upgrades and checkout are launching soon. New lawyers already receive a one-month Base plan. Compare plans on the public Pricing page."
+            >
+              <BillingSubscriptionPage />
+            </BillingComingSoonGate>
+          }
+        />
+        <Route
+          path="billing/usage"
+          element={
+            <BillingComingSoonGate
+              icon={FiActivity}
+              title="Usage"
+              description="Usage meters and paid-plan limits are launching soon. Your included Base trial still applies in the meantime."
+            >
+              <BillingUsagePage />
+            </BillingComingSoonGate>
+          }
+        />
+        <Route
+          path="billing/invoices"
+          element={
+            <BillingComingSoonGate
+              icon={FiFileText}
+              title="Invoices"
+              description="Invoices and the payment portal are launching soon. You cannot purchase a plan yet."
+            >
+              <BillingInvoicesPage />
+            </BillingComingSoonGate>
+          }
+        />
         <Route path="profile" element={<Navigate to="/lawyer/settings/profile" replace />} />
         <Route path="availability" element={<LawyerAvailabilityPage />} />
         <Route path="bookings" element={<LawyerBookingsPage />} />

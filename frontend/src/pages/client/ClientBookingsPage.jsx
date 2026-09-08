@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   FiEye,
   FiEdit2,
@@ -7,7 +7,8 @@ import {
   FiStar,
   FiTrash2,
   FiAlertTriangle,
-  FiCalendar
+  FiCalendar,
+  FiSearch
 } from "react-icons/fi";
 import { clientApi } from "../../services/client.api";
 import { lawyerApi } from "../../services/lawyer.api";
@@ -405,6 +406,11 @@ export default function ClientBookingsPage() {
         icon={FiCalendar}
         title="My Bookings"
         subtitle="View, manage, and join your consultations"
+        actions={
+          <Link to="/lawyers" className="no-underline">
+            <Button icon={FiSearch}>Book a lawyer</Button>
+          </Link>
+        }
       />
       <DataList
         filters={
@@ -424,6 +430,13 @@ export default function ClientBookingsPage() {
           density="compact"
           emptyMessage="No bookings found"
           emptyDescription="Book a consultation to see it listed here."
+          emptyAction={
+            <Link to="/lawyers" className="no-underline">
+              <Button size="sm" icon={FiSearch}>
+                Book a lawyer
+              </Button>
+            </Link>
+          }
         />
       </DataList>
 

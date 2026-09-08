@@ -308,7 +308,7 @@ export default function MarketingPage() {
               <SectionHeader
                 eyebrow="Billing & plans"
                 title="Subscriptions that match the workspace"
-                subtitle="Clients never need a subscription. Lawyers and firms choose Adal Base, Adal Max, or a Law Firm plan—self-serve checkout is coming soon."
+                subtitle="Clients never need a subscription. Lawyers and firms choose Adal Base, Adal Max, or a Law Firm plan—billed per workspace."
               />
             </div>
             {PLAN_TEASERS.map((plan) => (
@@ -316,9 +316,9 @@ export default function MarketingPage() {
                 <div className="mkt-card relative h-full overflow-hidden rounded-2xl border border-border bg-card p-5 sm:p-6 flex flex-col">
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="m-0 text-lg sm:text-xl font-bold text-text-primary">{plan.name}</h3>
-                    <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-text-muted border border-border rounded-full px-2 py-0.5">
-                      Soon
-                    </span>
+                  <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-primary border border-primary/30 rounded-full px-2 py-0.5">
+                    Live
+                  </span>
                   </div>
                   {plan.priceLabel ? (
                     <p className="m-0 mt-2 text-sm font-semibold text-primary">{plan.priceLabel}</p>

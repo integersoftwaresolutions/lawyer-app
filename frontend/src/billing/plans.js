@@ -1,48 +1,42 @@
+import { BILLING_COMING_SOON } from "../config/features";
+
 /**
- * Shared lawyer plan display — mirrors backend PlanCatalog limits/features.
- * Display prices can be overridden by /api/billing/plans when available.
+ * Frontend plan display defaults. Live limits/prices prefer /api/billing/plans.
  */
 
 export const PLAN_KEYS = Object.freeze({
-  FREE: "free",
-  PRO: "pro",
-  FIRM: "firm"
+  BASE: "base",
+  MAX: "max",
+  FIRM: "firm",
+  FIRM_MAX: "firm_max"
 });
 
-const DEFAULT_PLANS = [
+export const DEFAULT_PLANS = Object.freeze([
   {
-    key: PLAN_KEYS.FREE,
-    name: "Free",
+    key: PLAN_KEYS.BASE,
+    name: "Adal Base",
     tagline: "Solo practice essentials",
     workspaceTypes: ["PERSONAL"],
-    displayPriceMonthly: 0,
-    currency: "usd",
+    displayPriceMonthly: 1000,
+    currency: "pkr",
     popular: false,
     limits: {
-      "cases.active": 5,
-      "ai.messages_per_month": 20,
-      "docs.count": 25,
-      "docs.storage_mb": 200,
+      "cases.active": 10,
+      "ai.messages_per_month": 50,
+      "docs.count": 50,
+      "docs.storage_mb": 500,
       seats: 1
     },
-    features: {
-      "features.create_firm": false
-    },
-    highlights: [
-      "Marketplace profile & bookings (always included)",
-      "5 active cases",
-      "20 AI messages / month",
-      "25 documents · 200 MB",
-      "Personal workspace"
-    ]
+    features: { "features.create_firm": false },
+    highlights: ["30-day Base trial for new lawyers", "1 seat", "Limited AI"]
   },
   {
-    key: PLAN_KEYS.PRO,
-    name: "Pro",
-    tagline: "For growing solo practices",
+    key: PLAN_KEYS.MAX,
+    name: "Adal Max",
+    tagline: "Extended AI for growing solos",
     workspaceTypes: ["PERSONAL"],
-    displayPriceMonthly: Number(import.meta.env.VITE_BILLING_DISPLAY_PRICE_PRO || 29),
-    currency: "usd",
+    displayPriceMonthly: 3000,
+    currency: "pkr",
     popular: true,
     limits: {
       "cases.active": 50,
@@ -51,77 +45,122 @@ const DEFAULT_PLANS = [
       "docs.storage_mb": 5000,
       seats: 1
     },
-    features: {
-      "features.create_firm": false
-    },
-    highlights: [
-      "Everything in Free",
-      "50 active cases",
-      "500 AI messages / month",
-      "500 documents · 5 GB",
-      "14-day Pro trial for new lawyers"
-    ]
+    features: { "features.create_firm": false },
+    highlights: ["1 seat", "Extended AI", "Higher practice capacity"]
   },
   {
     key: PLAN_KEYS.FIRM,
-    name: "Firm",
-    tagline: "Teams, seats & shared quotas",
+    name: "Law Firm Plan",
+    tagline: "Team workspace for small firms",
     workspaceTypes: ["FIRM"],
-    displayPriceMonthly: Number(import.meta.env.VITE_BILLING_DISPLAY_PRICE_FIRM || 99),
-    currency: "usd",
+    displayPriceMonthly: 4000,
+    currency: "pkr",
     popular: false,
     limits: {
-      "cases.active": 200,
-      "ai.messages_per_month": 2000,
+      "cases.active": 100,
+      "ai.messages_per_month": 1000,
+      "docs.count": 1000,
+      "docs.storage_mb": 10000,
+      seats: 5
+    },
+    features: { "features.create_firm": true },
+    highlights: ["Up to 5 seats", "Roles & invites", "Shared workspace"]
+  },
+  {
+    key: PLAN_KEYS.FIRM_MAX,
+    name: "Law Firm Max",
+    tagline: "Larger teams with extended AI",
+    workspaceTypes: ["FIRM"],
+    displayPriceMonthly: 10000,
+    currency: "pkr",
+    popular: false,
+    limits: {
+      "cases.active": 250,
+      "ai.messages_per_month": 3000,
       "docs.count": 2000,
-      "docs.storage_mb": 20000,
-      seats: 10
+      "docs.storage_mb": 25000,
+      seats: 7
     },
-    features: {
-      "features.create_firm": true
-    },
-    highlights: [
-      "Firm workspace with roles & invites",
-      "Up to 10 seats",
-      "200 active cases",
-      "2,000 AI messages / month (shared)",
-      "2,000 documents · 20 GB"
-    ]
+    features: { "features.create_firm": true },
+    highlights: ["Up to 7 seats", "Extended AI", "Firm collaboration"]
   }
-];
+]);
 
 export function getDefaultPlans() {
-  return DEFAULT_PLANS.map((p) => ({ ...p, highlights: [...p.highlights] }));
+  return DEFAULT_PLANS.map((p) => ({
+    ...p,
+    limits: { ...p.limits },
+    features: { ...p.features },
+    highlights: [...(p.highlights || [])],
+    workspaceTypes: [...(p.workspaceTypes || [])]
+  }));
 }
 
-/** Merge API catalog into display plans (prices + stripe flags). */
-export function mergeCatalogPlans(apiPlans = []) {
-  const byKey = Object.fromEntries((apiPlans || []).map((p) => [p.key, p]));
-  return getDefaultPlans().map((base) => {
-    const api = byKey[base.key];
-    if (!api) return base;
-    return {
-      ...base,
-      name: api.name || base.name,
-      limits: api.limits || base.limits,
-      features: api.features || base.features,
-      displayPriceMonthly:
-        api.displayPriceMonthly != null ? api.displayPriceMonthly : base.displayPriceMonthly,
-      currency: api.currency || base.currency,
-      stripePriceConfigured: Boolean(api.stripePriceConfigured)
-    };
-  });
+/**
+ * Merge API catalog into display plans. Prefer API keys; keep defaults for missing fields.
+ */
+export function mergeCatalogPlans(apiPlans) {
+  const defaults = getDefaultPlans();
+  const byKey = Object.fromEntries(defaults.map((p) => [p.key, p]));
+  const apiList = Array.isArray(apiPlans) ? apiPlans : [];
+
+  const keys = [
+    ...new Set([...defaults.map((p) => p.key), ...apiList.map((p) => p.key).filter(Boolean)])
+  ];
+
+  return keys
+    .map((key) => {
+      const base = byKey[key] || {
+        key,
+        name: key,
+        tagline: "",
+        workspaceTypes: [],
+        displayPriceMonthly: null,
+        currency: "pkr",
+        popular: key === PLAN_KEYS.MAX,
+        limits: {},
+        features: {},
+        highlights: []
+      };
+      const api = apiList.find((p) => p.key === key);
+      if (!api) return base;
+      return {
+        ...base,
+        name: api.name || base.name,
+        workspaceTypes: api.workspaceTypes || base.workspaceTypes,
+        limits: { ...base.limits, ...(api.limits || {}) },
+        features: { ...base.features, ...(api.features || {}) },
+        displayPriceMonthly:
+          api.displayPriceMonthly != null ? api.displayPriceMonthly : base.displayPriceMonthly,
+        currency: (api.currency || base.currency || "pkr").toLowerCase(),
+        stripePriceConfigured: Boolean(api.stripePriceConfigured),
+        version: api.version,
+        updatedAt: api.updatedAt
+      };
+    })
+    .filter((p) => Object.values(PLAN_KEYS).includes(p.key));
 }
 
 export function formatPlanPrice(plan) {
-  const amount = Number(plan.displayPriceMonthly);
-  if (!amount) return { primary: "Free", secondary: "" };
-  const currency = (plan.currency || "usd").toUpperCase();
-  const symbol = currency === "USD" ? "$" : `${currency} `;
-  return { primary: `${symbol}${amount}`, secondary: "/mo" };
+  const amount = Number(plan?.displayPriceMonthly);
+  const currency = (plan?.currency || "pkr").toLowerCase();
+  if (!Number.isFinite(amount)) return { primary: "—", secondary: null };
+  if (amount === 0) return { primary: "Free", secondary: null };
+  if (currency === "pkr" || currency === "rs") {
+    return {
+      primary: `Rs ${amount.toLocaleString("en-PK")}`,
+      secondary: "/ month"
+    };
+  }
+  if (currency === "usd") {
+    return { primary: `$${amount}`, secondary: "/ month" };
+  }
+  return {
+    primary: `${currency.toUpperCase()} ${amount.toLocaleString()}`,
+    secondary: "/ month"
+  };
 }
 
-/** Shared limit rows for pricing / catalog cards (single source of truth). */
 export const PLAN_LIMIT_ROWS = Object.freeze([
   { key: "cases.active", label: "Active cases" },
   { key: "ai.messages_per_month", label: "AI messages / month" },
@@ -132,75 +171,70 @@ export const PLAN_LIMIT_ROWS = Object.freeze([
 
 export function formatStorageMb(mb) {
   const n = Number(mb);
-  if (!Number.isFinite(n)) return String(mb);
-  if (n >= 1000) {
-    const gb = n / 1000;
-    return `${Number.isInteger(gb) ? gb : gb.toFixed(1)} GB`;
-  }
+  if (!Number.isFinite(n)) return "—";
+  if (n >= 1000) return `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)} GB`;
   return `${n} MB`;
 }
 
 export function formatPlanLimitValue(key, value) {
+  if (value == null) return "—";
   if (key === "docs.storage_mb") return formatStorageMb(value);
-  if (typeof value === "number") return value.toLocaleString();
   return String(value);
 }
 
-export function formatWorkspaceTypeLabel(type) {
-  if (!type) return "";
-  return String(type).charAt(0) + String(type).slice(1).toLowerCase();
+export function formatWorkspaceTypeLabel(types = []) {
+  if (!types?.length) return "—";
+  return types.map((t) => (t === "PERSONAL" ? "Personal" : t === "FIRM" ? "Firm" : t)).join(", ");
 }
 
-/**
- * Auth-aware CTA for the public Pricing page (SaaS conversion surface).
- * @returns {{ label: string, href: string }}
- */
 export function resolvePublicPricingCta(plan, user) {
   const role = user?.role;
-
+  if (BILLING_COMING_SOON) {
+    if (role === "CLIENT") {
+      return { label: "Browse lawyers", href: "/lawyers" };
+    }
+    if (role === "ADMIN") {
+      return { label: "Admin subscriptions", href: "/admin/subscriptions" };
+    }
+    if (!role && plan.key === PLAN_KEYS.BASE) {
+      return { label: "Start free trial", href: "/register?role=lawyer" };
+    }
+    return { label: "Coming soon", href: null };
+  }
   if (role === "CLIENT") {
+    return { label: "Browse lawyers", href: "/lawyers" };
+  }
+  if (role === "LAWYER") {
+    if (plan.key === PLAN_KEYS.FIRM || plan.key === PLAN_KEYS.FIRM_MAX) {
+      return {
+        label: plan.key === PLAN_KEYS.FIRM_MAX ? "Get Firm Max in billing" : "Get Firm in billing",
+        href: `/lawyer/billing/subscription?upgrade=${plan.key}`
+      };
+    }
     return {
-      label: "Browse lawyers",
-      href: "/lawyers"
+      label: plan.key === PLAN_KEYS.MAX ? "Upgrade in billing" : "Open billing",
+      href: `/lawyer/billing/subscription?upgrade=${plan.key}`
     };
   }
-
-  if (role === "LAWYER") {
-    if (plan.key === PLAN_KEYS.PRO) {
-      return { label: "Upgrade in billing", href: "/lawyer/billing/subscription?upgrade=pro" };
-    }
-    if (plan.key === PLAN_KEYS.FIRM) {
-      return { label: "Get Firm in billing", href: "/lawyer/billing/subscription?upgrade=firm" };
-    }
-    return { label: "Open billing", href: "/lawyer/billing/subscription" };
-  }
-
   if (role === "ADMIN") {
     return { label: "Admin subscriptions", href: "/admin/subscriptions" };
   }
-
-  // Signed out
-  if (plan.key === PLAN_KEYS.FREE) {
-    return { label: "Start free trial", href: "/register?role=lawyer&plan=free" };
-  }
-  if (plan.key === PLAN_KEYS.FIRM) {
+  if (plan.key === PLAN_KEYS.FIRM || plan.key === PLAN_KEYS.FIRM_MAX) {
     return { label: "Start with Firm", href: "/register?role=lawyer&plan=firm" };
   }
-  return { label: "Get Pro", href: "/register?role=lawyer&plan=pro" };
+  if (plan.key === PLAN_KEYS.BASE) {
+    return { label: "Start free trial", href: "/register?role=lawyer&plan=base" };
+  }
+  return { label: "Get Adal Max", href: "/register?role=lawyer&plan=max" };
 }
 
-export function planCtaLabel(planKey, { isLoggedInLawyer, currentPlanKey, isFirm } = {}) {
-  if (!isLoggedInLawyer) {
-    if (planKey === PLAN_KEYS.FREE) return "Start free trial";
-    if (planKey === PLAN_KEYS.FIRM) return "Create firm";
-    return "Get Pro";
+export function planCtaLabel(planKey, { currentPlanKey, isLoggedIn } = {}) {
+  if (planKey === PLAN_KEYS.BASE) return isLoggedIn ? "Current / Base" : "Start free trial";
+  if (planKey === PLAN_KEYS.FIRM) return "Get Firm";
+  if (planKey === PLAN_KEYS.FIRM_MAX) return "Get Firm Max";
+  if (planKey === PLAN_KEYS.MAX) {
+    if (currentPlanKey === PLAN_KEYS.MAX) return "Current plan";
+    return "Upgrade to Max";
   }
-  if (planKey === PLAN_KEYS.FIRM) {
-    return isFirm ? "Manage firm billing" : "Create firm workspace";
-  }
-  if (planKey === PLAN_KEYS.PRO) {
-    if (currentPlanKey === "pro" || currentPlanKey === PLAN_KEYS.PRO) return "Current plan";
-    return "Upgrade to Pro";
-  }
-  return "View billing";
+  return "Get started";
 }

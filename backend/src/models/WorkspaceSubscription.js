@@ -28,7 +28,7 @@ const WorkspaceSubscriptionSchema = new mongoose.Schema(
     planKey: {
       type: String,
       enum: Object.values(PLAN_KEYS),
-      default: PLAN_KEYS.FREE,
+      default: PLAN_KEYS.BASE,
       index: true
     },
     status: {
@@ -52,7 +52,7 @@ const WorkspaceSubscriptionSchema = new mongoose.Schema(
     cancelAtPeriodEnd: { type: Boolean, default: false },
     canceledAt: { type: Date, default: null },
     graceEndsAt: { type: Date, default: null },
-    /** When true, practice writes/AI are locked (firm past_due after grace). */
+    /** When true, practice writes/AI are locked (past due grace or post-trial unpaid). */
     practiceLocked: { type: Boolean, default: false },
     metadata: {
       type: mongoose.Schema.Types.Mixed,

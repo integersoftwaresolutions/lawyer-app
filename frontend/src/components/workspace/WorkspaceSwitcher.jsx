@@ -7,9 +7,12 @@ import {
   createFirm,
   fetchWorkspaces
 } from "../../store/slices/workspaceSlice";
-import { Button, Modal, Input, Textarea } from "../ui";
 import { useToast } from "../../hooks/useToast";
 import { getErrorMessage } from "../../utils/errorHandler";
+import FirmCreateModal from "../billing/FirmCreateModal";
+import { billingApi } from "../../services/billing.api";
+import { getDefaultPlans, mergeCatalogPlans, PLAN_KEYS } from "../../billing/plans";
+import { BILLING_COMING_SOON } from "../../config/features";
 
 /** Minimal switcher: list workspaces + create firm. Admin lives under /lawyer/workspace. */
 export default function WorkspaceSwitcher({ variant = "sidebar" }) {
@@ -21,6 +24,8 @@ export default function WorkspaceSwitcher({ variant = "sidebar" }) {
   const [open, setOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [stripeConfigured, setStripeConfigured] = useState(true);
+  const [plans, setPlans] = useState(getDefaultPlans());
   const [form, setForm] = useState({
     name: "",
     city: "",
@@ -28,7 +33,8 @@ export default function WorkspaceSwitcher({ variant = "sidebar" }) {
     website: "",
     address: "",
     description: "",
-    practiceAreas: ""
+    practiceAreas: "",
+    planKey: PLAN_KEYS.FIRM
   });
 
   const isNavbar = variant === "navbar";
@@ -36,6 +42,17 @@ export default function WorkspaceSwitcher({ variant = "sidebar" }) {
   useEffect(() => {
     if (user?.role === "LAWYER") {
       dispatch(fetchWorkspaces());
+      if (BILLING_COMING_SOON) return;
+      billingApi
+        .catalog()
+        .then((res) => {
+          const catalog = res.data;
+          if (catalog?.plans) setPlans(mergeCatalogPlans(catalog.plans));
+          if (catalog && typeof catalog.stripeConfigured === "boolean") {
+            setStripeConfigured(catalog.stripeConfigured);
+          }
+        })
+        .catch(() => {});
     }
   }, [dispatch, user?.role]);
 
@@ -68,6 +85,13 @@ export default function WorkspaceSwitcher({ variant = "sidebar" }) {
 
   async function handleCreate(e) {
     e.preventDefault();
+    if (!form.name.trim()) {
+      toast.error("Firm name is required");
+      return;
+    }
+    const planKey =
+      form.planKey === PLAN_KEYS.FIRM_MAX ? PLAN_KEYS.FIRM_MAX : PLAN_KEYS.FIRM;
+    const planName = planKey === PLAN_KEYS.FIRM_MAX ? "Law Firm Max" : "Law Firm Plan";
     setBusy(true);
     try {
       const data = await dispatch(
@@ -78,6 +102,7 @@ export default function WorkspaceSwitcher({ variant = "sidebar" }) {
           website: form.website,
           address: form.address,
           description: form.description,
+          planKey,
           practiceAreas: form.practiceAreas
             ? form.practiceAreas.split(",").map((s) => s.trim()).filter(Boolean)
             : []
@@ -85,7 +110,7 @@ export default function WorkspaceSwitcher({ variant = "sidebar" }) {
       ).unwrap();
 
       if (data?.requiresCheckout && data?.checkoutUrl) {
-        toast.success("Redirecting to Firm checkout…");
+        toast.success(`Redirecting to ${planName} checkout…`);
         window.location.href = data.checkoutUrl;
         return;
       }
@@ -98,9 +123,10 @@ export default function WorkspaceSwitcher({ variant = "sidebar" }) {
         website: "",
         address: "",
         description: "",
-        practiceAreas: ""
+        practiceAreas: "",
+        planKey: PLAN_KEYS.FIRM
       });
-      toast.success("Firm created");
+      toast.success(`Firm created on ${planName}`);
       navigate("/lawyer/workspace/overview");
     } catch (err) {
       toast.error(getErrorMessage(err));
@@ -184,6 +210,7 @@ export default function WorkspaceSwitcher({ variant = "sidebar" }) {
             ))}
           </ul>
 
+          {!BILLING_COMING_SOON ? (
           <div className="border-t border-card-border p-1">
             <button
               type="button"
@@ -197,82 +224,22 @@ export default function WorkspaceSwitcher({ variant = "sidebar" }) {
               Create firm
             </button>
           </div>
+          ) : null}
         </div>
       )}
 
-      <Modal
-        isOpen={createOpen}
+      {!BILLING_COMING_SOON ? (
+      <FirmCreateModal
+        open={createOpen}
         onClose={() => setCreateOpen(false)}
-        title="Create firm workspace"
-        size="lg"
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setCreateOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreate} loading={busy}>
-              Continue
-            </Button>
-          </>
-        }
-      >
-        <form onSubmit={handleCreate} className="space-y-3">
-          <p className="text-sm text-text-secondary m-0">
-            Firm plan includes seats and shared practice quotas. With Stripe configured, you&apos;ll
-            complete payment before the firm is created. Prefer to compare plans first?{" "}
-            <button
-              type="button"
-              className="text-link underline bg-transparent border-0 p-0 cursor-pointer"
-              onClick={() => {
-                setCreateOpen(false);
-                navigate("/lawyer/billing/subscription");
-              }}
-            >
-              Open Plans & billing
-            </button>
-          </p>
-          <Input
-            label="Firm name"
-            required
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-          />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Input
-              label="City"
-              value={form.city}
-              onChange={(e) => setForm({ ...form, city: e.target.value })}
-            />
-            <Input
-              label="Phone"
-              value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
-            />
-          </div>
-          <Input
-            label="Website"
-            value={form.website}
-            onChange={(e) => setForm({ ...form, website: e.target.value })}
-          />
-          <Input
-            label="Address"
-            value={form.address}
-            onChange={(e) => setForm({ ...form, address: e.target.value })}
-          />
-          <Input
-            label="Practice areas"
-            placeholder="Family Law, Criminal Law"
-            value={form.practiceAreas}
-            onChange={(e) => setForm({ ...form, practiceAreas: e.target.value })}
-          />
-          <Textarea
-            label="Description"
-            rows={3}
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-          />
-        </form>
-      </Modal>
+        firmForm={form}
+        setFirmForm={setForm}
+        firmBusy={busy}
+        onSubmit={handleCreate}
+        stripeConfigured={stripeConfigured}
+        plans={plans}
+      />
+      ) : null}
     </div>
   );
 }

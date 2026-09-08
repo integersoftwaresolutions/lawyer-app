@@ -56,9 +56,14 @@ function NavLeaf({ item, basePath, onNavigate, nested = false }) {
           }`}
         />
       ) : null}
-      <span className={`text-sm truncate ${isActive ? "font-semibold" : "font-medium"}`}>
+      <span className={`text-sm truncate min-w-0 ${isActive ? "font-semibold" : "font-medium"}`}>
         {item.label}
       </span>
+      {item.badge ? (
+        <span className="ml-auto text-[10px] font-semibold uppercase tracking-wide text-warning bg-warning-light px-1.5 py-0.5 rounded-full shrink-0">
+          {item.badge}
+        </span>
+      ) : null}
     </Link>
   );
 }
@@ -98,12 +103,17 @@ function NavBranch({ item, basePath, onNavigate, expandedIds, toggleExpanded }) 
             />
           ) : null}
           <span
-            className={`text-sm truncate ${
+            className={`text-sm truncate min-w-0 ${
               selfOnlyActive || childActive ? "font-semibold" : "font-medium"
             }`}
           >
             {item.label}
           </span>
+          {item.badge ? (
+            <span className="ml-auto text-[10px] font-semibold uppercase tracking-wide text-warning bg-warning-light px-1.5 py-0.5 rounded-full shrink-0">
+              {item.badge}
+            </span>
+          ) : null}
         </Link>
         <button
           type="button"

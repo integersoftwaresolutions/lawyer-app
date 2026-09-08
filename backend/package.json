@@ -4,6 +4,7 @@
   "type": "module",
   "main": "src/server.js",
   "scripts": {
+    "migrate:plans": "node src/seeders/migratePlanKeys.js",
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "lint": "eslint .",

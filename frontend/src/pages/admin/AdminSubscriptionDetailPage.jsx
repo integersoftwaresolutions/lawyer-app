@@ -23,7 +23,7 @@ export default function AdminSubscriptionDetailPage() {
   const [error, setError] = useState(null);
   const [data, setData] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [planKey, setPlanKey] = useState("pro");
+  const [planKey, setPlanKey] = useState("base");
   const [seatLimit, setSeatLimit] = useState("");
   const [trialDays, setTrialDays] = useState("");
   const [reason, setReason] = useState("");
@@ -34,7 +34,7 @@ export default function AdminSubscriptionDetailPage() {
     try {
       const res = await adminBillingApi.getSubscription(workspaceId);
       setData(res.data);
-      setPlanKey(res.data?.subscription?.planKey || "pro");
+      setPlanKey(res.data?.subscription?.planKey || "base");
       setSeatLimit(
         res.data?.subscription?.seatLimit != null ? String(res.data.subscription.seatLimit) : ""
       );
@@ -70,11 +70,11 @@ export default function AdminSubscriptionDetailPage() {
   };
 
   const forceFree = async () => {
-    if (!window.confirm("Force this workspace to Free?")) return;
+    if (!window.confirm("Force this workspace to unpaid Adal Base?")) return;
     try {
       setBusy(true);
       await adminBillingApi.forceFree(workspaceId, { reason });
-      toast.success("Set to Free");
+      toast.success("Set to Base (unpaid)");
       await load();
     } catch (err) {
       toast.error(getErrorMessage(err));
@@ -138,7 +138,7 @@ export default function AdminSubscriptionDetailPage() {
                 Reconcile Stripe
               </Button>
               <Button size="sm" variant="danger" outline loading={busy} onClick={forceFree}>
-                Force Free
+                Force Base (unpaid)
               </Button>
             </div>
           </Card>
@@ -150,9 +150,10 @@ export default function AdminSubscriptionDetailPage() {
               value={planKey}
               onChange={(e) => setPlanKey(e.target.value)}
               options={[
-                { value: "free", label: "Free" },
-                { value: "pro", label: "Pro" },
-                { value: "firm", label: "Firm" }
+                { value: "base", label: "Adal Base" },
+                { value: "max", label: "Adal Max" },
+                { value: "firm", label: "Law Firm Plan" },
+                { value: "firm_max", label: "Law Firm Max" }
               ]}
             />
             <Input
@@ -166,7 +167,7 @@ export default function AdminSubscriptionDetailPage() {
               type="number"
               value={trialDays}
               onChange={(e) => setTrialDays(e.target.value)}
-              placeholder="Optional — sets TRIALING Pro"
+              placeholder="Optional — sets TRIALING Base"
             />
             <Textarea
               label="Reason"

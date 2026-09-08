@@ -10,11 +10,15 @@ import BillingEvent from "../models/BillingEvent.js";
 import BillingInvoice from "../models/BillingInvoice.js";
 import {
   PLAN_KEYS,
-  getPlanDefinition,
-  listPlans,
+  LIMIT_KEYS,
   resolvePlanKeyFromPriceId,
-  entitlementsPlanKey
+  entitlementsPlanKey,
+  isPersonalPlan,
+  isFirmPlan,
+  isValidPlanKey,
+  resolveFirmCreatePlanKey
 } from "./planCatalog.js";
+import { getResolvedPlan, listResolvedPlans } from "./planDefinition.service.js";
 import {
   stripeBillingProvider,
   getPriceIdForPlan,
@@ -24,11 +28,15 @@ import {
 import { WORKSPACE_TYPES } from "../config/constants.js";
 
 function trialDays() {
-  return env.billingTrialDays || 14;
+  return env.billingTrialDays || 30;
 }
 
 function graceDays() {
   return env.billingPastDueGraceDays || 3;
+}
+
+function seatsFromPlan(plan) {
+  return plan.limits?.[LIMIT_KEYS.SEATS] ?? plan.limits?.seats ?? 1;
 }
 
 export function formatSubscription(doc) {
@@ -65,36 +73,36 @@ export async function ensureSubscription(workspaceId, defaults = {}) {
   let sub = await WorkspaceSubscription.findOne({ workspaceId });
   if (sub) return sub;
 
-  const planKey = defaults.planKey || PLAN_KEYS.FREE;
-  const plan = getPlanDefinition(planKey);
+  const planKey = defaults.planKey || PLAN_KEYS.BASE;
+  const plan = await getResolvedPlan(planKey);
   sub = await WorkspaceSubscription.create({
     workspaceId,
     planKey,
     status: defaults.status || BILLING_STATUS.FREE,
     provider: defaults.provider || BILLING_PROVIDER.NONE,
-    seatLimit: defaults.seatLimit ?? plan.limits.seats ?? plan.limits["seats"],
+    seatLimit: defaults.seatLimit ?? seatsFromPlan(plan),
     trialEndsAt: defaults.trialEndsAt || null,
-    practiceLocked: false,
+    practiceLocked: defaults.practiceLocked ?? false,
     metadata: defaults.metadata || {}
   });
   return sub;
 }
 
 export async function startPersonalTrial(workspaceId) {
-  const plan = getPlanDefinition(PLAN_KEYS.PRO);
+  const plan = await getResolvedPlan(PLAN_KEYS.BASE);
   const trialEndsAt = new Date(Date.now() + trialDays() * 24 * 60 * 60 * 1000);
   const existing = await WorkspaceSubscription.findOne({ workspaceId });
   if (existing) return existing;
 
   return WorkspaceSubscription.create({
     workspaceId,
-    planKey: PLAN_KEYS.PRO,
+    planKey: PLAN_KEYS.BASE,
     status: BILLING_STATUS.TRIALING,
     provider: BILLING_PROVIDER.NONE,
-    seatLimit: plan.limits.seats,
+    seatLimit: seatsFromPlan(plan),
     trialEndsAt,
     practiceLocked: false,
-    metadata: { trialStartedAt: new Date().toISOString() }
+    metadata: { trialStartedAt: new Date().toISOString(), trialPlanKey: PLAN_KEYS.BASE }
   });
 }
 
@@ -127,18 +135,18 @@ export async function createUpgradeCheckout({
   if (!isStripeConfigured()) {
     throw new ApiError(503, "Stripe is not configured. Set STRIPE_SECRET_KEY and price IDs.");
   }
+  if (!isValidPlanKey(planKey)) {
+    throw new ApiError(400, `Unknown plan key: ${planKey}`);
+  }
 
   const workspace = await Workspace.findOne({ _id: workspaceId, deletedAt: null });
   if (!workspace) throw new ApiError(404, "Workspace not found");
 
-  if (planKey === PLAN_KEYS.FIRM && workspace.type !== WORKSPACE_TYPES.FIRM) {
-    throw new ApiError(400, "Firm plan is only for firm workspaces. Create a firm instead.");
+  if (isFirmPlan(planKey) && workspace.type !== WORKSPACE_TYPES.FIRM) {
+    throw new ApiError(400, "Firm plans are only for firm workspaces. Create a firm instead.");
   }
-  if (planKey === PLAN_KEYS.PRO && workspace.type !== WORKSPACE_TYPES.PERSONAL) {
-    throw new ApiError(400, "Pro plan is only for personal workspaces");
-  }
-  if (planKey === PLAN_KEYS.FREE) {
-    throw new ApiError(400, "Cannot checkout Free plan");
+  if (isPersonalPlan(planKey) && workspace.type !== WORKSPACE_TYPES.PERSONAL) {
+    throw new ApiError(400, "Base and Max plans are only for personal workspaces");
   }
 
   const priceId = getPriceIdForPlan(planKey);
@@ -167,27 +175,30 @@ export async function createUpgradeCheckout({
 }
 
 /**
- * Pay-then-create firm: Checkout with firm payload in metadata; webhook creates workspace.
+ * Pay-then-create firm. `planKey` must be firm or firm_max (defaults to firm).
  */
 export async function createFirmCheckout({
   actorUserId,
   firmPayload,
   successUrl,
-  cancelUrl
+  cancelUrl,
+  planKey: requestedPlanKey
 }) {
   if (!isStripeConfigured()) {
-    return null; // caller falls back to manual firm create
+    return null;
   }
 
-  const priceId = getPriceIdForPlan(PLAN_KEYS.FIRM);
+  const planKey = resolveFirmCreatePlanKey(requestedPlanKey);
+  const priceId = getPriceIdForPlan(planKey);
   if (!priceId) {
-    throw new ApiError(503, "Stripe Firm price is not configured (STRIPE_PRICE_FIRM_MONTHLY)");
+    const envName =
+      planKey === PLAN_KEYS.FIRM_MAX ? "STRIPE_PRICE_FIRM_MAX_MONTHLY" : "STRIPE_PRICE_FIRM_MONTHLY";
+    throw new ApiError(503, `Stripe price is not configured for ${planKey} (${envName})`);
   }
 
   const user = await User.findById(actorUserId).select("email fullName name").lean();
   if (!user) throw new ApiError(404, "User not found");
 
-  // Temporary customer without workspace — attach workspaceId after create in webhook
   const customer = await stripeBillingProvider.createCustomer({
     email: user.email,
     name: user.fullName || user.name || firmPayload.name,
@@ -203,7 +214,7 @@ export async function createFirmCheckout({
     metadata: {
       intent: "create_firm",
       actorUserId: String(actorUserId),
-      planKey: PLAN_KEYS.FIRM,
+      planKey: String(planKey),
       firmName: String(firmPayload.name || "").slice(0, 200),
       firmSlug: String(firmPayload.slug || "").slice(0, 80),
       firmCity: String(firmPayload.city || "").slice(0, 100),
@@ -211,7 +222,9 @@ export async function createFirmCheckout({
         address: firmPayload.address || "",
         phone: firmPayload.phone || "",
         website: firmPayload.website || "",
-        practiceAreas: Array.isArray(firmPayload.practiceAreas) ? firmPayload.practiceAreas.slice(0, 20) : [],
+        practiceAreas: Array.isArray(firmPayload.practiceAreas)
+          ? firmPayload.practiceAreas.slice(0, 20)
+          : [],
         description: String(firmPayload.description || "").slice(0, 500)
       }).slice(0, 450)
     }
@@ -236,7 +249,8 @@ function mapStripeStatus(stripeStatus) {
   switch (stripeStatus) {
     case "active":
     case "trialing":
-      return BILLING_STATUS.ACTIVE;
+    case "paused":
+      return stripeStatus === "paused" ? BILLING_STATUS.PAST_DUE : BILLING_STATUS.ACTIVE;
     case "past_due":
     case "unpaid":
       return BILLING_STATUS.PAST_DUE;
@@ -256,42 +270,52 @@ function priceIdFromSubscription(stripeSub) {
 
 export async function applyStripeSubscription(workspaceId, stripeSub, extras = {}) {
   const priceId = priceIdFromSubscription(stripeSub);
-  const planKey =
+  let planKey =
     extras.planKey ||
+    stripeSub.metadata?.planKey ||
     resolvePlanKeyFromPriceId(priceId, getStripePriceMap()) ||
-    PLAN_KEYS.PRO;
+    null;
 
-  const plan = getPlanDefinition(planKey);
+  if (!planKey || !isValidPlanKey(planKey)) {
+    console.error(
+      `[billing] Unknown Stripe price ${priceId} for workspace ${workspaceId} — refusing to invent a plan`
+    );
+    throw new ApiError(502, `Unknown Stripe price id: ${priceId || "none"}`);
+  }
+
+  const plan = await getResolvedPlan(planKey);
   let status = mapStripeStatus(stripeSub.status);
 
-  // Local trials are separate; Stripe "trialing" maps to ACTIVE paid trial if used later
   if (stripeSub.status === "trialing" && !extras.keepLocalTrial) {
     status = BILLING_STATUS.ACTIVE;
   }
 
-  const seatLimit = extras.seatLimitOverride ?? plan.limits.seats;
+  const seatLimit = extras.seatLimitOverride ?? seatsFromPlan(plan);
   const graceEndsAt =
     status === BILLING_STATUS.PAST_DUE
-      ? extras.graceEndsAt ||
-        new Date(Date.now() + graceDays() * 24 * 60 * 60 * 1000)
+      ? extras.graceEndsAt || new Date(Date.now() + graceDays() * 24 * 60 * 60 * 1000)
       : null;
 
   const practiceLocked =
-    status === BILLING_STATUS.PAST_DUE &&
-    graceEndsAt &&
-    graceEndsAt.getTime() < Date.now();
+    status === BILLING_STATUS.PAST_DUE && graceEndsAt && graceEndsAt.getTime() < Date.now();
 
   const sub = await ensureSubscription(workspaceId);
-  sub.planKey = planKey;
-  sub.status = status === BILLING_STATUS.CANCELED ? BILLING_STATUS.FREE : status;
+
   if (status === BILLING_STATUS.CANCELED) {
-    sub.planKey = workspaceTypePlanFallback(await Workspace.findById(workspaceId).lean());
+    const basePlan = await getResolvedPlan(PLAN_KEYS.BASE);
+    sub.planKey = PLAN_KEYS.BASE;
+    sub.status = BILLING_STATUS.FREE;
     sub.provider = BILLING_PROVIDER.STRIPE;
     sub.canceledAt = new Date();
     sub.stripeSubscriptionId = null;
-    sub.practiceLocked = false;
+    sub.stripePriceId = null;
+    sub.practiceLocked = true;
     sub.graceEndsAt = null;
+    sub.trialEndsAt = null;
+    sub.seatLimit = seatsFromPlan(basePlan);
   } else {
+    sub.planKey = planKey;
+    sub.status = status;
     sub.provider = BILLING_PROVIDER.STRIPE;
     sub.stripeSubscriptionId = stripeSub.id;
     sub.stripePriceId = priceId;
@@ -307,6 +331,8 @@ export async function applyStripeSubscription(workspaceId, stripeSub, extras = {
     sub.practiceLocked = Boolean(practiceLocked);
     if (status === BILLING_STATUS.ACTIVE) {
       sub.trialEndsAt = null;
+      sub.practiceLocked = false;
+      sub.canceledAt = null;
     }
   }
 
@@ -321,10 +347,6 @@ export async function applyStripeSubscription(workspaceId, stripeSub, extras = {
   return sub;
 }
 
-function workspaceTypePlanFallback(ws) {
-  return ws?.type === WORKSPACE_TYPES.FIRM ? PLAN_KEYS.FREE : PLAN_KEYS.FREE;
-}
-
 export async function upsertInvoiceFromStripe(workspaceId, invoice) {
   if (!invoice?.id || !workspaceId) return null;
   return BillingInvoice.findOneAndUpdate(
@@ -336,7 +358,7 @@ export async function upsertInvoiceFromStripe(workspaceId, invoice) {
         status: invoice.status || "",
         amountDue: invoice.amount_due || 0,
         amountPaid: invoice.amount_paid || 0,
-        currency: invoice.currency || "usd",
+        currency: invoice.currency || "pkr",
         hostedInvoiceUrl: invoice.hosted_invoice_url || "",
         pdfUrl: invoice.invoice_pdf || "",
         periodStart: invoice.period_start ? new Date(invoice.period_start * 1000) : null,
@@ -364,7 +386,7 @@ async function markEventProcessed(event) {
     });
     return true;
   } catch (err) {
-    if (err?.code === 11000) return false; // already processed
+    if (err?.code === 11000) return false;
     throw err;
   }
 }
@@ -377,8 +399,13 @@ export async function handleStripeWebhookEvent(event) {
     case "checkout.session.completed":
       await onCheckoutCompleted(event.data.object);
       break;
+    case "checkout.session.expired":
+      await onCheckoutExpired(event.data.object);
+      break;
     case "customer.subscription.created":
     case "customer.subscription.updated":
+    case "customer.subscription.paused":
+    case "customer.subscription.resumed":
       await onSubscriptionUpdated(event.data.object);
       break;
     case "customer.subscription.deleted":
@@ -387,13 +414,30 @@ export async function handleStripeWebhookEvent(event) {
     case "invoice.paid":
     case "invoice.payment_failed":
     case "invoice.finalized":
-      await onInvoiceEvent(event.data.object);
+    case "invoice.updated":
+    case "invoice.payment_action_required":
+      await onInvoiceEvent(event.data.object, event.type);
       break;
     default:
       break;
   }
 
   return { ok: true };
+}
+
+async function onCheckoutExpired(session) {
+  const workspaceId = session.metadata?.workspaceId || session.client_reference_id;
+  if (!workspaceId) return;
+  const sub = await WorkspaceSubscription.findOne({ workspaceId });
+  if (!sub) return;
+  if (sub.status === BILLING_STATUS.INCOMPLETE && !sub.stripeSubscriptionId) {
+    sub.metadata = {
+      ...(sub.metadata || {}),
+      lastCheckoutExpiredAt: new Date().toISOString(),
+      lastExpiredSessionId: session.id
+    };
+    await sub.save();
+  }
 }
 
 async function onCheckoutCompleted(session) {
@@ -406,7 +450,7 @@ async function onCheckoutCompleted(session) {
       actorUserId: session.metadata.actorUserId,
       stripeCustomerId: session.customer,
       stripeSubscriptionId: session.subscription,
-      planKey: PLAN_KEYS.FIRM,
+      planKey: resolveFirmCreatePlanKey(planKey),
       firm: {
         name: session.metadata.firmName,
         slug: session.metadata.firmSlug || undefined,
@@ -455,31 +499,38 @@ async function findWorkspaceIdForStripeSub(stripeSub) {
 async function onSubscriptionUpdated(stripeSub) {
   const workspaceId = await findWorkspaceIdForStripeSub(stripeSub);
   if (!workspaceId) return;
-  await applyStripeSubscription(workspaceId, stripeSub, {
-    stripeCustomerId: stripeSub.customer
-  });
+  try {
+    await applyStripeSubscription(workspaceId, stripeSub, {
+      stripeCustomerId: stripeSub.customer
+    });
+  } catch (err) {
+    console.error("onSubscriptionUpdated apply failed:", err.message);
+  }
 }
 
 async function onSubscriptionDeleted(stripeSub) {
   const workspaceId = await findWorkspaceIdForStripeSub(stripeSub);
   if (!workspaceId) return;
   const sub = await ensureSubscription(workspaceId);
-  const ws = await Workspace.findById(workspaceId).lean();
-  sub.planKey = PLAN_KEYS.FREE;
+  const basePlan = await getResolvedPlan(PLAN_KEYS.BASE);
+  sub.planKey = PLAN_KEYS.BASE;
   sub.status = BILLING_STATUS.FREE;
   sub.stripeSubscriptionId = null;
+  sub.stripePriceId = null;
   sub.cancelAtPeriodEnd = false;
   sub.canceledAt = new Date();
-  sub.practiceLocked = ws?.type === WORKSPACE_TYPES.FIRM;
-  sub.seatLimit = getPlanDefinition(PLAN_KEYS.FREE).limits.seats;
+  sub.practiceLocked = true;
+  sub.trialEndsAt = null;
+  sub.graceEndsAt = null;
+  sub.seatLimit = seatsFromPlan(basePlan);
   await sub.save();
   await Workspace.updateOne(
     { _id: workspaceId },
-    { $set: { planId: PLAN_KEYS.FREE, seatLimit: sub.seatLimit } }
+    { $set: { planId: PLAN_KEYS.BASE, seatLimit: sub.seatLimit } }
   );
 }
 
-async function onInvoiceEvent(invoice) {
+async function onInvoiceEvent(invoice, eventType = "") {
   let workspaceId = invoice.metadata?.workspaceId || null;
   if (!workspaceId && invoice.customer) {
     const sub = await WorkspaceSubscription.findOne({
@@ -490,23 +541,27 @@ async function onInvoiceEvent(invoice) {
   if (!workspaceId) return;
   await upsertInvoiceFromStripe(workspaceId, invoice);
 
-  if (invoice.subscription && invoice.paid) {
-    const stripeSub = await stripeBillingProvider.retrieveSubscription(invoice.subscription);
-    if (stripeSub) {
-      await applyStripeSubscription(workspaceId, stripeSub, {
-        stripeCustomerId: invoice.customer
-      });
-    }
+  const needsApply =
+    Boolean(invoice.subscription) &&
+    (invoice.paid ||
+      eventFailed(invoice) ||
+      eventType === "invoice.payment_action_required" ||
+      eventType === "invoice.updated");
+
+  if (!needsApply || !invoice.subscription) return;
+
+  const stripeSub = await stripeBillingProvider.retrieveSubscription(invoice.subscription);
+  if (!stripeSub) return;
+
+  const extras = { stripeCustomerId: invoice.customer };
+  if (eventFailed(invoice) || eventType === "invoice.payment_action_required") {
+    extras.graceEndsAt = new Date(Date.now() + graceDays() * 24 * 60 * 60 * 1000);
   }
 
-  if (invoice.subscription && eventFailed(invoice)) {
-    const stripeSub = await stripeBillingProvider.retrieveSubscription(invoice.subscription);
-    if (stripeSub) {
-      await applyStripeSubscription(workspaceId, stripeSub, {
-        stripeCustomerId: invoice.customer,
-        graceEndsAt: new Date(Date.now() + graceDays() * 24 * 60 * 60 * 1000)
-      });
-    }
+  try {
+    await applyStripeSubscription(workspaceId, stripeSub, extras);
+  } catch (err) {
+    console.error("onInvoiceEvent apply failed:", err.message);
   }
 }
 
@@ -514,7 +569,7 @@ function eventFailed(invoice) {
   return invoice.status === "open" || invoice.status === "uncollectible";
 }
 
-/** Expire local trials (not Stripe charges). */
+/** Expire local trials → Base unpaid + practice locked. */
 export async function expireTrials() {
   const now = new Date();
   const due = await WorkspaceSubscription.find({
@@ -522,24 +577,25 @@ export async function expireTrials() {
     trialEndsAt: { $lte: now }
   });
 
+  const basePlan = await getResolvedPlan(PLAN_KEYS.BASE);
   let count = 0;
   for (const sub of due) {
     if (sub.stripeSubscriptionId) continue;
     sub.status = BILLING_STATUS.FREE;
-    sub.planKey = PLAN_KEYS.FREE;
-    sub.seatLimit = getPlanDefinition(PLAN_KEYS.FREE).limits.seats;
+    sub.planKey = PLAN_KEYS.BASE;
+    sub.seatLimit = seatsFromPlan(basePlan);
     sub.trialEndsAt = null;
+    sub.practiceLocked = true;
     await sub.save();
     await Workspace.updateOne(
       { _id: sub.workspaceId },
-      { $set: { planId: PLAN_KEYS.FREE, seatLimit: sub.seatLimit } }
+      { $set: { planId: PLAN_KEYS.BASE, seatLimit: sub.seatLimit } }
     );
     count += 1;
   }
   return count;
 }
 
-/** Lock firm practice after past_due grace. */
 export async function applyPastDueGraceLocks() {
   const now = new Date();
   const rows = await WorkspaceSubscription.find({
@@ -595,24 +651,38 @@ export async function adminGrantPlan({
   adminUserId,
   reason = "",
   seatLimit = null,
-  trialDaysExtend = null
+  trialDaysExtend = null,
+  practiceLocked = false
 }) {
-  const plan = getPlanDefinition(planKey);
+  if (!isValidPlanKey(planKey) && trialDaysExtend == null) {
+    throw new ApiError(400, `Unknown plan key: ${planKey}`);
+  }
+
   const sub = await ensureSubscription(workspaceId);
 
   if (trialDaysExtend != null) {
+    const basePlan = await getResolvedPlan(PLAN_KEYS.BASE);
     sub.status = BILLING_STATUS.TRIALING;
-    sub.planKey = PLAN_KEYS.PRO;
+    sub.planKey = PLAN_KEYS.BASE;
     sub.trialEndsAt = new Date(Date.now() + Number(trialDaysExtend) * 24 * 60 * 60 * 1000);
+    sub.seatLimit = seatLimit ?? seatsFromPlan(basePlan);
+    sub.practiceLocked = false;
   } else {
+    const plan = await getResolvedPlan(planKey);
     sub.planKey = planKey;
-    sub.status = planKey === PLAN_KEYS.FREE ? BILLING_STATUS.FREE : BILLING_STATUS.ACTIVE;
-    if (planKey === PLAN_KEYS.FREE) sub.trialEndsAt = null;
+    sub.trialEndsAt = null;
+    sub.seatLimit = seatLimit ?? seatsFromPlan(plan);
+    sub.practiceLocked = Boolean(practiceLocked);
+    // Paid tiers always ACTIVE; Base unpaid → FREE (support can unlock via practiceLocked=false)
+    if (planKey === PLAN_KEYS.BASE && !sub.stripeSubscriptionId) {
+      sub.status = BILLING_STATUS.FREE;
+    } else {
+      sub.status = BILLING_STATUS.ACTIVE;
+      sub.practiceLocked = false;
+    }
   }
 
   sub.provider = BILLING_PROVIDER.MANUAL;
-  sub.seatLimit = seatLimit ?? plan.limits.seats;
-  sub.practiceLocked = false;
   sub.graceEndsAt = null;
   sub.metadata = {
     ...(sub.metadata || {}),
@@ -630,12 +700,18 @@ export async function adminGrantPlan({
   return formatSubscription(sub);
 }
 
-export async function adminForceFree({ workspaceId, adminUserId, reason = "" }) {
+export async function adminForceFree({
+  workspaceId,
+  adminUserId,
+  reason = "",
+  practiceLocked = false
+}) {
   return adminGrantPlan({
     workspaceId,
-    planKey: PLAN_KEYS.FREE,
+    planKey: PLAN_KEYS.BASE,
     adminUserId,
-    reason
+    reason: reason || "force-base",
+    practiceLocked
   });
 }
 
@@ -701,7 +777,7 @@ export async function getSubscriptionDetailAdmin(workspaceId) {
       : null,
     invoices,
     events,
-    catalogPlan: getPlanDefinition(entitlementsPlanKey(sub))
+    catalogPlan: await getResolvedPlan(entitlementsPlanKey(sub))
   };
 }
 
@@ -709,29 +785,39 @@ export async function listInvoices(workspaceId, limit = 20) {
   return BillingInvoice.find({ workspaceId }).sort({ createdAt: -1 }).limit(limit).lean();
 }
 
-export function getCatalogPublic() {
-  const displayPrices = {
-    [PLAN_KEYS.FREE]: 0,
-    [PLAN_KEYS.PRO]: Number(env.billingDisplayPricePro ?? 29),
-    [PLAN_KEYS.FIRM]: Number(env.billingDisplayPriceFirm ?? 99)
+export async function getCatalogPublic() {
+  const plans = await listResolvedPlans();
+  const currency = (env.billingDisplayCurrency || "pkr").toLowerCase();
+  const envDisplay = {
+    [PLAN_KEYS.BASE]: Number(env.billingDisplayPriceBase ?? 1000),
+    [PLAN_KEYS.MAX]: Number(env.billingDisplayPriceMax ?? 3000),
+    [PLAN_KEYS.FIRM]: Number(env.billingDisplayPriceFirm ?? 4000),
+    [PLAN_KEYS.FIRM_MAX]: Number(env.billingDisplayPriceFirmMax ?? 10000)
   };
-  const currency = (env.billingDisplayCurrency || "usd").toLowerCase();
 
   return {
-    plans: listPlans().map((p) => ({
+    plans: plans.map((p) => ({
       key: p.key,
       name: p.name,
       workspaceTypes: p.workspaceTypes,
       limits: p.limits,
       features: p.features,
       stripePriceConfigured: Boolean(getPriceIdForPlan(p.key)),
-      displayPriceMonthly: displayPrices[p.key] ?? null,
-      currency
+      displayPriceMonthly: p.displayPrice ?? envDisplay[p.key] ?? null,
+      currency,
+      version: p.version,
+      updatedAt: p.updatedAt
     })),
     stripeConfigured: isStripeConfigured(),
+    trial: {
+      days: trialDays(),
+      planKey: PLAN_KEYS.BASE
+    },
     priceEnvKeys: {
-      [PLAN_KEYS.PRO]: "STRIPE_PRICE_PRO_MONTHLY",
-      [PLAN_KEYS.FIRM]: "STRIPE_PRICE_FIRM_MONTHLY"
+      [PLAN_KEYS.BASE]: "STRIPE_PRICE_BASE_MONTHLY",
+      [PLAN_KEYS.MAX]: "STRIPE_PRICE_MAX_MONTHLY",
+      [PLAN_KEYS.FIRM]: "STRIPE_PRICE_FIRM_MONTHLY",
+      [PLAN_KEYS.FIRM_MAX]: "STRIPE_PRICE_FIRM_MAX_MONTHLY"
     }
   };
 }

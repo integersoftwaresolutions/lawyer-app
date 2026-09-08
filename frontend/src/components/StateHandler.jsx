@@ -1,5 +1,7 @@
 import { getErrorMessage } from "../utils/errorHandler";
+import { isLawyerNotVerifiedError } from "../utils/lawyerVerification";
 import Button from "./ui/Button";
+import VerificationRequiredPanel from "./verification/VerificationRequiredPanel";
 
 /**
  * Universal state management wrapper for API-driven UI sections
@@ -76,6 +78,14 @@ function DefaultLoader({ className = "", size = "md", ...props }) {
  * Error state UI with retry button
  */
 function ErrorState({ error, onRetry, className = "", ...props }) {
+  if (isLawyerNotVerifiedError(error)) {
+    return (
+      <div className={className} {...props}>
+        <VerificationRequiredPanel compact />
+      </div>
+    );
+  }
+
   const errorMessage = getErrorMessage(error);
 
   return (

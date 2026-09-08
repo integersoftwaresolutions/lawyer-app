@@ -73,13 +73,19 @@ export const env = {
   // Billing / Stripe
   stripeSecretKey: optional("STRIPE_SECRET_KEY"),
   stripeWebhookSecret: optional("STRIPE_WEBHOOK_SECRET"),
-  stripePriceProMonthly: optional("STRIPE_PRICE_PRO_MONTHLY"),
+  stripePriceBaseMonthly: optional("STRIPE_PRICE_BASE_MONTHLY"),
+  stripePriceMaxMonthly: optional("STRIPE_PRICE_MAX_MONTHLY"),
   stripePriceFirmMonthly: optional("STRIPE_PRICE_FIRM_MONTHLY"),
-  billingTrialDays: Number(process.env.BILLING_TRIAL_DAYS || 14),
+  stripePriceFirmMaxMonthly: optional("STRIPE_PRICE_FIRM_MAX_MONTHLY"),
+  /** @deprecated legacy alias */
+  stripePriceProMonthly: optional("STRIPE_PRICE_PRO_MONTHLY"),
+  billingTrialDays: Number(process.env.BILLING_TRIAL_DAYS || 30),
   billingPastDueGraceDays: Number(process.env.BILLING_PAST_DUE_GRACE_DAYS || 3),
   billingReconcileEnabled: (process.env.BILLING_RECONCILE_ENABLED || "true") === "true",
   billingJobIntervalMs: Number(process.env.BILLING_JOB_INTERVAL_MS || 60 * 60 * 1000),
-  billingDisplayPricePro: Number(process.env.BILLING_DISPLAY_PRICE_PRO || 29),
-  billingDisplayPriceFirm: Number(process.env.BILLING_DISPLAY_PRICE_FIRM || 99),
-  billingDisplayCurrency: optional("BILLING_DISPLAY_CURRENCY", "usd")
+  billingDisplayPriceBase: Number(process.env.BILLING_DISPLAY_PRICE_BASE || 1000),
+  billingDisplayPriceMax: Number(process.env.BILLING_DISPLAY_PRICE_MAX || 3000),
+  billingDisplayPriceFirm: Number(process.env.BILLING_DISPLAY_PRICE_FIRM || 4000),
+  billingDisplayPriceFirmMax: Number(process.env.BILLING_DISPLAY_PRICE_FIRM_MAX || 10000),
+  billingDisplayCurrency: optional("BILLING_DISPLAY_CURRENCY", "pkr")
 };

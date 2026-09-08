@@ -156,6 +156,32 @@ Webhook URL in Stripe Dashboard (live/test):
 
 Set `STRIPE_WEBHOOK_SECRET` to the Dashboard signing secret (not the local CLI `whsec`).
 
+### Required webhook events
+
+- `checkout.session.completed`
+- `checkout.session.expired`
+- `customer.subscription.created`
+- `customer.subscription.updated`
+- `customer.subscription.deleted`
+- `customer.subscription.paused`
+- `customer.subscription.resumed`
+- `invoice.paid`
+- `invoice.payment_failed`
+- `invoice.finalized`
+- `invoice.updated`
+- `invoice.payment_action_required`
+
+### Price env vars (PKR monthly products in Stripe Dashboard)
+
+- `STRIPE_PRICE_BASE_MONTHLY`
+- `STRIPE_PRICE_MAX_MONTHLY`
+- `STRIPE_PRICE_FIRM_MONTHLY`
+- `STRIPE_PRICE_FIRM_MAX_MONTHLY`
+
+Local trials are **app-only** (30-day Base). Do not set Stripe `trial_period_days`.
+
+After deploy with new plan keys, run once: `node src/seeders/migratePlanKeys.js` from `backend/`.
+
 ---
 
 ## Post-deploy checklist

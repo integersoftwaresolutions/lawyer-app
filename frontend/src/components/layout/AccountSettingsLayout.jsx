@@ -8,6 +8,7 @@ import SidebarUserFooter from "./SidebarUserFooter";
 import Navbar from "./Navbar";
 import WorkspaceSwitcher from "../workspace/WorkspaceSwitcher";
 import { getDashboardPath } from "../../utils/authRoutes";
+import VerificationStatusBanner from "../verification/VerificationStatusBanner";
 
 const FULL_ACCOUNT_ITEMS = [
   { id: "profile", label: "Profile", icon: FiUser },
@@ -48,7 +49,7 @@ export default function AccountSettingsLayout({ basePath = "" }) {
         <Sidebar
           isOpen={mobileOpen}
           onClose={() => setMobileOpen(false)}
-          width="w-[240px]"
+          width="w-[280px]"
           contentClassName="p-2 md:p-3"
           footer={<SidebarUserFooter onNavigate={() => setMobileOpen(false)} />}
         >
@@ -72,6 +73,7 @@ export default function AccountSettingsLayout({ basePath = "" }) {
 
         <main className="flex-1 min-w-0 min-h-0 overflow-y-auto">
           <div className="max-w-7xl mx-auto w-full p-3 sm:p-4 md:p-5 lg:p-6">
+            {isLawyer ? <VerificationStatusBanner /> : null}
             <Outlet />
           </div>
         </main>

@@ -8,6 +8,7 @@ import { getDefaultPlans, mergeCatalogPlans, PLAN_KEYS } from "../billing/plans"
 import { useToast } from "./useToast";
 import { getErrorMessage } from "../utils/errorHandler";
 import { createFirm } from "../store/slices/workspaceSlice";
+import { BILLING_COMING_SOON } from "../config/features";
 
 export const BILLING_METER_LABELS = Object.freeze({
   "cases.active": "Active cases",
@@ -37,8 +38,12 @@ const emptyFirmForm = {
   website: "",
   address: "",
   description: "",
-  practiceAreas: ""
+  practiceAreas: "",
+  planKey: PLAN_KEYS.FIRM
 };
+
+const PERSONAL_KEYS = new Set([PLAN_KEYS.BASE, PLAN_KEYS.MAX]);
+const FIRM_KEYS = new Set([PLAN_KEYS.FIRM, PLAN_KEYS.FIRM_MAX]);
 
 /**
  * Shared billing state for Subscription / Usage / Invoices pages.
@@ -107,31 +112,46 @@ export function useWorkspaceBilling({ handleUpgradeDeepLinks = false } = {}) {
 
   const sub = entitlements?.subscription;
   const meters = entitlements?.meters || {};
-  const currentPlanKey = entitlements?.planKey || "free";
+  const currentPlanKey = entitlements?.planKey || PLAN_KEYS.BASE;
 
-  const handleUpgradePro = useCallback(async () => {
-    if (!canManage) {
-      toast.error("You need billing permission to change the plan");
-      return;
-    }
-    if (isFirm) {
-      toast.error("Pro is for personal workspaces. Switch to your personal workspace first.");
-      return;
-    }
-    try {
-      setBusyPlanKey(PLAN_KEYS.PRO);
-      const res = await billingApi.checkout(workspaceId, { planKey: PLAN_KEYS.PRO });
-      const url = res.data?.checkoutUrl;
-      if (url) window.location.href = url;
-      else toast.error("Checkout unavailable — Stripe may not be configured yet.");
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setBusyPlanKey(null);
-    }
-  }, [canManage, isFirm, toast, workspaceId]);
+  const handleCheckout = useCallback(
+    async (planKey) => {
+      if (BILLING_COMING_SOON) {
+        toast.error("Paid plans are coming soon. You cannot checkout yet.");
+        return;
+      }
+      if (!canManage) {
+        toast.error("You need billing permission to change the plan");
+        return;
+      }
+      if (PERSONAL_KEYS.has(planKey) && isFirm) {
+        toast.error("Base and Max are for personal workspaces. Switch workspace first.");
+        return;
+      }
+      if (FIRM_KEYS.has(planKey) && !isFirm) {
+        toast.error("Firm plans require a firm workspace. Create a firm first.");
+        return;
+      }
+      try {
+        setBusyPlanKey(planKey);
+        const res = await billingApi.checkout(workspaceId, { planKey });
+        const url = res.data?.checkoutUrl;
+        if (url) window.location.href = url;
+        else toast.error("Checkout unavailable — Stripe may not be configured yet.");
+      } catch (err) {
+        toast.error(getErrorMessage(err));
+      } finally {
+        setBusyPlanKey(null);
+      }
+    },
+    [canManage, isFirm, toast, workspaceId]
+  );
+
+  /** @deprecated use handleCheckout(PLAN_KEYS.MAX) */
+  const handleUpgradePro = useCallback(() => handleCheckout(PLAN_KEYS.MAX), [handleCheckout]);
 
   useEffect(() => {
+    if (BILLING_COMING_SOON) return;
     if (!handleUpgradeDeepLinks || loading || upgradeHandled || !entitlements) return;
     const upgrade = searchParams.get("upgrade");
     if (!upgrade) return;
@@ -141,20 +161,38 @@ export function useWorkspaceBilling({ handleUpgradeDeepLinks = false } = {}) {
     setSearchParams(next, { replace: true });
     setUpgradeHandled(true);
 
-    if (upgrade === "pro") {
-      if (currentPlanKey === "pro" && sub?.status === "ACTIVE") {
-        toast.success("You're already on Pro");
+    const key = upgrade === "pro" ? PLAN_KEYS.MAX : upgrade;
+
+    if (key === PLAN_KEYS.FIRM) {
+      if (isFirm) {
+        handleCheckout(PLAN_KEYS.FIRM);
         return;
       }
-      handleUpgradePro();
+      setFirmForm((f) => ({ ...f, planKey: PLAN_KEYS.FIRM }));
+      setFirmOpen(true);
       return;
     }
-    if (upgrade === "firm") {
+
+    if (key === PLAN_KEYS.FIRM_MAX) {
       if (isFirm) {
-        navigate("/lawyer/workspace/overview");
+        if (currentPlanKey === PLAN_KEYS.FIRM_MAX && sub?.status === "ACTIVE") {
+          toast.success("You're already on Law Firm Max");
+          return;
+        }
+        handleCheckout(PLAN_KEYS.FIRM_MAX);
         return;
       }
+      setFirmForm((f) => ({ ...f, planKey: PLAN_KEYS.FIRM_MAX }));
       setFirmOpen(true);
+      return;
+    }
+
+    if (PERSONAL_KEYS.has(key)) {
+      if (currentPlanKey === key && sub?.status === "ACTIVE") {
+        toast.success(`You're already on ${key === PLAN_KEYS.MAX ? "Adal Max" : "Adal Base"}`);
+        return;
+      }
+      handleCheckout(key);
     }
   }, [
     handleUpgradeDeepLinks,
@@ -166,19 +204,29 @@ export function useWorkspaceBilling({ handleUpgradeDeepLinks = false } = {}) {
     currentPlanKey,
     sub?.status,
     isFirm,
-    handleUpgradePro,
-    navigate,
-    toast
+    handleCheckout,
+    toast,
+    setFirmForm
   ]);
 
   const handleCreateFirm = async (e) => {
     e.preventDefault();
+    if (BILLING_COMING_SOON) {
+      toast.error("Paid plans are coming soon. You cannot checkout yet.");
+      return;
+    }
     if (!firmForm.name.trim()) {
       toast.error("Firm name is required");
       return;
     }
+    if (!firmForm.planKey || (firmForm.planKey !== PLAN_KEYS.FIRM && firmForm.planKey !== PLAN_KEYS.FIRM_MAX)) {
+      toast.error("Choose Law Firm Plan or Law Firm Max");
+      return;
+    }
     setFirmBusy(true);
     try {
+      const planKey = firmForm.planKey;
+      const planName = planKey === PLAN_KEYS.FIRM_MAX ? "Law Firm Max" : "Law Firm Plan";
       const data = await dispatch(
         createFirm({
           name: firmForm.name.trim(),
@@ -187,6 +235,7 @@ export function useWorkspaceBilling({ handleUpgradeDeepLinks = false } = {}) {
           website: firmForm.website,
           address: firmForm.address,
           description: firmForm.description,
+          planKey,
           practiceAreas: firmForm.practiceAreas
             ? firmForm.practiceAreas.split(",").map((s) => s.trim()).filter(Boolean)
             : []
@@ -194,13 +243,13 @@ export function useWorkspaceBilling({ handleUpgradeDeepLinks = false } = {}) {
       ).unwrap();
 
       if (data?.requiresCheckout && data?.checkoutUrl) {
-        toast.success("Redirecting to Firm checkout…");
+        toast.success(`Redirecting to ${planName} checkout…`);
         window.location.href = data.checkoutUrl;
         return;
       }
       setFirmOpen(false);
       setFirmForm(emptyFirmForm);
-      toast.success("Firm workspace created");
+      toast.success(`Firm workspace created on ${planName}`);
       navigate("/lawyer/workspace/overview");
     } catch (err) {
       toast.error(getErrorMessage(err));
@@ -210,25 +259,46 @@ export function useWorkspaceBilling({ handleUpgradeDeepLinks = false } = {}) {
   };
 
   const handleSelectPlan = async (plan) => {
-    if (plan.key === PLAN_KEYS.FREE) {
+    if (plan.key === PLAN_KEYS.BASE) {
+      if (currentPlanKey === PLAN_KEYS.BASE && sub?.status === "ACTIVE") return;
+      if (sub?.status === "TRIALING" || sub?.status === "FREE") {
+        await handleCheckout(PLAN_KEYS.BASE);
+        return;
+      }
       navigate("/lawyer/billing/usage");
       return;
     }
-    if (plan.key === PLAN_KEYS.PRO) {
-      if (currentPlanKey === "pro" && sub?.status === "ACTIVE") return;
-      await handleUpgradePro();
+    if (plan.key === PLAN_KEYS.MAX) {
+      if (currentPlanKey === PLAN_KEYS.MAX && sub?.status === "ACTIVE") return;
+      await handleCheckout(PLAN_KEYS.MAX);
       return;
     }
     if (plan.key === PLAN_KEYS.FIRM) {
       if (isFirm) {
-        navigate("/lawyer/workspace/overview");
+        if (currentPlanKey === PLAN_KEYS.FIRM && sub?.status === "ACTIVE") return;
+        await handleCheckout(PLAN_KEYS.FIRM);
         return;
       }
+      setFirmForm((f) => ({ ...f, planKey: PLAN_KEYS.FIRM }));
+      setFirmOpen(true);
+      return;
+    }
+    if (plan.key === PLAN_KEYS.FIRM_MAX) {
+      if (isFirm) {
+        if (currentPlanKey === PLAN_KEYS.FIRM_MAX && sub?.status === "ACTIVE") return;
+        await handleCheckout(PLAN_KEYS.FIRM_MAX);
+        return;
+      }
+      setFirmForm((f) => ({ ...f, planKey: PLAN_KEYS.FIRM_MAX }));
       setFirmOpen(true);
     }
   };
 
   const handlePortal = async () => {
+    if (BILLING_COMING_SOON) {
+      toast.error("Paid plans are coming soon. You cannot checkout yet.");
+      return;
+    }
     try {
       setBusyPlanKey("portal");
       const res = await billingApi.portal(workspaceId);
@@ -242,19 +312,33 @@ export function useWorkspaceBilling({ handleUpgradeDeepLinks = false } = {}) {
     }
   };
 
-  const planLabels = useMemo(
-    () => ({
-      [PLAN_KEYS.FREE]: "View usage",
-      [PLAN_KEYS.PRO]:
-        currentPlanKey === "pro" && sub?.status === "ACTIVE"
+  const planLabels = useMemo(() => {
+    const active = (key) => currentPlanKey === key && sub?.status === "ACTIVE";
+    return {
+      [PLAN_KEYS.BASE]:
+        active(PLAN_KEYS.BASE)
           ? "Current plan"
           : sub?.status === "TRIALING"
-            ? "Subscribe to Pro"
-            : "Upgrade to Pro",
-      [PLAN_KEYS.FIRM]: isFirm ? "Open firm settings" : "Create firm"
-    }),
-    [currentPlanKey, sub?.status, isFirm]
-  );
+            ? "Subscribe to Base"
+            : "Get Adal Base",
+      [PLAN_KEYS.MAX]:
+        active(PLAN_KEYS.MAX)
+          ? "Current plan"
+          : sub?.status === "TRIALING"
+            ? "Upgrade to Max"
+            : "Upgrade to Max",
+      [PLAN_KEYS.FIRM]: isFirm
+        ? active(PLAN_KEYS.FIRM)
+          ? "Current plan"
+          : "Switch to Firm"
+        : "Create firm",
+      [PLAN_KEYS.FIRM_MAX]: isFirm
+        ? active(PLAN_KEYS.FIRM_MAX)
+          ? "Current plan"
+          : "Upgrade to Firm Max"
+        : "Create firm on Max"
+    };
+  }, [currentPlanKey, sub?.status, isFirm]);
 
   return {
     workspace,
@@ -278,6 +362,7 @@ export function useWorkspaceBilling({ handleUpgradeDeepLinks = false } = {}) {
     firmBusy,
     firmForm,
     setFirmForm,
+    handleCheckout,
     handleUpgradePro,
     handleSelectPlan,
     handlePortal,
