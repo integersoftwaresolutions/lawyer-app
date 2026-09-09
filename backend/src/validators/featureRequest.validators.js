@@ -1,7 +1,6 @@
 import Joi from "joi";
-import { DEMO_INTERESTS } from "../models/DemoRequest.js";
 
-export const createDemoRequestSchema = Joi.object({
+export const createFeatureRequestSchema = Joi.object({
   body: Joi.object({
     fullName: Joi.string().trim().min(2).max(120).required(),
     email: Joi.string().trim().email().max(254).required(),
@@ -20,11 +19,7 @@ export const createDemoRequestSchema = Joi.object({
         "any.required": "Phone is required",
         "string.empty": "Phone is required"
       }),
-    interest: Joi.string()
-      .valid(...DEMO_INTERESTS)
-      .empty("")
-      .default("demo"),
-    message: Joi.string().trim().allow("").max(2000).optional(),
+    feature: Joi.string().trim().min(10).max(2000).required(),
     source: Joi.string().trim().allow("").max(80).optional(),
     /** Honeypot — bots fill this; humans leave blank */
     website: Joi.string().allow("").max(200).optional()

@@ -146,6 +146,20 @@ export default function MarketingPage() {
             }
             items={CORE_PILLARS}
           />
+          <div className="mt-8 sm:mt-10 rounded-2xl border border-border bg-card p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+            <div>
+              <h3 className="m-0 text-lg font-semibold text-text-primary">
+                Missing something your practice needs?
+              </h3>
+              <p className="m-0 mt-2 text-sm text-text-secondary leading-relaxed">
+                Tell us what would make Adal AI more useful to you.
+              </p>
+            </div>
+            <CtaLink href="/request-feature" variant="outline" className="shrink-0">
+              Request a feature
+              <FiArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+            </CtaLink>
+          </div>
         </div>
       </section>
 

@@ -3,29 +3,21 @@ import { Link } from "react-router-dom";
 import { FiArrowRight, FiCheck } from "react-icons/fi";
 import { Navbar } from "../../components/layout";
 import Footer from "../../components/Footer";
-import { Button, Input, Select, Textarea } from "../../components/ui";
+import { Button, Input, Textarea } from "../../components/ui";
 import { useTheme } from "../../context/ThemeContext";
-import { submitDemoRequest } from "../../services/demo.api";
+import { submitFeatureRequest } from "../../services/feature.api";
 import { getErrorMessage } from "../../utils/errorHandler";
 import "./marketing/marketing-motion.css";
-
-const INTEREST_OPTIONS = [
-  { value: "demo", label: "Product demo" },
-  { value: "setup", label: "Setup / onboarding" },
-  { value: "pricing", label: "Pricing discussion" },
-  { value: "other", label: "Other" }
-];
 
 const INITIAL = {
   fullName: "",
   email: "",
   phone: "",
-  interest: "",
-  message: "",
+  feature: "",
   website: ""
 };
 
-export default function RequestDemoPage() {
+export default function RequestFeaturePage() {
   const { isDarkMode } = useTheme();
   const [form, setForm] = useState(INITIAL);
   const [fieldErrors, setFieldErrors] = useState({});
@@ -56,6 +48,9 @@ export default function RequestDemoPage() {
     if (phoneDigits.length < 7) {
       errors.phone = "Please enter a phone number";
     }
+    if (form.feature.trim().length < 10 || form.feature.trim().length > 2000) {
+      errors.feature = "Please describe your feature in 10 to 2000 characters";
+    }
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   }
@@ -67,13 +62,12 @@ export default function RequestDemoPage() {
 
     setSubmitting(true);
     try {
-      await submitDemoRequest({
+      await submitFeatureRequest({
         fullName: form.fullName.trim(),
         email: form.email.trim(),
         phone: form.phone.trim(),
-        interest: form.interest || "demo",
-        message: form.message.trim(),
-        source: "request-demo",
+        feature: form.feature.trim(),
+        source: "request-feature",
         website: form.website
       });
       setDone(true);
@@ -108,14 +102,14 @@ export default function RequestDemoPage() {
 
           <div className="relative max-w-[720px] mx-auto px-4 sm:px-6 py-10 sm:py-14 text-center">
             <p className="text-xs sm:text-sm font-semibold text-primary m-0 mb-3 tracking-wide uppercase">
-              Request a demo
+              Request a feature
             </p>
             <h1 className="text-3xl sm:text-4xl font-bold text-text-primary m-0 leading-tight">
-              See Adal AI for your practice
+              Help shape Adal AI for your practice
             </h1>
             <p className="text-base sm:text-lg text-text-secondary m-0 mt-3 leading-relaxed">
-              Share your name, email, and phone. Everything else is optional—we&apos;ll follow up
-              to schedule a demo or help with setup.
+              Share your name, email, phone, and the feature you would like us to build.
+              Tell us how it would help your practice.
             </p>
           </div>
         </header>
@@ -131,8 +125,8 @@ export default function RequestDemoPage() {
                 Request received
               </h2>
               <p className="m-0 mt-3 text-sm sm:text-base text-text-secondary leading-relaxed">
-                Thanks for reaching out. Our team will contact you shortly at the email you
-                provided—usually within one business day.
+                Thanks for sharing your idea. Our team will review your feature request
+                and may contact you at the email you provided for more details.
               </p>
               <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
                 <Link
@@ -160,6 +154,7 @@ export default function RequestDemoPage() {
                 <Input
                   label="Full name *"
                   name="fullName"
+                  maxLength={120}
                   autoComplete="name"
                   value={form.fullName}
                   onChange={(e) => update("fullName", e.target.value)}
@@ -169,6 +164,7 @@ export default function RequestDemoPage() {
                 <Input
                   label="Work email *"
                   name="email"
+                  maxLength={254}
                   type="email"
                   autoComplete="email"
                   value={form.email}
@@ -181,6 +177,7 @@ export default function RequestDemoPage() {
               <Input
                 label="Phone *"
                 name="phone"
+                maxLength={40}
                 type="tel"
                 autoComplete="tel"
                 value={form.phone}
@@ -189,23 +186,17 @@ export default function RequestDemoPage() {
                 placeholder="+92 …"
               />
 
-              <Select
-                label="What do you need?"
-                name="interest"
-                options={INTEREST_OPTIONS}
-                value={form.interest}
-                onChange={(e) => update("interest", e.target.value)}
-                error={fieldErrors.interest}
-                placeholder="Product demo (default)"
-              />
-
               <Textarea
-                label="Anything else we should know?"
-                name="message"
-                rows={4}
-                value={form.message}
-                onChange={(e) => update("message", e.target.value)}
-                placeholder="Goals, timeline, number of lawyers, current tools…"
+                label="Describe your feature *"
+                name="feature"
+                rows={6}
+                required
+                minLength={10}
+                maxLength={2000}
+                value={form.feature}
+                onChange={(e) => update("feature", e.target.value)}
+                error={fieldErrors.feature}
+                placeholder="What would you like Adal AI to do? Describe the problem and how your suggested feature would help."
               />
 
               {/* Honeypot — hidden from humans */}
@@ -229,7 +220,7 @@ export default function RequestDemoPage() {
               ) : null}
 
               <p className="m-0 mb-5 text-xs text-text-muted leading-relaxed">
-                We&apos;ll use these details only to contact you about Adal AI demos and setup.
+                We&apos;ll use these details only to contact you about your feature request.
                 By submitting, you agree to be contacted by our team.
               </p>
 

@@ -17,6 +17,7 @@ const QUICK_LINKS = [
   { to: "/lawyers", label: "Find Lawyers" },
   { to: "/pricing", label: "Pricing" },
   { to: "/request-demo", label: "Request a demo" },
+  { to: "/request-feature", label: "Request a feature" },
   { to: "/#features", label: "Features" },
   { to: "/#marketplace", label: "Marketplace" },
   { to: "/#practice", label: "Practice tools" }
@@ -26,6 +27,7 @@ const LAWYER_LINKS = [
   { to: "/register?role=lawyer", label: "Join as Lawyer" },
   { to: "/pricing", label: "Base / Max / Firm" },
   { to: "/request-demo", label: "Request a demo" },
+  { to: "/request-feature", label: "Request a feature" },
   { to: "/#how-it-works", label: "How it works" },
   { to: "/#ai", label: "AI & knowledge" },
   { to: "/#firms", label: "Firms & workspaces" }

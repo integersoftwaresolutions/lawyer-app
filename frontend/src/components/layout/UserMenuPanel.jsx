@@ -75,6 +75,9 @@ export default function UserMenuPanel({ onNavigate }) {
             </Link>
           </>
         )}
+        <Link to="/request-feature" onClick={close} className={linkClass}>
+          Request a feature
+        </Link>
         <button type="button" onClick={handleLogout} className={logoutClass}>
           Logout
         </button>

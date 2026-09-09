@@ -48,9 +48,8 @@ export default function Navbar({
     : [
         { to: user ? "/lawyers" : "/login", label: "Find Lawyers" },
         { to: "/pricing", label: "Pricing" },
-        { to: "/request-demo", label: "Request a demo" },
+        { to: "/request-feature", label: "Request a feature" },
         { to: "/#features", label: "Features" },
-        { to: "/#how-it-works", label: "How it works" }
       ];
 
   const closeMobileMenu = () => setMobileMenuOpen(false);

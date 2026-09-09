@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import MarketingPage from "../pages/public/MarketingPage.jsx";
 import PricingPage from "../pages/public/PricingPage.jsx";
 import RequestDemoPage from "../pages/public/RequestDemoPage.jsx";
+import RequestFeaturePage from "../pages/public/RequestFeaturePage.jsx";
 import LawyerSearch from "../pages/public/LawyerSearch.jsx";
 import LawyerProfile from "../pages/public/LawyerProfile.jsx";
 import Login from "../pages/auth/Login.jsx";
@@ -90,6 +91,7 @@ export default function RoutesRoot() {
       />
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/request-demo" element={<RequestDemoPage />} />
+      <Route path="/request-feature" element={<RequestFeaturePage />} />
       
       {/* Client Dashboard Routes */}
       <Route

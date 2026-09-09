@@ -1,26 +1,19 @@
 import mongoose from "mongoose";
 
-export const DEMO_INTERESTS = ["demo", "setup", "pricing", "other"];
-export const DEMO_STATUSES = ["new", "contacted", "qualified", "closed"];
+export const FEATURE_STATUSES = ["new", "contacted", "qualified", "closed"];
 
-const DemoRequestSchema = new mongoose.Schema(
+const FeatureRequestSchema = new mongoose.Schema(
   {
     fullName: { type: String, required: true, trim: true, maxlength: 120 },
     email: { type: String, required: true, trim: true, lowercase: true, maxlength: 254, index: true },
     phone: { type: String, required: true, trim: true, maxlength: 40 },
-    interest: {
-      type: String,
-      enum: DEMO_INTERESTS,
-      default: "demo",
-      index: true
-    },
-    message: { type: String, default: "", trim: true, maxlength: 2000 },
-    source: { type: String, default: "request-demo", trim: true, maxlength: 80 },
+    feature: { type: String, required: true, trim: true, minlength: 10, maxlength: 2000 },
+    source: { type: String, default: "request-feature", trim: true, maxlength: 80 },
     /** Honeypot — should always be empty for real humans */
     website: { type: String, default: "", select: false },
     status: {
       type: String,
-      enum: DEMO_STATUSES,
+      enum: FEATURE_STATUSES,
       default: "new",
       index: true
     },
@@ -34,6 +27,6 @@ const DemoRequestSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-DemoRequestSchema.index({ createdAt: -1 });
+FeatureRequestSchema.index({ createdAt: -1 });
 
-export default mongoose.model("DemoRequest", DemoRequestSchema);
+export default mongoose.model("FeatureRequest", FeatureRequestSchema);

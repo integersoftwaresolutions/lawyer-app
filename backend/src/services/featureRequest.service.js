@@ -1,13 +1,6 @@
-import DemoRequest from "../models/DemoRequest.js";
+import FeatureRequest from "../models/FeatureRequest.js";
 import { env } from "../config/env.js";
 import { sendEmail } from "./email.service.js";
-
-const INTEREST_LABELS = {
-  demo: "Product demo",
-  setup: "Setup / onboarding",
-  pricing: "Pricing discussion",
-  other: "Other"
-};
 
 function escapeHtml(value = "") {
   return String(value)
@@ -36,13 +29,13 @@ function formatSubmittedAt(date) {
 function buildMessageSection(message) {
   const trimmed = (message || "").trim();
   if (!trimmed) return "";
-  return `<p><strong>Message from prospect</strong></p>
+  return `<p><strong>Requested feature</strong></p>
 <div class="info-card"><p style="white-space:pre-wrap;margin:0;">${escapeHtml(trimmed)}</p></div>`;
 }
 
 function buildLeadEmailText(lead, interestLabel, submittedAt) {
   return [
-    "New Adal AI demo request",
+    "New Adal AI feature request",
     "",
     `Name: ${lead.fullName}`,
     `Email: ${lead.email}`,
@@ -51,7 +44,7 @@ function buildLeadEmailText(lead, interestLabel, submittedAt) {
     `Source: ${lead.source || "—"}`,
     `Submitted: ${submittedAt}`,
     "",
-    lead.message ? `Message:\n${lead.message}` : "",
+    lead.feature ? `Feature:\n${lead.feature}` : "",
     "",
     `Lead ID: ${lead._id}`,
     "",
@@ -62,12 +55,12 @@ function buildLeadEmailText(lead, interestLabel, submittedAt) {
 }
 
 function buildLeadVariables(lead) {
-  const interestLabel = INTEREST_LABELS[lead.interest] || lead.interest;
+  const interestLabel = "Feature request";
   const submittedAt = formatSubmittedAt(lead.createdAt);
   const phone = (lead.phone || "").trim();
   return {
     preheader: `${lead.fullName} — ${interestLabel}`,
-    headline: "New demo request",
+    headline: "New feature request",
     introLine: `<strong>${escapeHtml(lead.fullName)}</strong> requested <strong>${escapeHtml(
       interestLabel
     )}</strong> via the public form.`,
@@ -78,9 +71,9 @@ function buildLeadVariables(lead) {
       ? `<a href="tel:${escapeHtml(phone.replace(/\s+/g, ""))}">${escapeHtml(phone)}</a>`
       : "—",
     interestLabel: escapeHtml(interestLabel),
-    source: escapeHtml(lead.source || "request-demo"),
+    source: escapeHtml(lead.source || "request-feature"),
     submittedAt: escapeHtml(submittedAt),
-    messageSection: buildMessageSection(lead.message),
+    messageSection: buildMessageSection(lead.feature),
     leadId: escapeHtml(String(lead._id)),
     interestLabelRaw: interestLabel,
     submittedAtRaw: submittedAt
@@ -88,22 +81,21 @@ function buildLeadVariables(lead) {
 }
 
 /**
- * Persist a demo request and notify the sales inbox.
+ * Persist a feature request and notify the sales inbox.
  * Email failure does not roll back the lead.
  */
-export async function createDemoRequest(payload, { ip = "", userAgent = "" } = {}) {
+export async function createFeatureRequest(payload, { ip = "", userAgent = "" } = {}) {
   // Honeypot: pretend success so bots don't learn they were blocked
   if (payload.website && String(payload.website).trim() !== "") {
     return { id: null, accepted: true, spam: true };
   }
 
-  const lead = await DemoRequest.create({
+  const lead = await FeatureRequest.create({
     fullName: payload.fullName,
     email: payload.email,
     phone: payload.phone || "",
-    interest: payload.interest || "demo",
-    message: payload.message || "",
-    source: payload.source || "request-demo",
+    feature: payload.feature,
+    source: payload.source || "request-feature",
     website: "",
     meta: {
       ip: ip || "",
@@ -113,7 +105,7 @@ export async function createDemoRequest(payload, { ip = "", userAgent = "" } = {
 
   const inbox = env.leadsInbox;
   if (!inbox) {
-    console.warn("⚠️  LEADS_INBOX not set — demo request saved but sales email skipped.");
+    console.warn("⚠️  LEADS_INBOX not set — feature request saved but sales email skipped.");
     lead.emailError = "LEADS_INBOX not configured";
     await lead.save();
     return { id: lead._id, accepted: true, spam: false, emailed: false };
@@ -121,20 +113,20 @@ export async function createDemoRequest(payload, { ip = "", userAgent = "" } = {
 
   try {
     const vars = buildLeadVariables(lead);
-    await sendEmail({
+    const delivery = await sendEmail({
       to: inbox,
       subject: `[Adal AI] ${vars.interestLabelRaw} — ${lead.fullName}`,
-      template: "demo-request-lead",
+      template: "feature-request-lead",
       variables: vars,
       text: buildLeadEmailText(lead, vars.interestLabelRaw, vars.submittedAtRaw),
       replyTo: lead.email
     });
-    lead.emailNotifiedAt = new Date();
-    lead.emailError = "";
+    lead.emailNotifiedAt = delivery.sent ? new Date() : null;
+    lead.emailError = delivery.sent ? "" : "Email transport not configured";
     await lead.save();
-    return { id: lead._id, accepted: true, spam: false, emailed: true };
+    return { id: lead._id, accepted: true, spam: false, emailed: delivery.sent };
   } catch (err) {
-    console.error("Demo request email failed:", err.message);
+    console.error("Feature request email failed:", err.message);
     lead.emailError = err.message?.slice(0, 500) || "Email send failed";
     await lead.save();
     return { id: lead._id, accepted: true, spam: false, emailed: false };
