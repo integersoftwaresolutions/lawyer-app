@@ -31,25 +31,52 @@ export default function UserMenuPanel({ onNavigate }) {
           <div className="text-xs text-text-secondary truncate">{user.email}</div>
           {user.isEmailVerified ? (
             <span className="shrink-0 text-[10px] font-medium text-success">Verified</span>
-          ) : null}
+          ) : (
+            <span className="shrink-0 text-[10px] font-medium text-warning">Unverified</span>
+          )}
         </div>
       </div>
       <div className="py-1">
-        <Link to={getDashboardPath(user.role)} onClick={close} className={linkClass}>
-          Dashboard
-        </Link>
-        {user.role === "LAWYER" ? (
+        {user.isEmailVerified ? (
           <>
-            <Link to="/lawyer/billing/subscription" onClick={close} className={linkClass}>
-              Billing
+            <Link to={getDashboardPath(user.role)} onClick={close} className={linkClass}>
+              Dashboard
+            </Link>
+            {user.role === "CLIENT" ? (
+              <Link to="/lawyers" onClick={close} className={linkClass}>
+                Book a lawyer
+              </Link>
+            ) : null}
+            {user.role === "LAWYER" ? (
+              <>
+                <Link to="/lawyer/billing/subscription" onClick={close} className={linkClass}>
+                  Billing
+                </Link>
+                <Link to="/pricing" onClick={close} className={linkClass}>
+                  Pricing
+                </Link>
+              </>
+            ) : null}
+            <Link to={getProfilePath(user.role)} onClick={close} className={linkClass}>
+              Account settings
+            </Link>
+          </>
+        ) : (
+          <>
+            <Link
+              to={`/verify-email?email=${encodeURIComponent(user.email)}`}
+              onClick={close}
+              className={linkClass}
+            >
+              Verify email
             </Link>
             <Link to="/pricing" onClick={close} className={linkClass}>
               Pricing
             </Link>
           </>
-        ) : null}
-        <Link to={getProfilePath(user.role)} onClick={close} className={linkClass}>
-          Account settings
+        )}
+        <Link to="/request-feature" onClick={close} className={linkClass}>
+          Request a feature
         </Link>
         <button type="button" onClick={handleLogout} className={logoutClass}>
           Logout

@@ -1,8 +1,11 @@
 import { Outlet } from "react-router-dom";
 import { DashboardLayout } from "../../components/layout";
 import WorkspaceSwitcher from "../../components/workspace/WorkspaceSwitcher";
+import LawyerMarketplaceGate from "../../components/verification/LawyerMarketplaceGate";
+import VerificationStatusBanner from "../../components/verification/VerificationStatusBanner";
 import { usePermission } from "../../hooks/useWorkspaceAccess";
 import { PERMISSIONS } from "../../workspaces/permissions";
+import { AI_COMING_SOON, BILLING_COMING_SOON } from "../../config/features";
 import {
   FiHome,
   FiCalendar,
@@ -32,24 +35,28 @@ export default function LawyerDashboardLayout() {
       label: "Billing",
       icon: FiCreditCard,
       to: "/lawyer/billing/subscription",
-      children: [
-        {
-          id: "billing-subscription",
-          label: "Subscription",
-          to: "/lawyer/billing/subscription",
-          exact: true
-        },
-        {
-          id: "billing-usage",
-          label: "Usage",
-          to: "/lawyer/billing/usage"
-        },
-        {
-          id: "billing-invoices",
-          label: "Invoices",
-          to: "/lawyer/billing/invoices"
-        }
-      ]
+      ...(BILLING_COMING_SOON
+        ? { badge: "Soon" }
+        : {
+            children: [
+              {
+                id: "billing-subscription",
+                label: "Subscription",
+                to: "/lawyer/billing/subscription",
+                exact: true
+              },
+              {
+                id: "billing-usage",
+                label: "Usage",
+                to: "/lawyer/billing/usage"
+              },
+              {
+                id: "billing-invoices",
+                label: "Invoices",
+                to: "/lawyer/billing/invoices"
+              }
+            ]
+          })
     },
     {
       id: "workspace",
@@ -60,30 +67,47 @@ export default function LawyerDashboardLayout() {
     ...(canViewCases ? [{ id: "cases", label: "Cases", icon: FiLayers }] : []),
     ...(canUseAi
       ? [
-          {
-            id: "ai-tools",
-            label: "AI tools",
-            icon: FiCpu,
-            to: "/lawyer/ai",
-            children: [
-              {
-                id: "ai",
-                label: "AI Assistant",
-                to: "/lawyer/ai",
+          AI_COMING_SOON
+            ? {
+                id: "ai-tools",
+                label: "AI tools",
                 icon: FiCpu,
-                exact: true
-              },
-              {
-                id: "cross-exam",
-                label: "Cross-Exam Practice",
-                to: "/lawyer/cross-exam",
-                icon: FiTarget
+                to: "/lawyer/ai",
+                badge: "Soon"
               }
-            ]
+            : {
+                id: "ai-tools",
+                label: "AI tools",
+                icon: FiCpu,
+                to: "/lawyer/ai",
+                children: [
+                  {
+                    id: "ai",
+                    label: "AI Assistant",
+                    to: "/lawyer/ai",
+                    icon: FiCpu,
+                    exact: true
+                  },
+                  {
+                    id: "cross-exam",
+                    label: "Cross-Exam Practice",
+                    to: "/lawyer/cross-exam",
+                    icon: FiTarget
+                  }
+                ]
+              }
+        ]
+      : []),
+    ...(canViewDocs
+      ? [
+          {
+            id: "documents",
+            label: "Documents",
+            icon: FiFolder,
+            badge: AI_COMING_SOON ? "Soon" : undefined
           }
         ]
       : []),
-    ...(canViewDocs ? [{ id: "documents", label: "Documents", icon: FiFolder }] : []),
     { id: "planner", label: "Smart Planner", icon: FiCalendar },
     { id: "availability", label: "Availability", icon: FiClock },
     { id: "bookings", label: "Bookings", icon: FiFileText },
@@ -107,7 +131,10 @@ export default function LawyerDashboardLayout() {
       hideBrand
       hideMarketingLinks
     >
-      <Outlet />
+      <VerificationStatusBanner />
+      <LawyerMarketplaceGate>
+        <Outlet />
+      </LawyerMarketplaceGate>
     </DashboardLayout>
   );
 }

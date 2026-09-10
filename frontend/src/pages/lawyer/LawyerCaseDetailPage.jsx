@@ -38,6 +38,7 @@ import { getErrorMessage } from "../../utils/errorHandler";
 import { usePermission } from "../../hooks/useWorkspaceAccess";
 import { useToast } from "../../hooks/useToast";
 import { PERMISSIONS } from "../../workspaces/permissions";
+import { AI_COMING_SOON } from "../../config/features";
 
 const TABS = {
   OVERVIEW: "overview",
@@ -239,7 +240,7 @@ export default function LawyerCaseDetailPage() {
   }, [load]);
 
   useEffect(() => {
-    if (!canEdit) return;
+    if (!canEdit || AI_COMING_SOON) return;
     aiApi
       .listDocuments({ unlinked: true, limit: 50 })
       .then((res) => setLibraryDocs(res.items || []))
@@ -336,10 +337,12 @@ export default function LawyerCaseDetailPage() {
       await casesApi.detachDocument(caseId, documentId);
       setDocs((prev) => prev.filter((d) => d.id !== documentId));
       toast.success("Document detached");
-      aiApi
-        .listDocuments({ unlinked: true, limit: 50 })
-        .then((res) => setLibraryDocs(res.items || []))
-        .catch(() => {});
+      if (!AI_COMING_SOON) {
+        aiApi
+          .listDocuments({ unlinked: true, limit: 50 })
+          .then((res) => setLibraryDocs(res.items || []))
+          .catch(() => {});
+      }
     } catch (err) {
       toast.error(getErrorMessage(err));
     } finally {
@@ -725,17 +728,25 @@ export default function LawyerCaseDetailPage() {
                 <div>
                   <h2 className="text-lg font-semibold text-text-primary m-0">Documents</h2>
                   <p className="text-sm text-text-muted m-0 mt-1">
-                    Files attached to this case. Library docs can be linked anytime.
+                    {AI_COMING_SOON
+                      ? "AI document intelligence is launching soon. Files already attached to this case stay listed here."
+                      : "Files attached to this case. Library docs can be linked anytime."}
                   </p>
                 </div>
-                {canUpload && (
+                {canUpload && !AI_COMING_SOON && (
                   <Button size="sm" icon={FiPlus} onClick={() => setUploadOpen(true)}>
                     Upload to case
                   </Button>
                 )}
               </div>
 
-              {canEdit && (
+              {AI_COMING_SOON ? (
+                <div className="mb-5 rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-secondary">
+                  Upload, library linking, and AI indexing for case files are coming soon.
+                </div>
+              ) : null}
+
+              {canEdit && !AI_COMING_SOON && (
                 <div className="flex flex-col sm:flex-row sm:items-end gap-2 mb-5 p-3 sm:p-4 rounded-xl border border-card-border bg-surface">
                   <Select
                     label="Link from library"
@@ -794,7 +805,7 @@ export default function LawyerCaseDetailPage() {
                         >
                           <FiEye className="w-4 h-4" />
                         </button>
-                        {canEdit && (
+                        {canEdit && !AI_COMING_SOON && (
                           <Button
                             size="sm"
                             variant="ghost"
@@ -813,9 +824,13 @@ export default function LawyerCaseDetailPage() {
                 <ModuleEmpty
                   icon={FiFileText}
                   title="No documents attached"
-                  description="Upload a file to this case or link one from your workspace library."
+                  description={
+                    AI_COMING_SOON
+                      ? "Document intelligence for cases is launching soon."
+                      : "Upload a file to this case or link one from your workspace library."
+                  }
                   action={
-                    canUpload ? (
+                    canUpload && !AI_COMING_SOON ? (
                       <Button size="sm" icon={FiPlus} onClick={() => setUploadOpen(true)}>
                         Upload document
                       </Button>

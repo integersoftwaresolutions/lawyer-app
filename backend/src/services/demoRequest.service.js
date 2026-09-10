@@ -46,11 +46,8 @@ function buildLeadEmailText(lead, interestLabel, submittedAt) {
     "",
     `Name: ${lead.fullName}`,
     `Email: ${lead.email}`,
-    `Company: ${lead.company || "—"}`,
     `Phone: ${lead.phone || "—"}`,
-    `Role: ${lead.roleTitle || "—"}`,
     `Interest: ${interestLabel}`,
-    `Team size: ${lead.teamSize || "—"}`,
     `Source: ${lead.source || "—"}`,
     `Submitted: ${submittedAt}`,
     "",
@@ -68,31 +65,19 @@ function buildLeadVariables(lead) {
   const interestLabel = INTEREST_LABELS[lead.interest] || lead.interest;
   const submittedAt = formatSubmittedAt(lead.createdAt);
   const phone = (lead.phone || "").trim();
-  const role = (lead.roleTitle || "").trim();
-  const teamSize = (lead.teamSize || "").trim();
-  const company = (lead.company || "").trim();
-  const fromFirm = company
-    ? ` from <strong>${escapeHtml(company)}</strong>`
-    : "";
-
   return {
-    preheader: company
-      ? `${lead.fullName} at ${company} — ${interestLabel}`
-      : `${lead.fullName} — ${interestLabel}`,
+    preheader: `${lead.fullName} — ${interestLabel}`,
     headline: "New demo request",
-    introLine: `<strong>${escapeHtml(lead.fullName)}</strong>${fromFirm} requested <strong>${escapeHtml(
+    introLine: `<strong>${escapeHtml(lead.fullName)}</strong> requested <strong>${escapeHtml(
       interestLabel
     )}</strong> via the public form.`,
     fullName: escapeHtml(lead.fullName),
     email: escapeHtml(lead.email),
-    company: company ? escapeHtml(company) : "—",
-    companyEncoded: encodeURIComponent(company || lead.fullName || "Adal AI"),
+    nameEncoded: encodeURIComponent(lead.fullName || "Adal AI"),
     phoneDisplay: phone
       ? `<a href="tel:${escapeHtml(phone.replace(/\s+/g, ""))}">${escapeHtml(phone)}</a>`
       : "—",
-    roleDisplay: role ? escapeHtml(role) : "—",
     interestLabel: escapeHtml(interestLabel),
-    teamSizeDisplay: teamSize ? escapeHtml(teamSize) : "—",
     source: escapeHtml(lead.source || "request-demo"),
     submittedAt: escapeHtml(submittedAt),
     messageSection: buildMessageSection(lead.message),
@@ -115,11 +100,8 @@ export async function createDemoRequest(payload, { ip = "", userAgent = "" } = {
   const lead = await DemoRequest.create({
     fullName: payload.fullName,
     email: payload.email,
-    company: payload.company,
     phone: payload.phone || "",
-    roleTitle: payload.roleTitle || "",
     interest: payload.interest || "demo",
-    teamSize: payload.teamSize || "",
     message: payload.message || "",
     source: payload.source || "request-demo",
     website: "",
@@ -141,7 +123,7 @@ export async function createDemoRequest(payload, { ip = "", userAgent = "" } = {
     const vars = buildLeadVariables(lead);
     await sendEmail({
       to: inbox,
-      subject: `[Adal AI] ${vars.interestLabelRaw} — ${lead.company || lead.fullName}`,
+      subject: `[Adal AI] ${vars.interestLabelRaw} — ${lead.fullName}`,
       template: "demo-request-lead",
       variables: vars,
       text: buildLeadEmailText(lead, vars.interestLabelRaw, vars.submittedAtRaw),

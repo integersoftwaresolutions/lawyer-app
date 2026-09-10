@@ -40,14 +40,16 @@ export default function Navbar({
   }, [mobileMenuOpen]);
 
   // Public Pricing is always the conversion page (auth-aware). In-app billing is separate.
+  const clientBookLink =
+    user?.role === "CLIENT" ? [{ to: "/lawyers", label: "Book a lawyer" }] : [];
+
   const navLinks = hideMarketingLinks
-    ? []
+    ? clientBookLink
     : [
         { to: user ? "/lawyers" : "/login", label: "Find Lawyers" },
         { to: "/pricing", label: "Pricing" },
-        { to: "/request-demo", label: "Request a demo" },
+        { to: "/request-feature", label: "Request a feature" },
         { to: "/#features", label: "Features" },
-        { to: "/#how-it-works", label: "How it works" }
       ];
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
@@ -221,22 +223,35 @@ export default function Navbar({
           {!showSidebarToggle && user && (
             <>
               <div className="border-t border-border my-2" />
-              <Link
-                to={getDashboardPath(user.role)}
-                onClick={closeMobileMenu}
-                tabIndex={mobileMenuOpen ? undefined : -1}
-                className="block px-4 py-3 rounded-lg text-text-primary no-underline text-sm font-medium hover:bg-surface-hover transition-colors"
-              >
-                Dashboard
-              </Link>
-              <Link
-                to={getProfilePath(user.role)}
-                onClick={closeMobileMenu}
-                tabIndex={mobileMenuOpen ? undefined : -1}
-                className="block px-4 py-3 rounded-lg text-text-primary no-underline text-sm font-medium hover:bg-surface-hover transition-colors"
-              >
-                Settings
-              </Link>
+              {user.isEmailVerified ? (
+                <>
+                  <Link
+                    to={getDashboardPath(user.role)}
+                    onClick={closeMobileMenu}
+                    tabIndex={mobileMenuOpen ? undefined : -1}
+                    className="block px-4 py-3 rounded-lg text-text-primary no-underline text-sm font-medium hover:bg-surface-hover transition-colors"
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    to={getProfilePath(user.role)}
+                    onClick={closeMobileMenu}
+                    tabIndex={mobileMenuOpen ? undefined : -1}
+                    className="block px-4 py-3 rounded-lg text-text-primary no-underline text-sm font-medium hover:bg-surface-hover transition-colors"
+                  >
+                    Settings
+                  </Link>
+                </>
+              ) : (
+                <Link
+                  to={`/verify-email?email=${encodeURIComponent(user.email)}`}
+                  onClick={closeMobileMenu}
+                  tabIndex={mobileMenuOpen ? undefined : -1}
+                  className="block px-4 py-3 rounded-lg text-text-primary no-underline text-sm font-medium hover:bg-surface-hover transition-colors"
+                >
+                  Verify email
+                </Link>
+              )}
               <button
                 type="button"
                 onClick={handleMobileLogout}

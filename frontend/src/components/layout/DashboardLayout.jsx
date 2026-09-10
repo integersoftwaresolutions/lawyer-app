@@ -42,7 +42,7 @@ export default function DashboardLayout({
         <Sidebar
           isOpen={mobileOpen}
           onClose={() => setMobileOpen(false)}
-          width="w-[240px]"
+          width="w-[280px]"
           contentClassName="p-2 md:p-3"
           footer={<SidebarUserFooter onNavigate={() => setMobileOpen(false)} />}
         >

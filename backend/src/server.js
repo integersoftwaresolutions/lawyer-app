@@ -7,6 +7,7 @@ import { seedAdmin } from "./seeders/seedAdmin.js";
 import { seedUsers } from "./seeders/seedUsers.js";
 import { startReminderJob } from "./jobs/index.js";
 import { startBillingJob } from "./jobs/billing.job.js";
+import { ensurePlanDefinitionsSeeded } from "./billing/planDefinition.service.js";
 
 process.on("unhandledRejection", (reason) => {
   console.error("❌ Unhandled Rejection:", reason);
@@ -16,16 +17,11 @@ process.on("uncaughtException", (err) => {
   console.error("❌ Uncaught Exception:", err);
 });
 
-// ============================================
-// SEED USERS SCRIPT - Uncomment to create test users
-// ============================================
-// Uncomment the line below to seed test users (lawyer, client, admin)
-// After users are created, comment it again to avoid duplicates
-
 async function bootstrap() {
   await connectMongo();
 
   await seedAdmin();
+  await ensurePlanDefinitionsSeeded();
 
   // Uncomment the line below to seed test users
   // await seedUsers();

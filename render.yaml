@@ -47,10 +47,18 @@ services:
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
-      - key: STRIPE_PRICE_PRO_MONTHLY
+      - key: STRIPE_PRICE_BASE_MONTHLY
+        sync: false
+      - key: STRIPE_PRICE_MAX_MONTHLY
         sync: false
       - key: STRIPE_PRICE_FIRM_MONTHLY
         sync: false
+      - key: STRIPE_PRICE_FIRM_MAX_MONTHLY
+        sync: false
+      - key: BILLING_TRIAL_DAYS
+        value: "30"
+      - key: BILLING_DISPLAY_CURRENCY
+        value: pkr
 
   # ── SPA (Vite static) ────────────────────────────────────────────────────
   - type: web

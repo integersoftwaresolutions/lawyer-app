@@ -1,12 +1,14 @@
 /**
- * Single source of plan definitions, limit keys, and Stripe price mappings.
- * Add a plan or limit here — features must go through EntitlementService, not plan string checks.
+ * Plan keys, limit keys, and immutable structural defaults.
+ * Effective limits/features/name/displayPrice come from Mongo PlanDefinition overlays
+ * via getResolvedPlan / listResolvedPlans.
  */
 
 export const PLAN_KEYS = Object.freeze({
-  FREE: "free",
-  PRO: "pro",
-  FIRM: "firm"
+  BASE: "base",
+  MAX: "max",
+  FIRM: "firm",
+  FIRM_MAX: "firm_max"
 });
 
 export const LIMIT_KEYS = Object.freeze({
@@ -31,29 +33,31 @@ export const PLAN_LIMIT_ERROR_CODES = Object.freeze({
   BILLING_LOCKED: "PLAN_BILLING_LOCKED"
 });
 
-/** @typedef {{ key: string, name: string, workspaceTypes: string[], limits: Record<string, number>, features: Record<string, boolean>, stripePriceEnv?: string }} PlanDefinition */
+/** @typedef {{ key: string, name: string, workspaceTypes: string[], limits: Record<string, number>, features: Record<string, boolean>, stripePriceEnv?: string, displayPrice?: number }} PlanDefinitionShape */
 
-/** @type {Record<string, PlanDefinition>} */
-export const PLAN_CATALOG = Object.freeze({
-  [PLAN_KEYS.FREE]: Object.freeze({
-    key: PLAN_KEYS.FREE,
-    name: "Free",
-    workspaceTypes: ["PERSONAL"],
+/** Frozen code defaults — seed source and fallback if DB missing. */
+export const DEFAULT_PLAN_CATALOG = Object.freeze({
+  [PLAN_KEYS.BASE]: Object.freeze({
+    key: PLAN_KEYS.BASE,
+    name: "Adal Base",
+    workspaceTypes: Object.freeze(["PERSONAL"]),
     limits: Object.freeze({
-      [LIMIT_KEYS.CASES_ACTIVE]: 5,
-      [LIMIT_KEYS.AI_MESSAGES_PER_MONTH]: 20,
-      [LIMIT_KEYS.DOCS_COUNT]: 25,
-      [LIMIT_KEYS.DOCS_STORAGE_MB]: 200,
+      [LIMIT_KEYS.CASES_ACTIVE]: 10,
+      [LIMIT_KEYS.AI_MESSAGES_PER_MONTH]: 50,
+      [LIMIT_KEYS.DOCS_COUNT]: 50,
+      [LIMIT_KEYS.DOCS_STORAGE_MB]: 500,
       [LIMIT_KEYS.SEATS]: 1
     }),
     features: Object.freeze({
       [FEATURE_KEYS.CREATE_FIRM]: false
-    })
+    }),
+    stripePriceEnv: "STRIPE_PRICE_BASE_MONTHLY",
+    displayPrice: 1000
   }),
-  [PLAN_KEYS.PRO]: Object.freeze({
-    key: PLAN_KEYS.PRO,
-    name: "Pro",
-    workspaceTypes: ["PERSONAL"],
+  [PLAN_KEYS.MAX]: Object.freeze({
+    key: PLAN_KEYS.MAX,
+    name: "Adal Max",
+    workspaceTypes: Object.freeze(["PERSONAL"]),
     limits: Object.freeze({
       [LIMIT_KEYS.CASES_ACTIVE]: 50,
       [LIMIT_KEYS.AI_MESSAGES_PER_MONTH]: 500,
@@ -64,34 +68,65 @@ export const PLAN_CATALOG = Object.freeze({
     features: Object.freeze({
       [FEATURE_KEYS.CREATE_FIRM]: false
     }),
-    stripePriceEnv: "STRIPE_PRICE_PRO_MONTHLY"
+    stripePriceEnv: "STRIPE_PRICE_MAX_MONTHLY",
+    displayPrice: 3000
   }),
   [PLAN_KEYS.FIRM]: Object.freeze({
     key: PLAN_KEYS.FIRM,
-    name: "Firm",
-    workspaceTypes: ["FIRM"],
+    name: "Law Firm Plan",
+    workspaceTypes: Object.freeze(["FIRM"]),
     limits: Object.freeze({
-      [LIMIT_KEYS.CASES_ACTIVE]: 200,
-      [LIMIT_KEYS.AI_MESSAGES_PER_MONTH]: 2000,
-      [LIMIT_KEYS.DOCS_COUNT]: 2000,
-      [LIMIT_KEYS.DOCS_STORAGE_MB]: 20000,
-      [LIMIT_KEYS.SEATS]: 10
+      [LIMIT_KEYS.CASES_ACTIVE]: 100,
+      [LIMIT_KEYS.AI_MESSAGES_PER_MONTH]: 1000,
+      [LIMIT_KEYS.DOCS_COUNT]: 1000,
+      [LIMIT_KEYS.DOCS_STORAGE_MB]: 10000,
+      [LIMIT_KEYS.SEATS]: 5
     }),
     features: Object.freeze({
       [FEATURE_KEYS.CREATE_FIRM]: true
     }),
-    stripePriceEnv: "STRIPE_PRICE_FIRM_MONTHLY"
+    stripePriceEnv: "STRIPE_PRICE_FIRM_MONTHLY",
+    displayPrice: 4000
+  }),
+  [PLAN_KEYS.FIRM_MAX]: Object.freeze({
+    key: PLAN_KEYS.FIRM_MAX,
+    name: "Law Firm Max",
+    workspaceTypes: Object.freeze(["FIRM"]),
+    limits: Object.freeze({
+      [LIMIT_KEYS.CASES_ACTIVE]: 250,
+      [LIMIT_KEYS.AI_MESSAGES_PER_MONTH]: 3000,
+      [LIMIT_KEYS.DOCS_COUNT]: 2000,
+      [LIMIT_KEYS.DOCS_STORAGE_MB]: 25000,
+      [LIMIT_KEYS.SEATS]: 7
+    }),
+    features: Object.freeze({
+      [FEATURE_KEYS.CREATE_FIRM]: true
+    }),
+    stripePriceEnv: "STRIPE_PRICE_FIRM_MAX_MONTHLY",
+    displayPrice: 10000
   })
 });
 
-export function getPlanDefinition(planKey) {
-  const plan = PLAN_CATALOG[planKey];
+/** @deprecated Use DEFAULT_PLAN_CATALOG — alias for older imports during migration */
+export const PLAN_CATALOG = DEFAULT_PLAN_CATALOG;
+
+export function getDefaultPlanDefinition(planKey) {
+  const plan = DEFAULT_PLAN_CATALOG[planKey];
   if (!plan) throw new Error(`Unknown plan key: ${planKey}`);
   return plan;
 }
 
+/** Sync defaults only — prefer getResolvedPlan for entitlements. */
+export function getPlanDefinition(planKey) {
+  return getDefaultPlanDefinition(planKey);
+}
+
+export function listDefaultPlans() {
+  return Object.values(DEFAULT_PLAN_CATALOG);
+}
+
 export function listPlans() {
-  return Object.values(PLAN_CATALOG);
+  return listDefaultPlans();
 }
 
 export function resolvePlanKeyFromPriceId(priceId, priceMap) {
@@ -102,12 +137,29 @@ export function resolvePlanKeyFromPriceId(priceId, priceMap) {
   return null;
 }
 
-/** Effective entitlements while TRIALING use Pro limits. */
+/** Effective entitlements while TRIALING use Base limits. Unpaid/expired → base. */
 export function entitlementsPlanKey(subscription) {
-  if (!subscription) return PLAN_KEYS.FREE;
-  if (subscription.status === "TRIALING") return PLAN_KEYS.PRO;
+  if (!subscription) return PLAN_KEYS.BASE;
+  if (subscription.status === "TRIALING") return PLAN_KEYS.BASE;
   if (subscription.status === "ACTIVE" || subscription.status === "PAST_DUE") {
-    return subscription.planKey || PLAN_KEYS.FREE;
+    return subscription.planKey || PLAN_KEYS.BASE;
   }
-  return PLAN_KEYS.FREE;
+  return PLAN_KEYS.BASE;
+}
+
+export function isPersonalPlan(planKey) {
+  return planKey === PLAN_KEYS.BASE || planKey === PLAN_KEYS.MAX;
+}
+
+export function isFirmPlan(planKey) {
+  return planKey === PLAN_KEYS.FIRM || planKey === PLAN_KEYS.FIRM_MAX;
+}
+
+/** Firm create defaults to Law Firm Plan if an invalid/missing key is sent. */
+export function resolveFirmCreatePlanKey(planKey) {
+  return isFirmPlan(planKey) ? planKey : PLAN_KEYS.FIRM;
+}
+
+export function isValidPlanKey(planKey) {
+  return Object.values(PLAN_KEYS).includes(planKey);
 }

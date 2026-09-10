@@ -16,21 +16,11 @@ const INTEREST_OPTIONS = [
   { value: "other", label: "Other" }
 ];
 
-const TEAM_SIZE_OPTIONS = [
-  { value: "1", label: "Just me" },
-  { value: "2-5", label: "2–5" },
-  { value: "6-20", label: "6–20" },
-  { value: "21+", label: "21+" }
-];
-
 const INITIAL = {
   fullName: "",
   email: "",
-  company: "",
   phone: "",
-  roleTitle: "",
   interest: "",
-  teamSize: "",
   message: "",
   website: ""
 };
@@ -80,11 +70,8 @@ export default function RequestDemoPage() {
       await submitDemoRequest({
         fullName: form.fullName.trim(),
         email: form.email.trim(),
-        company: form.company.trim(),
         phone: form.phone.trim(),
-        roleTitle: form.roleTitle.trim(),
         interest: form.interest || "demo",
-        teamSize: form.teamSize,
         message: form.message.trim(),
         source: "request-demo",
         website: form.website
@@ -202,39 +189,6 @@ export default function RequestDemoPage() {
                 placeholder="+92 …"
               />
 
-              <p className="m-0 mb-3 mt-1 text-xs font-semibold uppercase tracking-wide text-text-muted">
-                Optional details
-              </p>
-
-              <Input
-                label="Company / firm"
-                name="company"
-                autoComplete="organization"
-                value={form.company}
-                onChange={(e) => update("company", e.target.value)}
-                error={fieldErrors.company}
-                placeholder="Khan & Associates"
-              />
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
-                <Input
-                  label="Your role"
-                  name="roleTitle"
-                  autoComplete="organization-title"
-                  value={form.roleTitle}
-                  onChange={(e) => update("roleTitle", e.target.value)}
-                  placeholder="Managing partner, Ops, …"
-                />
-                <Select
-                  label="Team size"
-                  name="teamSize"
-                  options={TEAM_SIZE_OPTIONS}
-                  value={form.teamSize}
-                  onChange={(e) => update("teamSize", e.target.value)}
-                  placeholder="Optional"
-                />
-              </div>
-
               <Select
                 label="What do you need?"
                 name="interest"
@@ -252,7 +206,6 @@ export default function RequestDemoPage() {
                 value={form.message}
                 onChange={(e) => update("message", e.target.value)}
                 placeholder="Goals, timeline, number of lawyers, current tools…"
-                helperText="Optional — max 2000 characters"
               />
 
               {/* Honeypot — hidden from humans */}

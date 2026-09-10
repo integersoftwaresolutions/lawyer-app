@@ -3,17 +3,14 @@
 <div class="info-card">
   <p><span class="info-label">Name:</span> {{fullName}}</p>
   <p><span class="info-label">Email:</span> <a href="mailto:{{email}}">{{email}}</a></p>
-  <p><span class="info-label">Company / firm:</span> {{company}}</p>
   <p><span class="info-label">Phone:</span> {{phoneDisplay}}</p>
-  <p><span class="info-label">Role:</span> {{roleDisplay}}</p>
   <p><span class="info-label">Interest:</span> {{interestLabel}}</p>
-  <p><span class="info-label">Team size:</span> {{teamSizeDisplay}}</p>
   <p><span class="info-label">Source:</span> {{source}}</p>
   <p><span class="info-label">Submitted:</span> {{submittedAt}}</p>
 </div>
 {{messageSection}}
 <div class="cta-wrap">
-  <a class="cta" href="mailto:{{email}}?subject=Re:%20Adal%20AI%20demo%20request%20—%20{{companyEncoded}}">Reply to {{fullName}}</a>
+  <a class="cta" href="mailto:{{email}}?subject=Re:%20Adal%20AI%20demo%20request%20—%20{{nameEncoded}}">Reply to {{fullName}}</a>
 </div>
 <p class="muted">Tip: use Reply in your mail client — Reply-To is already set to the prospect.</p>
 <p class="muted">Lead ID: {{leadId}}</p>

@@ -34,6 +34,8 @@ r.patch("/disputes/:disputeId/status", validate(updateDisputeStatusSchema), admi
 r.post("/disputes/:disputeId/resolve", validate(resolveDisputeSchema), adminCtrl.resolveDispute);
 
 r.get("/billing/catalog", billingCtrl.adminCatalog);
+r.patch("/billing/catalog/:planKey", billingCtrl.adminUpdatePlan);
+r.post("/billing/catalog/:planKey/reset", billingCtrl.adminResetPlan);
 r.get("/billing/subscriptions", billingCtrl.adminListSubscriptions);
 r.get("/billing/subscriptions/:workspaceId", billingCtrl.adminGetSubscription);
 r.post("/billing/subscriptions/:workspaceId/grant", billingCtrl.adminGrant);

@@ -26,8 +26,16 @@ const LIMIT_ICONS = {
   seats: FiUsers
 };
 
+function defaultLabel(plan) {
+  if (plan.key === PLAN_KEYS.MAX) return "Upgrade to Max";
+  if (plan.key === PLAN_KEYS.FIRM) return "Get Firm";
+  if (plan.key === PLAN_KEYS.FIRM_MAX) return "Get Firm Max";
+  if (plan.key === PLAN_KEYS.BASE) return "Get Adal Base";
+  return "Get started";
+}
+
 /**
- * Shared Free / Pro / Firm plan cards for pricing, billing, and admin catalog.
+ * Shared Base / Max / Firm / Firm Max plan cards.
  */
 export default function PlanComparisonCards({
   plans = [],
@@ -35,7 +43,7 @@ export default function PlanComparisonCards({
   highlightCurrent = false,
   onSelectPlan,
   busyPlanKey = null,
-  ctaMode = "link", // link | button | none
+  ctaMode = "link",
   getHref,
   getLabel,
   showAdminMeta = false,
@@ -43,34 +51,27 @@ export default function PlanComparisonCards({
 }) {
   return (
     <div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 items-stretch">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6 items-stretch">
         {plans.map((plan) => {
           const price = formatPlanPrice(plan);
           const isCurrent =
             highlightCurrent &&
             currentPlanKey &&
             String(currentPlanKey).toLowerCase() === plan.key;
-          const label =
-            getLabel?.(plan) ||
-            (plan.key === PLAN_KEYS.PRO
-              ? "Upgrade to Pro"
-              : plan.key === PLAN_KEYS.FIRM
-                ? "Get Firm"
-                : "Get started");
+          const label = getLabel?.(plan) || defaultLabel(plan);
           const href = getHref?.(plan);
           const busy = busyPlanKey === plan.key;
           const isPopular = plan.popular && !isCurrent;
           const createFirm = Boolean(plan.features?.["features.create_firm"]);
-          const priceMapped =
-            plan.key === PLAN_KEYS.FREE || Boolean(plan.stripePriceConfigured);
-          const showCta = ctaMode !== "none";
+          const priceMapped = Boolean(plan.stripePriceConfigured);
+          const emphasize = isPopular || plan.key === PLAN_KEYS.MAX;
 
           return (
             <div
               key={plan.key}
-              className={`relative flex flex-col rounded-2xl border bg-card p-6 sm:p-8 text-left transition-shadow ${
+              className={`relative flex flex-col rounded-2xl border bg-card p-5 sm:p-6 text-left transition-shadow ${
                 isPopular || isCurrent
-                  ? "border-primary shadow-lg md:scale-[1.02]"
+                  ? "border-primary shadow-lg"
                   : "border-border hover:shadow-md"
               }`}
             >
@@ -88,42 +89,35 @@ export default function PlanComparisonCards({
                     </Badge>
                   ))}
                   <Badge variant={priceMapped ? "success" : "warning"} size="sm">
-                    {plan.key === PLAN_KEYS.FREE
-                      ? "No Stripe price"
-                      : priceMapped
-                        ? "Price mapped"
-                        : "Price not mapped"}
+                    {priceMapped ? "Price mapped" : "Price not mapped"}
                   </Badge>
                 </div>
               ) : null}
 
               <div className="mb-1">
-                <h3 className="text-xl font-bold text-text-primary m-0">{plan.name}</h3>
+                <h3 className="text-lg font-bold text-text-primary m-0">{plan.name}</h3>
                 <p className="text-sm text-text-secondary m-0 mt-1">{plan.tagline}</p>
               </div>
 
-              <div className="mt-4 mb-6">
-                <span className="text-4xl sm:text-5xl font-bold text-text-primary">
+              <div className="mt-4 mb-5">
+                <span className="text-3xl sm:text-4xl font-bold text-text-primary">
                   {price.primary}
                 </span>
                 {price.secondary ? (
-                  <span className="text-text-secondary text-base ml-1">{price.secondary}</span>
+                  <span className="text-text-secondary text-sm ml-1">{price.secondary}</span>
                 ) : null}
               </div>
 
-              <ul className={`list-none p-0 m-0 space-y-3 flex-1 ${showCta ? "mb-8" : ""}`}>
+              <ul className={`list-none p-0 m-0 space-y-2.5 flex-1 ${ctaMode !== "none" ? "mb-6" : ""}`}>
                 {PLAN_LIMIT_ROWS.map(({ key, label: limitLabel }) => {
                   const raw = plan.limits?.[key];
                   if (raw == null) return null;
                   const Icon = LIMIT_ICONS[key] || FiLayers;
                   return (
-                    <li
-                      key={key}
-                      className="flex items-center justify-between gap-3 text-sm"
-                    >
+                    <li key={key} className="flex items-center justify-between gap-2 text-sm">
                       <span className="inline-flex items-center gap-2 text-text-secondary min-w-0">
-                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-surface border border-border shrink-0">
-                          <Icon className="w-4 h-4 text-primary" />
+                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-surface border border-border shrink-0">
+                          <Icon className="w-3.5 h-3.5 text-primary" />
                         </span>
                         <span className="truncate">{limitLabel}</span>
                       </span>
@@ -134,13 +128,13 @@ export default function PlanComparisonCards({
                   );
                 })}
 
-                <li className="flex items-center justify-between gap-3 text-sm pt-1 border-t border-border">
+                <li className="flex items-center justify-between gap-2 text-sm pt-1 border-t border-border">
                   <span className="inline-flex items-center gap-2 text-text-secondary min-w-0">
-                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-surface border border-border shrink-0">
+                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-surface border border-border shrink-0">
                       {createFirm ? (
-                        <FiCheck className="w-4 h-4 text-success" />
+                        <FiCheck className="w-3.5 h-3.5 text-success" />
                       ) : (
-                        <FiX className="w-4 h-4 text-text-muted" />
+                        <FiX className="w-3.5 h-3.5 text-text-muted" />
                       )}
                     </span>
                     <span className="truncate">Create firm workspace</span>
@@ -155,7 +149,7 @@ export default function PlanComparisonCards({
                 <Link
                   to={href}
                   className={`py-3 px-4 rounded-lg text-center text-sm font-semibold no-underline transition-colors ${
-                    isPopular || plan.key === PLAN_KEYS.PRO
+                    emphasize
                       ? "bg-primary text-primary-text hover:bg-primary-hover"
                       : "border-2 border-border bg-secondary text-secondary-text hover:bg-secondary-hover"
                   }`}
@@ -164,16 +158,25 @@ export default function PlanComparisonCards({
                 </Link>
               ) : null}
 
+              {ctaMode === "link" && !href ? (
+                <div
+                  className="mt-auto py-3 px-4 rounded-lg text-center text-sm font-semibold border border-border bg-surface text-text-muted select-none"
+                  aria-disabled="true"
+                >
+                  {label || "Coming soon"}
+                </div>
+              ) : null}
+
               {ctaMode === "button" ? (
                 <Button
                   fullWidth
                   loading={busy}
-                  disabled={isCurrent && plan.key !== PLAN_KEYS.FIRM}
-                  variant={isPopular || plan.key === PLAN_KEYS.PRO ? "primary" : "secondary"}
-                  outline={!(isPopular || plan.key === PLAN_KEYS.PRO)}
+                  disabled={isCurrent && !FIRM_UPGRADEABLE.has(plan.key)}
+                  variant={emphasize ? "primary" : "secondary"}
+                  outline={!emphasize}
                   onClick={() => onSelectPlan?.(plan)}
                 >
-                  {isCurrent && plan.key === PLAN_KEYS.PRO ? "Current plan" : label}
+                  {isCurrent ? "Current plan" : label}
                 </Button>
               ) : null}
             </div>
@@ -186,3 +189,5 @@ export default function PlanComparisonCards({
     </div>
   );
 }
+
+const FIRM_UPGRADEABLE = new Set([PLAN_KEYS.FIRM, PLAN_KEYS.FIRM_MAX]);

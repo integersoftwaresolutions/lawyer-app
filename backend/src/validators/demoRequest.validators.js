@@ -20,13 +20,10 @@ export const createDemoRequestSchema = Joi.object({
         "any.required": "Phone is required",
         "string.empty": "Phone is required"
       }),
-    company: Joi.string().trim().allow("").max(160).optional(),
-    roleTitle: Joi.string().trim().allow("").max(120).optional(),
     interest: Joi.string()
       .valid(...DEMO_INTERESTS)
       .empty("")
       .default("demo"),
-    teamSize: Joi.string().trim().allow("").max(40).optional(),
     message: Joi.string().trim().allow("").max(2000).optional(),
     source: Joi.string().trim().allow("").max(80).optional(),
     /** Honeypot — bots fill this; humans leave blank */

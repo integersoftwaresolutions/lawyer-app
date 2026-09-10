@@ -68,7 +68,7 @@ export default function BillingUsagePage() {
           {meters["ai.messages_per_month"]?.pct >= 90 && canManage && !isFirm && (
             <div className="mt-4">
               <Button size="sm" onClick={handleUpgradePro}>
-                Need more AI? Upgrade to Pro
+                Need more AI? Upgrade to Max
               </Button>
             </div>
           )}

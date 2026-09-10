@@ -12,6 +12,8 @@ import { acceptWorkspaceInvite, fetchWorkspaces } from "../../store/slices/works
 import { filterWorkspaceNavItems } from "../../workspaces/nav";
 import { useToast } from "../../hooks/useToast";
 import { getErrorMessage } from "../../utils/errorHandler";
+import { BILLING_COMING_SOON } from "../../config/features";
+import VerificationStatusBanner from "../verification/VerificationStatusBanner";
 
 export default function WorkspaceSettingsLayout() {
   const location = useLocation();
@@ -22,7 +24,10 @@ export default function WorkspaceSettingsLayout() {
   const { workspace, isFirm, permissions } = useWorkspace();
 
   const menuItems = useMemo(
-    () => filterWorkspaceNavItems({ isFirm, permissions }),
+    () =>
+      filterWorkspaceNavItems({ isFirm, permissions }).map((item) =>
+        item.id === "billing" && BILLING_COMING_SOON ? { ...item, badge: "Soon" } : item
+      ),
     [isFirm, permissions]
   );
 
@@ -63,7 +68,7 @@ export default function WorkspaceSettingsLayout() {
         <Sidebar
           isOpen={mobileOpen}
           onClose={() => setMobileOpen(false)}
-          width="w-[240px]"
+          width="w-[280px]"
           contentClassName="p-2 md:p-3"
           footer={<SidebarUserFooter onNavigate={() => setMobileOpen(false)} />}
         >
@@ -87,6 +92,7 @@ export default function WorkspaceSettingsLayout() {
 
         <main className="flex-1 min-w-0 min-h-0 overflow-y-auto">
           <div className="max-w-7xl mx-auto w-full p-3 sm:p-4 md:p-5 lg:p-6">
+            <VerificationStatusBanner />
             <Outlet />
           </div>
         </main>

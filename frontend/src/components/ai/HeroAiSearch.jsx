@@ -8,9 +8,10 @@ import {
   FiTarget
 } from "react-icons/fi";
 import { aiApi } from "../../services/ai.api";
-import { Card, Button } from "../ui";
+import { Card, Button, Badge } from "../ui";
 import { timeAgo } from "../../utils/timeAgo";
 import { getErrorMessage } from "../../utils/errorHandler";
+import { AI_COMING_SOON } from "../../config/features";
 
 const QUICK_PROMPTS = [
   "Recent Supreme Court cases on bail under Section 497 CrPC",
@@ -18,7 +19,29 @@ const QUICK_PROMPTS = [
   "Procedure for filing a writ petition in the High Court"
 ];
 
-export default function HeroAiSearch({ autoFocus = true }) {
+export default function HeroAiSearch(props) {
+  if (AI_COMING_SOON) {
+    return (
+      <Card
+        title="Ask your legal assistant"
+        subtitle="Research Pakistani law, drafts, and precedents."
+        padding="p-4 sm:p-5"
+      >
+        <div className="py-8 text-center">
+          <Badge variant="warning" size="sm">
+            Coming soon
+          </Badge>
+          <p className="text-sm text-text-secondary m-0 mt-3 max-w-md mx-auto leading-relaxed">
+            Ask-your-assistant search is launching soon.
+          </p>
+        </div>
+      </Card>
+    );
+  }
+  return <HeroAiSearchLive {...props} />;
+}
+
+function HeroAiSearchLive({ autoFocus = true }) {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [sessions, setSessions] = useState([]);

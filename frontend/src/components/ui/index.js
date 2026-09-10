@@ -5,6 +5,7 @@ export { default as Spinner } from "./Spinner";
 export { default as FilterTabs } from "./FilterTabs";
 export { default as PageShell } from "./PageShell";
 export { default as PageHeader } from "./PageHeader";
+export { default as ComingSoonPanel } from "./ComingSoonPanel";
 export {
   default as PageFilters,
   PageTabFilters,

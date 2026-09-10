@@ -2,10 +2,8 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
 /**
- * AuthRoute Component
- * 
- * Protects auth routes (login, register) from authenticated users
- * If user is already authenticated, redirects to their dashboard
+ * Protects login/register from users who already have a verified session.
+ * Unverified users are sent back to OTP — they can Sign out from that page.
  */
 export default function AuthRoute({ children }) {
   const { user, loading } = useAuth();

@@ -151,7 +151,7 @@ export const AI_FEATURES = [
   {
     icon: FiLayers,
     title: "Plan-based usage",
-    body: "AI messages and document quotas follow Free, Pro, or Firm limits on the workspace."
+    body: "AI messages and document quotas follow Adal Base, Max, or Law Firm limits on the workspace."
   }
 ];
 
@@ -182,7 +182,7 @@ export const PLAN_TEASERS = [
   {
     name: "Adal Base",
     priceLabel: "Rs 1,000/mo",
-    line: "1 user · Limited AI — after a 1-month Base trial"
+    line: "1 user · Limited AI — after a 30-day Base trial"
   },
   {
     name: "Adal Max",
@@ -242,7 +242,7 @@ export const LAWYER_STEPS = [
   {
     step: "1",
     title: "Join as a lawyer",
-    body: "Create your profile and personal workspace—start with a one-month Base-level trial."
+    body: "Create your profile and personal workspace—start with a 30-day Base-level trial."
   },
   {
     step: "2",

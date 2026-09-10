@@ -1,4 +1,5 @@
 import { getDashboardPath } from "../../../utils/authRoutes";
+import { BILLING_COMING_SOON } from "../../../config/features";
 
 /**
  * Auth-aware marketing CTAs. Feature content stays public; only destinations/labels change.
@@ -23,7 +24,10 @@ export function resolveMarketingCtas(user) {
       clientPrimary: { label: "Browse lawyers", href: "/lawyers" },
       clientSecondary: { label: "Open practice", href: dashboard },
       lawyerPrimary: { label: "Open practice", href: dashboard },
-      lawyerSecondary: { label: "Billing & plans", href: "/lawyer/billing/subscription" },
+      lawyerSecondary: {
+        label: BILLING_COMING_SOON ? "View pricing" : "Billing & plans",
+        href: BILLING_COMING_SOON ? "/pricing" : "/lawyer/billing/subscription"
+      },
       finalPrimary: { label: "Open practice", href: dashboard },
       finalSecondary: { label: "View pricing", href: "/pricing" }
     };

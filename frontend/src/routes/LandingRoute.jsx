@@ -3,24 +3,16 @@ import { useAuth } from "../hooks/useAuth";
 import { getDashboardPath } from "../utils/authRoutes";
 
 /**
- * The landing page is an entry point for signed-out users.
- * Authenticated users go directly to their role-specific destination.
+ * Marketing/landing is public.
+ * Verified signed-in users go to their dashboard.
+ * Unverified users stay here so they can leave the OTP screen.
  */
 export default function LandingRoute({ children }) {
   const { user, loading } = useAuth();
 
   if (loading) return null;
 
-  if (user) {
-    if (!user.isEmailVerified) {
-      return (
-        <Navigate
-          to={`/verify-email?email=${encodeURIComponent(user.email)}&from=login`}
-          replace
-        />
-      );
-    }
-
+  if (user?.isEmailVerified) {
     return <Navigate to={getDashboardPath(user.role)} replace />;
   }
 

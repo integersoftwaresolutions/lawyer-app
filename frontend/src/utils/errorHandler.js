@@ -1,3 +1,5 @@
+import { BILLING_COMING_SOON } from "../config/features";
+
 /**
  * Extract error message from API error response
  * Handles consistent error response format from backend
@@ -19,7 +21,9 @@ export function getErrorMessage(error) {
   if (error.response?.data?.message) {
     const code = error.response.data.code || "";
     if (String(code).startsWith("PLAN_LIMIT") || code === "PLAN_BILLING_LOCKED") {
-      return `${error.response.data.message} Open Plans & billing to upgrade.`;
+      return BILLING_COMING_SOON
+        ? error.response.data.message
+        : `${error.response.data.message} Open Plans & billing to upgrade.`;
     }
     return error.response.data.message;
   }
