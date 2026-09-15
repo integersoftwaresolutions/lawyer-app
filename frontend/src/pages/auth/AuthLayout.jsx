@@ -2,6 +2,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { Card } from "../../components/ui";
 import BrandLogo from "../../components/BrandLogo";
 import ThemeToggle from "../../components/ThemeToggle";
+import { useTheme } from "../../context/ThemeContext";
+import "../public/marketing/marketing-motion.css";
 
 export default function AuthLayout({
   children,
@@ -12,6 +14,7 @@ export default function AuthLayout({
   footer
 }) {
   const navigate = useNavigate();
+  const { isDarkMode } = useTheme();
 
   const handleBack = () => {
     if (onBack) {
@@ -22,11 +25,15 @@ export default function AuthLayout({
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-6 bg-background">
+    <div
+      className={`relative min-h-screen flex items-center justify-center p-6 ${
+        isDarkMode ? "mkt-landing--dark bg-background" : "mkt-landing--light bg-background"
+      }`}
+    >
       <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-10">
         <ThemeToggle />
       </div>
-      <div className="w-full max-w-[540px]">
+      <div className="relative z-[1] w-full max-w-[540px]">
         <div className="mb-6 text-center">
           <BrandLogo
             className="justify-center"
