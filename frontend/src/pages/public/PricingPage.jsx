@@ -3,17 +3,20 @@ import { useEffect, useMemo, useState } from "react";
 import { Navbar } from "../../components/layout";
 import Footer from "../../components/Footer";
 import { useAuth } from "../../hooks/useAuth";
+import { useTheme } from "../../context/ThemeContext";
 import { FiArrowRight } from "react-icons/fi";
 import PlanComparisonCards from "../../components/billing/PlanComparisonCards";
 import { getDefaultPlans, mergeCatalogPlans, resolvePublicPricingCta } from "../../billing/plans";
 import { billingApi } from "../../services/billing.api";
 import { BILLING_COMING_SOON } from "../../config/features";
+import "./marketing/marketing-motion.css";
 
 /**
  * Public pricing — live catalog. In-app checkout is gated; signup still grants Base trial.
  */
 export default function PricingPage() {
   const { user } = useAuth();
+  const { isDarkMode } = useTheme();
   const [plans, setPlans] = useState(getDefaultPlans());
   const [trial, setTrial] = useState({ days: 30, planKey: "base" });
 
@@ -50,7 +53,11 @@ export default function PricingPage() {
   }, [trial]);
 
   return (
-    <div className="min-h-screen bg-background text-text-primary flex flex-col">
+    <div
+      className={`min-h-screen relative text-text-primary flex flex-col ${
+        isDarkMode ? "mkt-landing--dark bg-background" : "mkt-landing--light bg-background"
+      }`}
+    >
       <Navbar />
 
       <main className="flex-1">
