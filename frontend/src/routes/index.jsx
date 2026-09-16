@@ -3,6 +3,11 @@ import MarketingPage from "../pages/public/MarketingPage.jsx";
 import PricingPage from "../pages/public/PricingPage.jsx";
 import RequestDemoPage from "../pages/public/RequestDemoPage.jsx";
 import RequestFeaturePage from "../pages/public/RequestFeaturePage.jsx";
+import {
+  TermsOfServicePage,
+  PrivacyPolicyPage,
+  CookiePolicyPage
+} from "../pages/public/LegalPages.jsx";
 import LawyerSearch from "../pages/public/LawyerSearch.jsx";
 import LawyerProfile from "../pages/public/LawyerProfile.jsx";
 import Login from "../pages/auth/Login.jsx";
@@ -92,6 +97,9 @@ export default function RoutesRoot() {
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/request-demo" element={<RequestDemoPage />} />
       <Route path="/request-feature" element={<RequestFeaturePage />} />
+      <Route path="/terms" element={<TermsOfServicePage />} />
+      <Route path="/privacy" element={<PrivacyPolicyPage />} />
+      <Route path="/cookies" element={<CookiePolicyPage />} />
       
       {/* Client Dashboard Routes */}
       <Route
@@ -343,23 +351,9 @@ export default function RoutesRoot() {
         <Route path="notifications" element={<NotificationSettingsPage />} />
       </Route>
       
-      {/* Public Lawyer Search/Profile */}
-      <Route
-        path="/lawyers"
-        element={
-          <ProtectedRoute>
-            <LawyerSearch />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/lawyers/:id"
-        element={
-          <ProtectedRoute>
-            <LawyerProfile />
-          </ProtectedRoute>
-        }
-      />
+      {/* Public Lawyer Search/Profile — open to guests and signed-in users */}
+      <Route path="/lawyers" element={<LawyerSearch />} />
+      <Route path="/lawyers/:id" element={<LawyerProfile />} />
 
       {/* Auth Routes - Redirect authenticated users to dashboard */}
       <Route 

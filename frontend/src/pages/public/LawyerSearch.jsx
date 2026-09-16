@@ -11,7 +11,6 @@ import {
   Avatar, 
   Badge, 
   Select,
-  Checkbox,
   Sidebar,
   Pagination
 } from "../../components/ui";
@@ -36,7 +35,6 @@ export default function LawyerSearch() {
     q: "",
     city: "",
     specialization: "",
-    verified: false,
     minExp: "",
     maxExp: "",
     minRate: "",
@@ -63,7 +61,6 @@ export default function LawyerSearch() {
       if (appliedFilters.q) params.q = appliedFilters.q;
       if (appliedFilters.city) params.city = appliedFilters.city;
       if (appliedFilters.specialization) params.specialization = appliedFilters.specialization;
-      if (appliedFilters.verified) params.verified = "true";
       if (appliedFilters.minExp) params.minExp = Number(appliedFilters.minExp);
       if (appliedFilters.maxExp) params.maxExp = Number(appliedFilters.maxExp);
       if (appliedFilters.minRate) params.minRate = Number(appliedFilters.minRate);
@@ -86,7 +83,6 @@ export default function LawyerSearch() {
         appliedFilters.q, 
         appliedFilters.city, 
         appliedFilters.specialization, 
-        appliedFilters.verified,
         appliedFilters.minExp,
         appliedFilters.maxExp,
         appliedFilters.minRate,
@@ -118,7 +114,6 @@ export default function LawyerSearch() {
       q: "",
       city: "",
       specialization: "",
-      verified: false,
       minExp: "",
       maxExp: "",
       minRate: "",
@@ -132,7 +127,6 @@ export default function LawyerSearch() {
 
   const activeFiltersCount = Object.entries(appliedFilters).filter(([key, value]) => {
     if (key === "sort") return false;
-    if (key === "verified") return value === true;
     return value !== "" && value !== false;
   }).length;
 
@@ -208,16 +202,6 @@ export default function LawyerSearch() {
                     ...constants.specializations.map(spec => ({ value: spec, label: spec }))
                   ]}
                   placeholder="Select specialization"
-                />
-              </div>
-
-              {/* Verified Only */}
-              <div>
-                <Checkbox
-                  label="Verified Lawyers Only"
-                  checked={filters.verified}
-                  onChange={(checked) => handleFilterChange("verified", checked)}
-                  containerClassName="mb-0"
                 />
               </div>
 

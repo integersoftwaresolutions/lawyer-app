@@ -46,7 +46,7 @@ export default function Navbar({
   const navLinks = hideMarketingLinks
     ? clientBookLink
     : [
-        { to: user ? "/lawyers" : "/login", label: "Find Lawyers" },
+        { to: "/lawyers", label: "Find Lawyers" },
         { to: "/pricing", label: "Pricing" },
         { to: "/request-feature", label: "Request a feature" },
         { to: "/#features", label: "Features" },

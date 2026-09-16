@@ -58,12 +58,6 @@ export default function LawyerDashboardLayout() {
             ]
           })
     },
-    {
-      id: "workspace",
-      label: "Workspace",
-      icon: FiBriefcase,
-      to: "/lawyer/workspace/overview"
-    },
     ...(canViewCases ? [{ id: "cases", label: "Cases", icon: FiLayers }] : []),
     ...(canUseAi
       ? [
@@ -114,6 +108,12 @@ export default function LawyerDashboardLayout() {
     { id: "earnings", label: "Earnings", icon: FiDollarSign },
     { id: "verification", label: "Verification", icon: FiCheckCircle },
     { id: "reviews", label: "Reviews", icon: FiStar },
+    {
+      id: "workspace",
+      label: "Workspace",
+      icon: FiBriefcase,
+      to: "/lawyer/workspace/overview"
+    },
     {
       id: "settings",
       label: "Account settings",

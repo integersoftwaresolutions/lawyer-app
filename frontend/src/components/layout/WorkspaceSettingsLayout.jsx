@@ -12,7 +12,6 @@ import { acceptWorkspaceInvite, fetchWorkspaces } from "../../store/slices/works
 import { filterWorkspaceNavItems } from "../../workspaces/nav";
 import { useToast } from "../../hooks/useToast";
 import { getErrorMessage } from "../../utils/errorHandler";
-import { BILLING_COMING_SOON } from "../../config/features";
 import VerificationStatusBanner from "../verification/VerificationStatusBanner";
 
 export default function WorkspaceSettingsLayout() {
@@ -24,10 +23,7 @@ export default function WorkspaceSettingsLayout() {
   const { workspace, isFirm, permissions } = useWorkspace();
 
   const menuItems = useMemo(
-    () =>
-      filterWorkspaceNavItems({ isFirm, permissions }).map((item) =>
-        item.id === "billing" && BILLING_COMING_SOON ? { ...item, badge: "Soon" } : item
-      ),
+    () => filterWorkspaceNavItems({ isFirm, permissions }),
     [isFirm, permissions]
   );
 

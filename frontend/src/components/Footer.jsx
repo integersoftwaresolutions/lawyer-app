@@ -128,13 +128,13 @@ export default function Footer() {
             &copy; {currentYear} Adal AI. All rights reserved.
           </p>
           <div className="flex flex-wrap justify-center gap-x-5 gap-y-1">
-            <Link to="#" className={linkClass}>
+            <Link to="/privacy" className={linkClass}>
               Privacy Policy
             </Link>
-            <Link to="#" className={linkClass}>
+            <Link to="/terms" className={linkClass}>
               Terms of Service
             </Link>
-            <Link to="#" className={linkClass}>
+            <Link to="/cookies" className={linkClass}>
               Cookie Policy
             </Link>
           </div>

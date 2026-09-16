@@ -14,7 +14,10 @@ import { LAWYER_PROFILE_FIELDS } from "../utils/userProfileFields.js";
 export async function searchLawyers(query) {
   const { page, limit, skip } = getPagination(query);
 
-  const filter = {};
+  // Marketplace listing: only verified lawyers (clients cannot book unverified profiles).
+  const filter = {
+    verificationStatus: "APPROVED"
+  };
   const now = new Date();
 
   // Expire featured status automatically so clients never see outdated boosts.
@@ -22,10 +25,6 @@ export async function searchLawyers(query) {
     { isFeatured: true, featuredUntil: { $ne: null, $lt: now } },
     { $set: { isFeatured: false, featuredUntil: null } }
   );
-
-  if (query.verified === "true") {
-    filter.verificationStatus = "APPROVED";
-  }
 
   if (query.city) filter.city = query.city;
   if (query.specialization) filter.specialization = query.specialization;

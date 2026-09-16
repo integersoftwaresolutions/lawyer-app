@@ -231,6 +231,7 @@ export default function LawyerProfile() {
   const lawyer = data;
   const reviews = reviewsData || [];
   const isClient = user?.role === "CLIENT";
+  const isVerified = lawyer?.verificationStatus === "APPROVED";
   const hasContact =
     contactDetails && (contactDetails.phone || contactDetails.email || contactDetails.whatsapp);
   const estimatedCost = Math.round(((lawyer?.hourlyRate || 0) * SLOT_DURATION_MINUTES) / 60);
@@ -256,7 +257,7 @@ export default function LawyerProfile() {
     };
   }, [id, isClient, lawyer]);
 
-  const bookingSidebar = isClient && (
+  const bookingSidebar = isClient && isVerified && (
     <div className="space-y-4">
       <Card padding="p-5">
         <div className="text-center mb-5">
@@ -615,9 +616,23 @@ export default function LawyerProfile() {
                 </div>
 
                 {/* Sidebar */}
-                {isClient ? (
+                {isClient && isVerified ? (
                   <div className="lg:col-span-1">
                     <div className="lg:sticky lg:top-6 space-y-4">{bookingSidebar}</div>
+                  </div>
+                ) : isClient && !isVerified ? (
+                  <div className="lg:col-span-1">
+                    <Card padding="p-5" className="lg:sticky lg:top-6">
+                      <SectionHeader
+                        icon={FiShield}
+                        title="Not available for booking"
+                        subtitle="This profile is not verified yet"
+                      />
+                      <p className="text-sm text-text-secondary m-0 leading-relaxed">
+                        Only verified lawyers can accept consultations. Check back once this
+                        profile is approved.
+                      </p>
+                    </Card>
                   </div>
                 ) : (
                   <div className="lg:col-span-1">

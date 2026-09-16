@@ -108,12 +108,12 @@ export default {
       },
       keyframes: {
         "modal-scale-in": {
-          "0%": { opacity: "0", transform: "scale(0.2)" },
-          "100%": { opacity: "1", transform: "scale(1)" },
+          "0%": { opacity: "0", transform: "translateY(8px) scale(0.98)" },
+          "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
         },
         "modal-scale-out": {
-          "0%": { opacity: "1", transform: "scale(1)" },
-          "100%": { opacity: "0", transform: "scale(0.2)" },
+          "0%": { opacity: "1", transform: "translateY(0) scale(1)" },
+          "100%": { opacity: "0", transform: "translateY(8px) scale(0.98)" },
         },
         "modal-fade-in": {
           "0%": { opacity: "0" },
@@ -123,12 +123,22 @@ export default {
           "0%": { opacity: "1" },
           "100%": { opacity: "0" },
         },
+        "drawer-slide-in": {
+          "0%": { transform: "translateX(100%)" },
+          "100%": { transform: "translateX(0)" },
+        },
+        "drawer-slide-out": {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(100%)" },
+        },
       },
       animation: {
         "modal-scale-in": "modal-scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards",
         "modal-scale-out": "modal-scale-out 0.2s cubic-bezier(0.4, 0, 1, 1) forwards",
         "modal-fade-in": "modal-fade-in 0.3s ease-out forwards",
         "modal-fade-out": "modal-fade-out 0.2s ease-in forwards",
+        "drawer-slide-in": "drawer-slide-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        "drawer-slide-out": "drawer-slide-out 0.2s ease-in forwards",
       },
     },
   },

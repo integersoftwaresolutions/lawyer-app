@@ -88,6 +88,9 @@ export async function createBooking({ clientId, lawyerUserId, startAt, durationM
 
   const lawyerProfile = await LawyerProfile.findOne({ userId: lawyerUserId });
   if (!lawyerProfile) throw new ApiError(404, "Lawyer not found");
+  if (lawyerProfile.verificationStatus !== "APPROVED") {
+    throw new ApiError(400, "This lawyer is not verified and cannot accept bookings yet.");
+  }
 
   const settings = await getAdminSettings();
 

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Input, Button, Checkbox } from "../../../components/ui";
 import { FormSection, ErrorMessage } from "../AuthLayout";
 
@@ -56,7 +57,30 @@ export function RegistrationFormStep({
 
       <Checkbox
         id="terms"
-        label="I agree to the Terms of Service and Privacy Policy"
+        label={
+          <>
+            I agree to the{" "}
+            <Link
+              to="/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link
+              to="/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Privacy Policy
+            </Link>
+          </>
+        }
         checked={formData.agreeTerms}
         onChange={onChange("agreeTerms")}
         error={errors.agreeTerms}

@@ -1,15 +1,25 @@
 import { useEffect, useState } from "react";
-import { FiBriefcase, FiShield, FiUsers } from "react-icons/fi";
-import { Badge, PageHeader, PageShell } from "../../../components/ui";
-import { useWorkspace, usePermission } from "../../../hooks/useWorkspaceAccess";
+import { Link } from "react-router-dom";
+import { FiBriefcase, FiCreditCard, FiShield, FiUsers } from "react-icons/fi";
+import { Badge, Button, PageHeader, PageShell } from "../../../components/ui";
+import {
+  useWorkspace,
+  usePermission,
+  useAnyPermission
+} from "../../../hooks/useWorkspaceAccess";
 import { workspaceApi } from "../../../services/workspace.api";
 import { PERMISSIONS } from "../../../workspaces/permissions";
 import { useToast } from "../../../hooks/useToast";
 import { getErrorMessage } from "../../../utils/errorHandler";
+import { BILLING_COMING_SOON } from "../../../config/features";
 
 export default function WorkspaceOverviewPage() {
   const toast = useToast();
   const { workspace, workspaceId, isFirm, isOwner } = useWorkspace();
+  const canViewBilling = useAnyPermission([
+    PERMISSIONS.BILLING_VIEW,
+    PERMISSIONS.BILLING_MANAGE
+  ]);
   const canViewMembers = usePermission(PERMISSIONS.MEMBERS_VIEW);
   const [stats, setStats] = useState({ members: null, roles: null });
 
@@ -81,6 +91,34 @@ export default function WorkspaceOverviewPage() {
           </p>
         )}
       </div>
+
+      {canViewBilling ? (
+        <div className="mt-6 rounded-xl border border-card-border bg-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="w-10 h-10 rounded-lg bg-primary-light text-primary flex items-center justify-center shrink-0">
+            <FiCreditCard className="w-5 h-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-sm font-semibold text-text-primary m-0">Billing</h3>
+              {BILLING_COMING_SOON ? (
+                <Badge variant="warning" size="sm">
+                  Soon
+                </Badge>
+              ) : null}
+            </div>
+            <p className="text-sm text-text-secondary m-0 mt-1">
+              {BILLING_COMING_SOON
+                ? "Subscription and usage billing for this workspace is launching soon."
+                : "Manage subscription, usage, and invoices for this workspace."}
+            </p>
+          </div>
+          <Link to="/lawyer/billing/subscription" className="shrink-0 no-underline">
+            <Button type="button" variant="secondary" size="sm">
+              Open billing
+            </Button>
+          </Link>
+        </div>
+      ) : null}
     </PageShell>
   );
 }

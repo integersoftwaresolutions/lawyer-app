@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { FiPlus, FiSearch, FiBriefcase } from "react-icons/fi";
+import { FiPlus, FiSearch, FiBriefcase, FiEdit2 } from "react-icons/fi";
 import {
   Badge,
   Button,
   DataList,
   DataTable,
+  IconButton,
   PageFilterField,
   PageFilters,
   PageHeader,
@@ -16,6 +17,7 @@ import {
   Switch
 } from "../../components/ui";
 import CaseCreateModal from "../../components/cases/CaseCreateModal";
+import CaseSummaryDrawer from "../../components/cases/CaseSummaryDrawer";
 import { casesApi } from "../../services/cases.api";
 import { usePaginatedQuery } from "../../hooks/usePaginatedQuery";
 import { usePermission } from "../../hooks/useWorkspaceAccess";
@@ -54,6 +56,7 @@ export default function LawyerCasesPage() {
   const [priority, setPriority] = useState("");
   const [includeArchived, setIncludeArchived] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [summaryCaseId, setSummaryCaseId] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
@@ -144,6 +147,26 @@ export default function LawyerCasesPage() {
       label: "Updated",
       hideOnMobile: true,
       render: (value) => (value ? new Date(value).toLocaleDateString() : "—")
+    },
+    {
+      key: "actions",
+      label: "",
+      align: "right",
+      width: "56px",
+      render: (_, row) => (
+        <IconButton
+          type="button"
+          label="Edit case"
+          title="Edit case"
+          size="sm"
+          variant="ghost"
+          icon={FiEdit2}
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/lawyer/cases/${row.id}`);
+          }}
+        />
+      )
     }
   ];
 
@@ -241,7 +264,7 @@ export default function LawyerCasesPage() {
               : "No cases match this view."
           }
           emptyIcon={<FiBriefcase className="w-6 h-6" />}
-          onRowClick={(row) => navigate(`/lawyer/cases/${row.id}`)}
+          onRowClick={(row) => setSummaryCaseId(row.id)}
         />
       </DataList>
 
@@ -251,7 +274,17 @@ export default function LawyerCasesPage() {
         onCreated={(created) => {
           setRefreshKey((k) => k + 1);
           const id = created?.id || created?.data?.id;
-          if (id) navigate(`/lawyer/cases/${id}`);
+          if (id) setSummaryCaseId(id);
+        }}
+      />
+
+      <CaseSummaryDrawer
+        isOpen={Boolean(summaryCaseId)}
+        caseId={summaryCaseId}
+        onClose={() => setSummaryCaseId(null)}
+        onEdit={(id) => {
+          setSummaryCaseId(null);
+          navigate(`/lawyer/cases/${id}`);
         }}
       />
     </PageShell>

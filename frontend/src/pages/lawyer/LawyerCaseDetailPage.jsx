@@ -37,6 +37,7 @@ import { aiApi } from "../../services/ai.api";
 import { getErrorMessage } from "../../utils/errorHandler";
 import { usePermission } from "../../hooks/useWorkspaceAccess";
 import { useToast } from "../../hooks/useToast";
+import { useLawyerBookingOptions } from "../../hooks/useLawyerBookingOptions";
 import { PERMISSIONS } from "../../workspaces/permissions";
 import { AI_COMING_SOON } from "../../config/features";
 
@@ -190,6 +191,22 @@ export default function LawyerCaseDetailPage() {
   const [bookingIdInput, setBookingIdInput] = useState("");
   const [bookingBusy, setBookingBusy] = useState(false);
   const [error, setError] = useState(null);
+  const { options: bookingOptions, loading: bookingsLoading } = useLawyerBookingOptions({
+    enabled: activeTab === TABS.BOOKING,
+    limit: 50
+  });
+
+  const bookingSelectOptions = useMemo(() => {
+    const list = [...bookingOptions];
+    const current = bookingIdInput.trim();
+    if (current && !list.some((o) => o.value === current)) {
+      list.unshift({
+        value: current,
+        label: `Current link (#${current.slice(-6)})`
+      });
+    }
+    return list;
+  }, [bookingOptions, bookingIdInput]);
 
   const dirty = useMemo(() => JSON.stringify(form) !== baseline, [form, baseline]);
 
@@ -866,8 +883,9 @@ export default function LawyerCaseDetailPage() {
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-text-primary m-0">Linked booking</p>
-                      <p className="text-xs text-text-muted m-0 mt-1 font-mono break-all">
-                        {String(caseData.bookingId)}
+                      <p className="text-xs text-text-muted m-0 mt-1">
+                        {bookingSelectOptions.find((o) => o.value === String(caseData.bookingId))
+                          ?.label || String(caseData.bookingId)}
                       </p>
                     </div>
                   </div>
@@ -879,19 +897,22 @@ export default function LawyerCaseDetailPage() {
                     <div>
                       <p className="text-sm font-semibold text-text-primary m-0">No booking linked</p>
                       <p className="text-xs text-text-muted m-0 mt-1">
-                        Paste a booking ID from Bookings to connect it.
+                        Choose a consultation booking to attach to this matter.
                       </p>
                     </div>
                   </div>
                 )}
 
                 <div className="flex flex-col sm:flex-row gap-2 items-end">
-                  <Input
-                    label="Booking ID"
+                  <Select
+                    label="Booking"
                     value={bookingIdInput}
                     onChange={(e) => setBookingIdInput(e.target.value)}
-                    disabled={!canEdit || bookingBusy}
-                    placeholder="Paste booking ObjectId"
+                    disabled={!canEdit || bookingBusy || bookingsLoading}
+                    options={bookingSelectOptions}
+                    placeholder={
+                      bookingsLoading ? "Loading bookings…" : "Select a booking (optional)"
+                    }
                     containerClassName="mb-0 flex-1"
                   />
                   {canEdit && (
